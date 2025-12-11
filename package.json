@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "nodemailer": "^6.9.13",
     "next": "latest",
     "react-hot-toast": "^2.4.1",
     "react": "^18.3.0",
