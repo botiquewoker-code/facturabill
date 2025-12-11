@@ -1,6 +1,12 @@
+
 {
-  "buildCommand": "next build",
-  "outputDirectory": ".next",
-  "framework": "nextjs",
-  "regions": ["mad1"]
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": ".next"
+      }
+    }
+  ]
 }
