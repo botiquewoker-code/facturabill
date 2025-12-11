@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "next": "latest",
+    "react-hot-toast": "^2.4.1",
     "react": "^18.3.0",
 "react-dom": "^18.3.0",
 "tailwindcss": "^3.4.0",
