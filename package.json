@@ -8,14 +8,20 @@
     "start": "next start"
   },
   "dependencies": {
-    "nodemailer": "^6.9.13",
     "next": "latest",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-hot-toast": "^2.4.1",
-    "react": "^18.3.0",
-"react-dom": "^18.3.0",
-"tailwindcss": "^4.0.0",
-"@tailwindcss/postcss": "^4.0.0"
-"postcss": "^8.4.0",
-"autoprefixer": "^10.4.0"
+    "nodemailer": "^6.9.13",
+    "@react-pdf/renderer": "^3.4.5"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.47",
+    "autoprefixer": "^10.4.20",
+    "typescript": "^5.6.3",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "@types/node": "^22.9.0"
   }
 }
