@@ -1,82 +1,42 @@
 "use client";
 
-import { useInvoice } from "@contexts/InvoiceContext";
-import { Card, CardContent } from "@/components/ui/card"; // si usas shadcn, si no te digo alternativa
+const templates = ["modern"] as const;
 
-const templates = [
-  {
-    name: "Moderna",
-    color: "blue",
-    headerBg: "bg-blue-800",
-    accent: "border-blue-500",
-  },
-  {
-    name: "Clásica",
-    color: "gray",
-    headerBg: "bg-gray-700",
-    accent: "border-gray-400",
-  },
-  {
-    name: "Minimal",
-    color: "light",
-    headerBg: "bg-white",
-    accent: "border-gray-300",
-  },
-];
+type Template = (typeof templates)[number];
 
-export default function TemplateSelector() {
-  const { plantilla, setPlantilla } = useInvoice();
+interface TemplateSelectorProps {
+  selected: Template;
+  onSelect: (template: Template) => void;
+}
 
+export function TemplateSelector({
+  selected,
+  onSelect,
+}: TemplateSelectorProps) {
   return (
-    <div className="max-w-4xl mx-auto py-8">
-      <h2 className="text-3xl font-bold text-center mb-10">Elige plantilla</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {templates.map((template) => (
-          <Card
-            key={template.name}
-            className={`cursor-pointer transition-all hover:scale-105 ${plantilla === template.name.toLowerCase() ? "ring-4 ring-blue-500" : ""} ${template.accent} border-4`}
-            onClick={() => setPlantilla(template.name.toLowerCase())}
-          >
-            <CardContent className="p-6">
+    <div className="my-12">
+      <h2 className="text-3xl font-bold text-center mb-8">Elige plantilla</h2>
+      <div className="overflow-x-auto pb-4">
+        <div className="flex gap-8 justify-center min-w-max">
+          {templates.map((t) => (
+            <div
+              key={t}
+              className="text-center cursor-pointer"
+              onClick={() => onSelect(t)}
+            >
               <div
-                className={`rounded-lg shadow-xl overflow-hidden ${template.headerBg} text-white p-4 mb-4`}
+                className={`rounded-2xl shadow-2xl overflow-hidden transition-all ${selected === t ? "border-4 border-blue-500 scale-105" : "border-4 border-transparent"}`}
               >
-                <div className="flex justify-between">
-                  <div className="text-sm">Empresa</div>
-                  <div className="text-2xl font-bold">FACTURA</div>
-                </div>
+                <img
+                  src={`/previews/${t}.jpg`}
+                  alt={t}
+                  className="w-80 h-auto"
+                />
               </div>
-              <div className="space-y-2 text-sm">
-                <div className="bg-gray-200 h-4 rounded w-3/4"></div>
-                <div className="bg-gray-200 h-4 rounded w-1/2"></div>
-                <table className="w-full mt-4 border-collapse">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th className="text-left p-2">Concepto</th>
-                      <th className="text-right p-2">Cant.</th>
-                      <th className="text-right p-2">Precio</th>
-                      <th className="text-right p-2">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="p-2 bg-gray-50">Servicio ejemplo</td>
-                      <td className="text-right p-2">1</td>
-                      <td className="text-right p-2">75€</td>
-                      <td className="text-right p-2">75€</td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div className="text-right mt-4 font-bold text-lg">
-                  Total: 90.75 €
-                </div>
-              </div>
-              <div className="text-center mt-6 text-xl font-semibold">
-                {template.name}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              <p className="mt-6 text-2xl font-bold capitalize">{t}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

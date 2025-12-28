@@ -63,22 +63,50 @@ export default function CrearFactura() {
     { desc: "", cant: 1, precio: 0 },
   ]);
   const [logo, setLogo] = useState<string>("");
+  const [tipoIVA, setTipoIVA] = useState(21);
+  const [showIVASelector, setShowIVASelector] = useState(false);
+  const [tipoRetencion, setTipoRetencion] = useState(0); // 0% por defecto
+  const [showRetencionSelector, setShowRetencionSelector] = useState(false);
   useEffect(() => {
     const guardado = localStorage.getItem("datosEmpresa");
     if (guardado) {
       const datos = JSON.parse(guardado);
       setEmpresa(datos);
     }
+  }, []); // solo al montar
+
+  useEffect(() => {
+    if (empresa.nombre || empresa.nif || empresa.direccion) {
+      // evita guardar vacío al inicio
+      localStorage.setItem("datosEmpresa", JSON.stringify(empresa));
+    }
+  }, [empresa]); // se ejecuta cada vez que empresa cambia
+
+  const [notas, setNotas] = useState("");
+  useEffect(() => {
+    const guardadoLogo = localStorage.getItem("logoUsuario");
+    if (guardadoLogo) {
+      setLogo(guardadoLogo);
+    }
+
+    const guardadasNotas = localStorage.getItem("notasUsuario");
+    if (guardadasNotas) {
+      setNotas(guardadasNotas);
+    }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("datosEmpresa", JSON.stringify(empresa));
-  }, [empresa]);
-  const [notas, setNotas] = useState("");
+    localStorage.setItem("logoUsuario", logo);
+  }, [logo]);
+
+  useEffect(() => {
+    localStorage.setItem("notasUsuario", notas);
+  }, [notas]);
 
   const subtotal = items.reduce((acc, i) => acc + i.cant * i.precio, 0);
-  const iva = subtotal * 0.21;
-  const total = subtotal + iva;
+  const iva = subtotal * (tipoIVA / 100);
+  const retencion = subtotal * (tipoRetencion / 100);
+  const total = subtotal + iva - retencion;
 
   const datos = {
     esPresupuesto,
@@ -93,6 +121,7 @@ export default function CrearFactura() {
     iva,
     total,
     notas,
+    plantilla: plantilla,
   };
   const nombreEmpresa = empresa.nombre?.trim() || "Tu empresa";
 
@@ -211,7 +240,7 @@ export default function CrearFactura() {
                 ].map((t) => (
                   <div key={t} className="shrink-0">
                     <img
-                      src={`/templates/${t}.jpg`}
+                      src={`/previews/${t}.jpg`}
                       alt={t}
                       className="w-80 h-auto rounded-xl shadow-2xl cursor-pointer hover:scale-105 transition-transform duration-300 border-4 border-transparent hover:border-indigo-500"
                       onClick={() => setPlantilla(t as any)}
@@ -468,26 +497,171 @@ export default function CrearFactura() {
             </button>
           </div>
 
-          {/* ==================== TOTALES ==================== */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-white shadow-2xl mb-20">
-            <div className="text-right space-y-4">
-              <div className="text-xl">
-                Base imponible:{" "}
-                <span className="font-bold text-3xl">
-                  {subtotal.toFixed(2)} €
-                </span>
-              </div>
-              <div className="text-xl">
-                IVA 21%:{" "}
-                <span className="font-bold text-3xl">{iva.toFixed(2)} €</span>
-              </div>
-              <div className="pt-6 border-t-4 border-white/40">
-                <div className="text-4xl font-bold">
-                  TOTAL {total.toFixed(2)} €
+          {/* ====================== TOTALES ====================== */}
+          <div className="my-12">
+            <div className="bg-orange-100 rounded-2xl p-8 shadow-xl max-w-md ml-auto">
+              <div className="text-right space-y-6">
+                <div className="flex items-center justify-end gap-4">
+                  <span className="font-bold text-lg">BASE IMPONIBLE</span>
+                  <span className="text-3xl font-bold">
+                    {subtotal.toFixed(2)} €
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-end gap-4">
+                  <button
+                    onClick={() => setShowIVASelector(!showIVASelector)}
+                    className="bg-orange-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-orange-600 transition"
+                  >
+                    Cambiar IVA
+                  </button>
+                  <div className="text-right">
+                    <span className="font-bold text-lg">IVA ({tipoIVA}%)</span>
+                    <span className="block text-3xl font-bold">
+                      {iva.toFixed(2)} €
+                    </span>
+                  </div>
+                </div>
+
+                {tipoRetencion !== 0 ? (
+                  <div className="flex items-center justify-end gap-4">
+                    <button
+                      onClick={() =>
+                        setShowRetencionSelector(!showRetencionSelector)
+                      }
+                      className="bg-orange-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-orange-600 transition"
+                    >
+                      Cambiar
+                    </button>
+                    <div className="text-right">
+                      <span className="font-bold text-lg">
+                        RETENCIÓN ({tipoRetencion}%)
+                      </span>
+                      <span className="block text-3xl font-bold">
+                        -{retencion.toFixed(2)} €
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-right">
+                    <button
+                      onClick={() => setShowRetencionSelector(true)}
+                      className="bg-orange-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-orange-600 transition"
+                    >
+                      Añadir retención
+                    </button>
+                  </div>
+                )}
+
+                <div className="bg-orange-500 text-white p-6 rounded-xl mt-6">
+                  <p className="font-bold text-2xl">TOTAL</p>
+                  <p className="text-4xl font-bold">{total.toFixed(2)} €</p>
                 </div>
               </div>
             </div>
           </div>
+
+          {showIVASelector && (
+            <div
+              className="fixed inset-0 flex items-center justify-center z-50 bg-black/40"
+              onClick={() => setShowIVASelector(false)}
+            >
+              <div
+                className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-2xl font-bold text-center mb-8 text-orange-600">
+                  Tipo de IVA
+                </h3>
+                <div className="space-y-4">
+                  {[21, 10, 4, 0].map((rate) => (
+                    <button
+                      key={rate}
+                      onClick={() => {
+                        setTipoIVA(rate);
+                        setShowIVASelector(false);
+                      }}
+                      className={`w-full py-4 rounded-xl font-bold text-lg transition ${
+                        rate === tipoIVA
+                          ? "bg-orange-500 text-white shadow-lg"
+                          : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                      }`}
+                    >
+                      {rate}%{" "}
+                      {rate === 21
+                        ? "(General)"
+                        : rate === 10
+                          ? "(Reducido)"
+                          : rate === 4
+                            ? "(Superreducido)"
+                            : "(Exento)"}
+                      {rate === tipoIVA && " ✓"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showRetencionSelector && (
+            <div
+              className="fixed inset-0 flex items-center justify-center z-50 bg-black/40"
+              onClick={() => setShowRetencionSelector(false)}
+            >
+              <div
+                className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-2xl font-bold text-center mb-8 text-orange-600">
+                  Tipo de retención IRPF
+                </h3>
+                <div className="space-y-4">
+                  <button
+                    onClick={() => {
+                      setTipoRetencion(15);
+                      setShowRetencionSelector(false);
+                    }}
+                    className={`w-full py-4 rounded-xl font-bold text-lg transition ${
+                      tipoRetencion === 15
+                        ? "bg-orange-500 text-white shadow-lg"
+                        : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                    }`}
+                  >
+                    15% (Estándar para profesionales)
+                    {tipoRetencion === 15 && " ✓"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setTipoRetencion(7);
+                      setShowRetencionSelector(false);
+                    }}
+                    className={`w-full py-4 rounded-xl font-bold text-lg transition ${
+                      tipoRetencion === 7
+                        ? "bg-orange-500 text-white shadow-lg"
+                        : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                    }`}
+                  >
+                    7% (Primeros 3 años de actividad)
+                    {tipoRetencion === 7 && " ✓"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setTipoRetencion(0);
+                      setShowRetencionSelector(false);
+                    }}
+                    className={`w-full py-4 rounded-xl font-bold text-lg transition ${
+                      tipoRetencion === 0
+                        ? "bg-orange-500 text-white shadow-lg"
+                        : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                    }`}
+                  >
+                    0% (Sin retención)
+                    {tipoRetencion === 0 && " ✓"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ==================== NOTAS ==================== */}
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-32">
@@ -505,7 +679,7 @@ export default function CrearFactura() {
         <div className="mt-12 flex flex-col sm:flex-row gap-6 justify-center pb-20">
           <button
             onClick={descargar}
-            className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition"
+            className="flex-1 bg-blue-700 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-800 transition flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition"
           >
             <Download className="h-6 w-6" />
             DESCARGAR PDF
