@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import ConfigPanel from "@/components/ConfigPanel";
 import {
   Upload,
   Plus,
@@ -9,6 +10,7 @@ import {
   Send,
   Receipt,
   FileCheck,
+  Settings,
 } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
 import InvoicePDF from "@/components/InvoicePDF";
@@ -36,7 +38,24 @@ type Cliente = {
 export default function CrearFactura() {
   const [esPresupuesto, setEsPresupuesto] = useState(true);
   const [numero, setNumero] = useState(`PRES-${new Date().getFullYear()}-001`);
+  const [mostrarConfig, setMostrarConfig] = useState(false);
   const [fecha] = useState(new Date().toISOString().split("T")[0]);
+  const [nuevoDesc, setNuevoDesc] = useState("");
+  const [nuevoCant, setNuevoCant] = useState(1);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
+  const [nuevoPrecio, setNuevoPrecio] = useState(0);
+  const añadirItem = () => {
+    if (nuevoDesc.trim() && nuevoCant > 0 && nuevoPrecio >= 0) {
+      setItems([
+        ...items,
+        { desc: nuevoDesc, cant: nuevoCant, precio: nuevoPrecio },
+      ]);
+      setNuevoDesc("");
+      setNuevoCant(1);
+      setNuevoPrecio(0);
+    }
+  };
   const [plantilla, setPlantilla] = useState<"clasica" | "moderna" | "minimal">(
     "moderna",
   );
@@ -65,6 +84,9 @@ export default function CrearFactura() {
   const [logo, setLogo] = useState<string>("");
   const [tipoIVA, setTipoIVA] = useState(21);
   const [showIVASelector, setShowIVASelector] = useState(false);
+  const [ivaPorc, setIvaPorc] = useState(21);
+  const [verifactuOpen, setVerifactuOpen] = useState(false);
+  const [retencionPorc, setRetencionPorc] = useState(0);
   const [tipoRetencion, setTipoRetencion] = useState(0); // 0% por defecto
   const [showRetencionSelector, setShowRetencionSelector] = useState(false);
   useEffect(() => {
@@ -120,11 +142,13 @@ export default function CrearFactura() {
     subtotal,
     iva,
     total,
+    ivaPorc,
+    retencionPorc,
+    retencion,
     notas,
-    plantilla: plantilla,
   };
-  const nombreEmpresa = empresa.nombre?.trim() || "Tu empresa";
 
+  const nombreEmpresa = empresa.nombre?.trim() || "Tu empresa";
   const toggleTipo = () => {
     setEsPresupuesto((p) => !p);
     setNumero((p) =>
@@ -183,47 +207,104 @@ export default function CrearFactura() {
     });
     toast[res.ok ? "success" : "error"](res.ok ? "Enviado" : "Error");
   };
-
   return (
     <>
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
         <div className="max-w-5xl mx-auto p-4 pb-24">
-          {/* CABECERA */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
-                  {esPresupuesto ? (
-                    <FileCheck className="h-8 w-8 text-green-600" />
-                  ) : (
-                    <Receipt className="h-8 w-8 text-indigo-600" />
-                  )}
-                  {esPresupuesto ? "PRESUPUESTO" : "FACTURA"}
-                </h1>
-                <p className="text-xl font-bold text-indigo-600">{numero}</p>
-                <p className="text-sm text-gray-600">
-                  Fecha: {new Date(fecha).toLocaleDateString("es-ES")}
-                </p>
-              </div>
+          {/* Cabecera clásica - tu diseño actual corregido */}
+          <header className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-50 shadow-sm">
+            <div className="max-w-7xl mx-auto px-6 py-1 flex items-center justify-between">
+              {/* Logo Facturabill.net a la izquierda */}
+              <img src="/logo.svg" alt="Facturabill.net" className="h-12" />
+
+              {/* Logo Veri*Factu a la derecha */}
+              <img
+                src="/verifactu-logo.jpg"
+                alt="Veri*Factu certificado"
+                className="h-10"
+              />
+
+              {/* Botón menú hamburguesa */}
               <button
-                onClick={toggleTipo}
-                className={`px-6 py-3 rounded-xl font-bold text-white shadow-lg ${
-                  esPresupuesto
-                    ? "bg-gradient-to-r from-green-500 to-emerald-600"
-                    : "bg-gradient-to-r from-indigo-600 to-purple-600"
-                }`}
+                onClick={() => setMenuOpen(true)}
+                className="text-2xl text-gray-800 hover:text-gray-900"
               >
-                {esPresupuesto
-                  ? "Convertir a FACTURA"
-                  : "Convertir a PRESUPUESTO"}
+                ☰
               </button>
             </div>
-          </div>
+          </header>
+
+          {/* Menú hamburguesa lateral - blanco puro, logo Veri*Factu */}
+          {menuOpen && (
+            <div
+              className="fixed inset-0 z-50"
+              onClick={() => setMenuOpen(false)}
+            >
+              <div
+                className="absolute right-0 top-0 h-full w-72 bg-white shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="p-6">
+                  <button
+                    onClick={() => setMenuOpen(false)}
+                    className="absolute top-4 right-4 text-2xl text-gray-800"
+                  >
+                    ×
+                  </button>
+
+                  <ul className="space-y-6 mt-8">
+                    <li>
+                      <button
+                        onClick={() => setVerifactuOpen(true)}
+                        className="flex items-center gap-3 w-full py-2"
+                      >
+                        <img
+                          src="verifactu-logo.jpg"
+                          alt="Veri*Factu"
+                          className="h-16"
+                        />
+                      </button>
+                    </li>
+                    <li>
+                      <a
+                        href="#"
+                        className="text-lg text-black hover:text-blue-950 block"
+                      >
+                        Precios
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="#"
+                        className="text-lg text-black hover:text-blue-950 block"
+                      >
+                        Cómo funciona
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="#"
+                        className="text-lg text-black hover:text-blue-950 block"
+                      >
+                        ¿Qué podemos mejorar?
+                      </a>
+                    </li>
+                  </ul>
+
+                  <div className="mt-6">
+                    <button className="w-full bg-blue-400 text-black py-3 px-6 rounded-xl font-bold hover:bg-yellow-600">
+                      Regístrate gratis
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* CARRUSEL CON PLANTILLAS REALES */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mt-20">
             <h3 className="text-lg font-bold mb-6 text-center">
               Elige plantilla
             </h3>
@@ -255,8 +336,8 @@ export default function CrearFactura() {
           </div>
           <div className="grid sm:grid-cols-2 gap-6 mb-6">
             {/* EMISOR */}
-            <div className="bg-blue-50 rounded-2xl p-5">
-              <h3 className="font-bold text-blue-900 mb-3 text-sm">Emisor</h3>
+            <div className="bg-blue-40 rounded-2xl p-5">
+              <h3 className="font-bold text-blue-500 mb-3 text-sm">Emisor</h3>
               <div className="space-y-3">
                 <input
                   placeholder="Nombre / Razón social"
@@ -318,8 +399,8 @@ export default function CrearFactura() {
             </div>
 
             {/* CLIENTE */}
-            <div className="bg-blue-50 rounded-2xl p-5">
-              <h3 className="font-bold text-blue-900 mb-3 text-sm">Cliente</h3>
+            <div className="bg-blue-40 rounded-2xl p-5">
+              <h3 className="font-bold text-blue-500 mb-3 text-sm">Cliente</h3>
               <div className="space-y-3">
                 <input
                   placeholder="Nombre / Razón social"
@@ -496,175 +577,82 @@ export default function CrearFactura() {
               Añadir concepto
             </button>
           </div>
+          {/* Cuadro de totales compacto y bonito */}
+          <div className="bg-orange-50 rounded-2xl p-4 shadow-md mb-8">
+            <div className="mb-3">
+              <p className="text-base font-bold">Base imponible</p>
+              <p className="text-xl font-bold">{subtotal.toFixed(2)} €</p>
+            </div>
 
-          {/* ====================== TOTALES ====================== */}
-          <div className="my-12">
-            <div className="bg-orange-100 rounded-2xl p-8 shadow-xl max-w-md ml-auto">
-              <div className="text-right space-y-6">
-                <div className="flex items-center justify-end gap-4">
-                  <span className="font-bold text-lg">BASE IMPONIBLE</span>
-                  <span className="text-3xl font-bold">
-                    {subtotal.toFixed(2)} €
-                  </span>
-                </div>
+            <div className="flex justify-between items-center mb-3">
+              <div>
+                <p className="text-base">IVA ({ivaPorc}%):</p>
+                <button className="text-blue-600 text-xs underline">
+                  cambiar
+                </button>
+              </div>
+              <p className="text-xl font-bold">{iva.toFixed(2)} €</p>
+            </div>
 
-                <div className="flex items-center justify-end gap-4">
-                  <button
-                    onClick={() => setShowIVASelector(!showIVASelector)}
-                    className="bg-orange-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-orange-600 transition"
-                  >
-                    Cambiar IVA
-                  </button>
-                  <div className="text-right">
-                    <span className="font-bold text-lg">IVA ({tipoIVA}%)</span>
-                    <span className="block text-3xl font-bold">
-                      {iva.toFixed(2)} €
-                    </span>
-                  </div>
-                </div>
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center">
+                <p className="text-base mr-2">Retención</p>
+                <select
+                  value={retencionPorc}
+                  onChange={(e) => setRetencionPorc(Number(e.target.value))}
+                  className="px-2 py-0.5 border border-gray-300 rounded text-sm"
+                >
+                  <option value={0}>0%</option>
+                  <option value={7}>7%</option>
+                  <option value={15}>15%</option>
+                </select>
+                <p className="ml-2 text-base">-</p>
+              </div>
+              <p className="text-xl font-bold">{retencion.toFixed(2)} €</p>
+            </div>
 
-                {tipoRetencion !== 0 ? (
-                  <div className="flex items-center justify-end gap-4">
-                    <button
-                      onClick={() =>
-                        setShowRetencionSelector(!showRetencionSelector)
-                      }
-                      className="bg-orange-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-orange-600 transition"
-                    >
-                      Cambiar
-                    </button>
-                    <div className="text-right">
-                      <span className="font-bold text-lg">
-                        RETENCIÓN ({tipoRetencion}%)
-                      </span>
-                      <span className="block text-3xl font-bold">
-                        -{retencion.toFixed(2)} €
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-right">
-                    <button
-                      onClick={() => setShowRetencionSelector(true)}
-                      className="bg-orange-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-orange-600 transition"
-                    >
-                      Añadir retención
-                    </button>
-                  </div>
-                )}
+            <div className="bg-orange-500 text-white rounded-xl p-3 text-center mb-3">
+              <p className="text-2xl font-bold">{total.toFixed(2)} €</p>
+            </div>
 
-                <div className="bg-orange-500 text-white p-6 rounded-xl mt-6">
-                  <p className="font-bold text-2xl">TOTAL</p>
-                  <p className="text-4xl font-bold">{total.toFixed(2)} €</p>
-                </div>
+            <p className="text-center text-gray-600 text-sm mb-4">
+              Importe final a pagar por el cliente
+            </p>
+
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={toggleTipo}
+                className="bg-green-600 text-white py-3 px-6 rounded-xl font-bold flex flex-col items-center shadow-xl"
+              >
+                <span className="text-xl">
+                  {esPresupuesto
+                    ? "Convertir a factura"
+                    : "Convertir a presupuesto"}
+                </span>
+                <span className="text-sm mt-1 opacity-90">
+                  {datos.numero} ·{" "}
+                  {new Date(datos.fecha).toLocaleDateString("es-ES")}
+                </span>
+              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={descargar}
+                  className="bg-white border border-gray-300 text-gray-800 py-1.5 px-5 rounded-xl font-bold text-sm"
+                >
+                  Descargar PDF
+                </button>
+                <button
+                  onClick={enviar}
+                  className="bg-white border border-gray-300 text-gray-800 py-1.5 px-5 rounded-xl font-bold text-sm"
+                >
+                  Enviar al cliente
+                </button>
               </div>
             </div>
           </div>
 
-          {showIVASelector && (
-            <div
-              className="fixed inset-0 flex items-center justify-center z-50 bg-black/40"
-              onClick={() => setShowIVASelector(false)}
-            >
-              <div
-                className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h3 className="text-2xl font-bold text-center mb-8 text-orange-600">
-                  Tipo de IVA
-                </h3>
-                <div className="space-y-4">
-                  {[21, 10, 4, 0].map((rate) => (
-                    <button
-                      key={rate}
-                      onClick={() => {
-                        setTipoIVA(rate);
-                        setShowIVASelector(false);
-                      }}
-                      className={`w-full py-4 rounded-xl font-bold text-lg transition ${
-                        rate === tipoIVA
-                          ? "bg-orange-500 text-white shadow-lg"
-                          : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                      }`}
-                    >
-                      {rate}%{" "}
-                      {rate === 21
-                        ? "(General)"
-                        : rate === 10
-                          ? "(Reducido)"
-                          : rate === 4
-                            ? "(Superreducido)"
-                            : "(Exento)"}
-                      {rate === tipoIVA && " ✓"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showRetencionSelector && (
-            <div
-              className="fixed inset-0 flex items-center justify-center z-50 bg-black/40"
-              onClick={() => setShowRetencionSelector(false)}
-            >
-              <div
-                className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h3 className="text-2xl font-bold text-center mb-8 text-orange-600">
-                  Tipo de retención IRPF
-                </h3>
-                <div className="space-y-4">
-                  <button
-                    onClick={() => {
-                      setTipoRetencion(15);
-                      setShowRetencionSelector(false);
-                    }}
-                    className={`w-full py-4 rounded-xl font-bold text-lg transition ${
-                      tipoRetencion === 15
-                        ? "bg-orange-500 text-white shadow-lg"
-                        : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                    }`}
-                  >
-                    15% (Estándar para profesionales)
-                    {tipoRetencion === 15 && " ✓"}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setTipoRetencion(7);
-                      setShowRetencionSelector(false);
-                    }}
-                    className={`w-full py-4 rounded-xl font-bold text-lg transition ${
-                      tipoRetencion === 7
-                        ? "bg-orange-500 text-white shadow-lg"
-                        : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                    }`}
-                  >
-                    7% (Primeros 3 años de actividad)
-                    {tipoRetencion === 7 && " ✓"}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setTipoRetencion(0);
-                      setShowRetencionSelector(false);
-                    }}
-                    className={`w-full py-4 rounded-xl font-bold text-lg transition ${
-                      tipoRetencion === 0
-                        ? "bg-orange-500 text-white shadow-lg"
-                        : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                    }`}
-                  >
-                    0% (Sin retención)
-                    {tipoRetencion === 0 && " ✓"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* ==================== NOTAS ==================== */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-32">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
             <textarea
               placeholder="Notas, condiciones de pago, IBAN, forma de pago..."
               value={notas}
@@ -673,25 +661,6 @@ export default function CrearFactura() {
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm resize-none"
             />
           </div>
-        </div>
-
-        {/* ==================== BOTONES FIJOS ==================== */}
-        <div className="mt-12 flex flex-col sm:flex-row gap-6 justify-center pb-20">
-          <button
-            onClick={descargar}
-            className="flex-1 bg-blue-700 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-800 transition flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition"
-          >
-            <Download className="h-6 w-6" />
-            DESCARGAR PDF
-          </button>
-
-          <button
-            onClick={enviar}
-            className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition"
-          >
-            <Send className="h-6 w-6" />
-            ENVIAR EMAIL
-          </button>
         </div>
 
         {/* QUITAR FLECHAS INPUT NUMBER */}
@@ -707,7 +676,7 @@ export default function CrearFactura() {
           }
         `}</style>
       </div>
-      <footer className="bg-gray-900 text-gray-300 py-12 mt-20">
+      <footer className="bg-gray-900 text-gray-300 py-12 mt-0">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 text-center md:text-left">
             <div>

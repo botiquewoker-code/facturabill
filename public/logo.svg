@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 200">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <g transform="translate(35,40)">
+    <!-- Documentos apilados -->
+    <rect x="0" y="30" width="90" height="60" rx="12" fill="#e6f0ff" stroke="#2563eb" stroke-width="3"/>
+    <rect x="20" y="15" width="90" height="60" rx="12" fill="#e9f8f1" stroke="#16a34a" stroke-width="3"/>
+    <rect x="40" y="0" width="90" height="60" rx="12" fill="#fff7d6" stroke="#facc15" stroke-width="3"/>
+    
+    <!-- Check verde arriba derecha, más dentro -->
+    <circle cx="105" cy="5" r="12" fill="#16a34a"/>
+    <path d="M98 5 l7 7 l14 -14" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Texto marca -->
+  <text x="200" y="120" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="700" letter-spacing="-1">
+    <tspan fill="#2563eb">Factura</tspan>
+    <tspan fill="#16a34a">bill</tspan>
+    <tspan fill="#facc15" font-size="44">.net</tspan>
+  </text>
+  
+  <!-- Claim -->
+  <text x="205" y="155" font-family="Inter, Arial, sans-serif" font-size="22" fill="#2563eb">
+    Crear facturas y presupuestos fácil
+  </text>
+</svg>
