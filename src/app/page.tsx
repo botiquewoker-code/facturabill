@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import ConfigPanel from "@/components/ConfigPanel";
 import {
@@ -293,11 +294,11 @@ export default function CrearFactura() {
                     </li>
                   </ul>
 
-                  <div className="mt-6">
+                  <Link href="registro">
                     <button className="w-full bg-blue-400 text-black py-3 px-6 rounded-xl font-bold hover:bg-yellow-600">
                       Regístrate gratis
                     </button>
-                  </div>
+                  </Link>
                 </div>
               </div>
             </div>
