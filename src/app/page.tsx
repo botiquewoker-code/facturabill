@@ -210,6 +210,67 @@ export default function CrearFactura() {
   };
   return (
     <>
+     <div className="min-h-screen bg-slate-50 pt-20 p-4">
+  <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-4">
+
+    {/* Panel izquierdo: Control rápido */}
+    <div className="bg-white rounded-2xl shadow-lg p-4 flex flex-col gap-4">
+      <input
+        type="text"
+        placeholder="Buscar cliente..."
+        className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+
+      <button className="bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition">
+        Añadir cliente
+      </button>
+      <button className="bg-green-600 text-white py-2 rounded-lg font-bold hover:bg-green-700 transition">
+        Nueva factura
+      </button>
+      <button className="bg-yellow-400 text-gray-900 py-2 rounded-lg font-bold hover:bg-yellow-500 transition">
+        Nuevo presupuesto
+      </button>
+
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold">Resumen</h3>
+        <ul className="text-gray-700 mt-2 space-y-1">
+          <li>Clientes: 12</li>
+          <li>Facturas Pendientes: 3</li>
+          <li>Facturas Pagadas: 15</li>
+        </ul>
+      </div>
+    </div>
+
+    {/* Panel derecho: Historial y contenido principal */}
+    <div className="md:col-span-3 bg-white rounded-2xl shadow-lg p-4">
+      <h2 className="text-xl font-semibold mb-4">Historial de facturas</h2>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-left border border-gray-200 rounded-lg">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-2 border-b">Cliente</th>
+              <th className="p-2 border-b">Factura</th>
+              <th className="p-2 border-b">Fecha</th>
+              <th className="p-2 border-b">Estado</th>
+              <th className="p-2 border-b">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="hover:bg-gray-50">
+              <td className="p-2 border-b">Cliente A</td>
+              <td className="p-2 border-b">#1234</td>
+              <td className="p-2 border-b">04/01/2026</td>
+              <td className="p-2 border-b text-green-600 font-bold">Pagada</td>
+              <td className="p-2 border-b">150 €</td>
+            </tr>
+            {/* Más filas */}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
