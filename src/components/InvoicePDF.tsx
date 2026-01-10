@@ -165,9 +165,8 @@ const FacturaPDF = ({ datos }: { datos: any }) => {
                 {isPresupuesto ? "PRESUPUESTO" : "FACTURA"}
               </Text>
               <Text style={styles.invoiceNumber}>
-                {isPresupuesto ? "PRES-" : "FAC-"}
-                {datos.año}-{datos.numero.toString().padStart(3, "0")} / Ficha{" "}
-                {datos.ficha}
+                {datos.numero} ·{" "}
+                {new Date(datos.fecha).toLocaleDateString("es-ES")}
               </Text>
             </View>
           </View>
