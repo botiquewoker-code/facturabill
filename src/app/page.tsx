@@ -3,6 +3,9 @@
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import ConfigPanel from "@/components/ConfigPanel";
+import InvoicePDF from "@/components/InvoicePDF";
+import clasica from "@/assets/clasica.jpg";
+
 import {
   Upload,
   Plus,
@@ -14,7 +17,6 @@ import {
   Settings,
 } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
-import InvoicePDF from "@/components/InvoicePDF";
 
 type Item = { desc: string; cant: number; precio: number };
 type Empresa = {
@@ -46,6 +48,25 @@ export default function CrearFactura() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
   const [nuevoPrecio, setNuevoPrecio] = useState(0);
+  const [numeroFactura, setNumeroFactura] = useState("001");
+
+  // Cargar el número desde localStorage **solo en el cliente**
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Esto asegura que estamos en el navegador
+      const guardado = localStorage.getItem("numeroFactura");
+      if (guardado) setNumeroFactura(guardado);
+    }
+  }, []);
+
+  // Guardar el número en localStorage cuando cambie
+  const handleNumeroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value;
+    setNumeroFactura(valor);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("numeroFactura", valor);
+    }
+  };
   const añadirItem = () => {
     if (nuevoDesc.trim() && nuevoCant > 0 && nuevoPrecio >= 0) {
       setItems([
@@ -152,8 +173,8 @@ export default function CrearFactura() {
     setEsPresupuesto((p) => !p);
     setNumero((p) =>
       p.startsWith("PRES")
-        ? p.replace("PRES", "FAC")
-        : p.replace("FAC", "PRES"),
+        ? p.replace("PRES", "FACT")
+        : p.replace("FACT", "PRES"),
     );
     toast.success(
       esPresupuesto ? "Convertido a Factura" : "Convertido a Presupuesto",
@@ -170,21 +191,34 @@ export default function CrearFactura() {
   };
 
   const descargar = async () => {
-    const { pdf } = await import("@react-pdf/renderer");
-    const blob = await pdf(<InvoicePDF datos={datos} />).toBlob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${esPresupuesto ? "Presupuesto" : "Factura"}_${numero}.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Descargado");
+    try {
+      const { pdf } = await import("@react-pdf/renderer");
+
+      const blob = await pdf(
+        <InvoicePDF datos={datos} numeroFactura={numeroFactura} />,
+      ).toBlob();
+
+      // Creamos enlace de descarga
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Factura_${numeroFactura}.pdf`; // Aquí usamos numeroFactura
+      a.click();
+      URL.revokeObjectURL(url);
+
+      toast.success("Descargado");
+    } catch (error) {
+      console.error("Error al generar factura:", error);
+      toast.error("Error al generar factura");
+    }
   };
 
   const enviar = async () => {
     if (!cliente.email) return toast.error("Falta email del cliente");
     const { pdf } = await import("@react-pdf/renderer");
-    const blob = await pdf(<InvoicePDF datos={datos} />).toBlob();
+    const blob = await pdf(
+      <InvoicePDF datos={datos} numeroFactura={numeroFactura} />,
+    ).toBlob();
     const formData = new FormData();
     formData.append(
       "file",
@@ -217,13 +251,6 @@ export default function CrearFactura() {
             <div className="max-w-7xl mx-auto px-6 py-1 flex items-center justify-between">
               {/* Logo Facturabill.net a la izquierda */}
               <img src="/logo.svg" alt="Facturabill.net" className="h-12" />
-
-              {/* Logo Veri*Factu a la derecha */}
-              <img
-                src="/verifactu-logo.jpg"
-                alt="Veri*Factu certificado"
-                className="h-10"
-              />
 
               {/* Botón menú hamburguesa */}
               <button
@@ -303,26 +330,18 @@ export default function CrearFactura() {
           )}
 
           {/* CARRUSEL CON PLANTILLAS REALES */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mt-20">
-            <h3 className="text-lg font-bold mb-6 text-center">
+          <div className="bg-white rounded-2xl shadow-lg p-0 mt-20">
+            <h3 className="text-lg font-bold mb-4 text-center">
               Elige plantilla
             </h3>
             <div className="overflow-x-auto whitespace-nowrap pb-4 -mx-6 px-6">
               <div className="inline-flex gap-6">
-                {[
-                  "modern",
-                  "elegant",
-                  "eco",
-                  "creative",
-                  "luxury",
-                  "minimal",
-                  "dark",
-                ].map((t) => (
+                {["clasica", "elegant", "creative", "minimal"].map((t) => (
                   <div key={t} className="shrink-0">
                     <img
                       src={`/previews/${t}.jpg`}
                       alt={t}
-                      className="w-80 h-auto rounded-xl shadow-2xl cursor-pointer hover:scale-105 transition-transform duration-300 border-4 border-transparent hover:border-indigo-500"
+                      className="w-40 h-auto rounded-xl shadow-2xl cursor-pointer hover:scale-105 transition-transform duration-300 border-4 border-transparent hover:border-indigo-500"
                       onClick={() => setPlantilla(t as any)}
                     />
                     <p className="text-center mt-3 text-sm font-medium capitalize">
@@ -332,6 +351,16 @@ export default function CrearFactura() {
                 ))}
               </div>
             </div>
+          </div>
+          <div className="flex items-center gap-2 bg-white shadow-md rounded p-1 w-max mt-3">
+            <span className="text-blue-500 font-semibold">N° de factura:</span>
+            <input
+              type="text"
+              value={numeroFactura}
+              onChange={handleNumeroChange}
+              className="w-16 p-1 text-center border-blue-300 rounded bg-yellow-300 font-bold"
+              placeholder="001"
+            />
           </div>
           <div className="grid sm:grid-cols-2 gap-6 mb-6">
             {/* EMISOR */}
@@ -612,7 +641,7 @@ export default function CrearFactura() {
                     : "Convertir a presupuesto"}
                 </span>
                 <span className="text-sm mt-1 opacity-90">
-                  {datos.numero} ·{" "}
+                  {esPresupuesto ? "PRES" : "FACT"}-{numeroFactura} ·{" "}
                   {new Date(datos.fecha).toLocaleDateString("es-ES")}
                 </span>
               </button>

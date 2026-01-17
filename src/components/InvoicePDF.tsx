@@ -129,7 +129,13 @@ const styles = StyleSheet.create({
   notesText: { fontSize: 11, lineHeight: 1.5 },
 });
 
-const FacturaPDF = ({ datos }: { datos: any }) => {
+const InvoicePDF = ({
+  datos,
+  numeroFactura,
+}: {
+  datos: any;
+  numeroFactura: string;
+}) => {
   console.log("Datos recibidos en PDF:", datos);
   const isPresupuesto = datos.esPresupuesto;
   const baseImponible =
@@ -165,7 +171,8 @@ const FacturaPDF = ({ datos }: { datos: any }) => {
                 {isPresupuesto ? "PRESUPUESTO" : "FACTURA"}
               </Text>
               <Text style={styles.invoiceNumber}>
-                {datos.numero} ·{" "}
+                {datos.esPresupuesto ? "PRES-" : "FACT-"}
+                {numeroFactura} -{" "}
                 {new Date(datos.fecha).toLocaleDateString("es-ES")}
               </Text>
             </View>
@@ -338,4 +345,4 @@ const FacturaPDF = ({ datos }: { datos: any }) => {
   );
 };
 
-export default FacturaPDF;
+export default InvoicePDF;
