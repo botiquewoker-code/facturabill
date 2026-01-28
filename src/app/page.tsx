@@ -3,8 +3,9 @@
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import ConfigPanel from "@/components/ConfigPanel";
+import PlantillaNueva from "@/components/PlantillaNueva";
 import InvoicePDF from "@/components/InvoicePDF";
-import clasica from "@/assets/clasica.jpg";
+import Image from "next/image";
 
 import {
   Upload,
@@ -37,29 +38,50 @@ type Cliente = {
   telefono: string;
   email: string;
 };
+const mapaPlantillas: Record<string, "InvoicePDF" | "PlantillaNueva"> = {
+  Clasica: "InvoicePDF",
+  elegant: "PlantillaNueva",
+  creative: "InvoicePDF",
+  minimal: "PlantillaNueva",
+};
 
 export default function CrearFactura() {
+  const [editarIva, setEditarIva] = useState(false);
   const [esPresupuesto, setEsPresupuesto] = useState(true);
   const [numero, setNumero] = useState(`PRES-${new Date().getFullYear()}-001`);
-  const [mostrarConfig, setMostrarConfig] = useState(false);
   const [fecha] = useState(new Date().toISOString().split("T")[0]);
+  const [nuevoPrecio, setNuevoPrecio] = useState(0);
+  const [numeroFactura, setNumeroFactura] = useState("001");
+  const [nombre, setNombre] = useState("");
+  const [direccion, setDireccion] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [email, setEmail] = useState("");
+  const [plantilla, setPlantilla] = useState<"InvoicePDF" | "PlantillaNueva">(
+    "InvoicePDF",
+  );
+  const datosUsuario = {
+    nombre,
+    direccion,
+    telefono,
+    email,
+    fecha,
+    numeroFactura,
+    nuevoPrecio,
+    esPresupuesto,
+  };
+  const [mostrarConfig, setMostrarConfig] = useState(false);
   const [nuevoDesc, setNuevoDesc] = useState("");
   const [nuevoCant, setNuevoCant] = useState(1);
   const [menuOpen, setMenuOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
-  const [nuevoPrecio, setNuevoPrecio] = useState(0);
-  const [numeroFactura, setNumeroFactura] = useState("001");
 
-  // Cargar el número desde localStorage **solo en el cliente**
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // Esto asegura que estamos en el navegador
       const guardado = localStorage.getItem("numeroFactura");
       if (guardado) setNumeroFactura(guardado);
     }
   }, []);
 
-  // Guardar el número en localStorage cuando cambie
   const handleNumeroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const valor = e.target.value;
     setNumeroFactura(valor);
@@ -78,9 +100,6 @@ export default function CrearFactura() {
       setNuevoPrecio(0);
     }
   };
-  const [plantilla, setPlantilla] = useState<"clasica" | "moderna" | "minimal">(
-    "moderna",
-  );
 
   const [empresa, setEmpresa] = useState<Empresa>({
     nombre: "",
@@ -117,11 +136,10 @@ export default function CrearFactura() {
       const datos = JSON.parse(guardado);
       setEmpresa(datos);
     }
-  }, []); // solo al montar
+  }, []);
 
   useEffect(() => {
     if (empresa.nombre || empresa.nif || empresa.direccion) {
-      // evita guardar vacío al inicio
       localStorage.setItem("datosEmpresa", JSON.stringify(empresa));
     }
   }, [empresa]); // se ejecuta cada vez que empresa cambia
@@ -194,50 +212,62 @@ export default function CrearFactura() {
     try {
       const { pdf } = await import("@react-pdf/renderer");
 
+      const Componente =
+        plantilla === "InvoicePDF" ? InvoicePDF : PlantillaNueva;
+      console.log("InvoicePDF:", InvoicePDF);
+
       const blob = await pdf(
-        <InvoicePDF datos={datos} numeroFactura={numeroFactura} />,
+        <Componente datos={datos} numeroFactura={numeroFactura} />,
       ).toBlob();
 
-      // Creamos enlace de descarga
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Factura_${numeroFactura}.pdf`; // Aquí usamos numeroFactura
+      a.download = `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
-
-      toast.success("Descargado");
     } catch (error) {
-      console.error("Error al generar factura:", error);
-      toast.error("Error al generar factura");
+      console.error(error);
     }
   };
 
   const enviar = async () => {
     if (!cliente.email) return toast.error("Falta email del cliente");
+
     const { pdf } = await import("@react-pdf/renderer");
+
+    const Componente = plantilla === "InvoicePDF" ? InvoicePDF : PlantillaNueva;
+
     const blob = await pdf(
-      <InvoicePDF datos={datos} numeroFactura={numeroFactura} />,
+      <Componente datos={datosUsuario} numeroFactura={numeroFactura} />,
     ).toBlob();
+
     const formData = new FormData();
     formData.append(
       "file",
       blob,
-      `${esPresupuesto ? "Presupuesto" : "Factura"}_${numero}.pdf`,
+      `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`,
     );
     formData.append("to", cliente.email);
     formData.append(
       "subject",
-      `${esPresupuesto ? "Presupuesto" : "Factura"} ${numero} - ${nombreEmpresa}`,
+      `${esPresupuesto ? "Presupuesto" : "Factura"} ${numeroFactura} - ${nombreEmpresa}`,
     );
     formData.append(
       "text",
-      `Hola,\n\nAdjunto ${esPresupuesto ? "el presupuesto" : "la factura"} ${numero}.\n\nGracias.\n${nombreEmpresa}`,
+      `Hola,
+
+Adjunto ${esPresupuesto ? "el presupuesto" : "la factura"} ${numeroFactura}.
+
+Gracias.
+${nombreEmpresa}`,
     );
+
     const res = await fetch("/api/enviar-email", {
       method: "POST",
       body: formData,
     });
+
     toast[res.ok ? "success" : "error"](res.ok ? "Enviado" : "Error");
   };
   return (
@@ -261,88 +291,84 @@ export default function CrearFactura() {
               </button>
             </div>
           </header>
-
           {/* Menú hamburguesa lateral - blanco puro, logo Veri*Factu */}
           {menuOpen && (
             <div
-              className="fixed inset-0 z-50"
+              className="fixed inset-0 z-50 bg-gray-100/90"
               onClick={() => setMenuOpen(false)}
             >
               <div
-                className="absolute right-0 top-0 h-full w-72 bg-white shadow-2xl"
+                className="absolute right-3 top-16 w-64 rounded-2xl bg-[#F8f8ff] shadow-2xl p-6"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="p-6">
+                {/* MENÚ */}
+                <ul className="space-y-4 text-[17px] font-semibold">
+                  <li>
+                    <Link href="/" className="block">
+                      Historial de facturas
+                    </Link>
+                  </li>
+
+                  <li>
+                    <Link href="/" className="block">
+                      Clientes
+                    </Link>
+                  </li>
+
+                  <li>
+                    <Link href="/como-funciona" className="block">
+                      Cómo funciona
+                    </Link>
+                  </li>
+
+                  <li>
+                    <Link href="/verifactu" className="block">
+                      VeriFactu
+                    </Link>
+                  </li>
+
+                  <li>
+                    <Link href="/" className="block">
+                      Precios
+                    </Link>
+                  </li>
+                </ul>
+
+                {/* SEPARADOR */}
+                <div className="my-6 h-px bg-gray-200" />
+
+                {/* BOTONES */}
+                <div className="space-y-3">
                   <button
-                    onClick={() => setMenuOpen(false)}
-                    className="absolute top-4 right-4 text-2xl text-gray-800"
+                    disabled
+                    className="w-full rounded-xl bg-grren-100 py-3 font-semibold text-gray-900 cursor-not-allowed"
                   >
-                    ×
+                    Registro en desarrollo
                   </button>
 
-                  <ul className="space-y-6 mt-8">
-                    <li>
-                      <button
-                        onClick={() => setVerifactuOpen(true)}
-                        className="flex items-center gap-3 w-full py-2"
-                      >
-                        <img
-                          src="verifactu-logo.jpg"
-                          alt="Veri*Factu"
-                          className="h-16"
-                        />
-                      </button>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="text-lg text-black hover:text-blue-950 block"
-                      >
-                        Precios
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="text-lg text-black hover:text-blue-950 block"
-                      >
-                        Cómo funciona
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="text-lg text-black hover:text-blue-950 block"
-                      >
-                        ¿Qué podemos mejorar?
-                      </a>
-                    </li>
-                  </ul>
-
-                  <Link href="registro">
-                    <button className="w-full bg-blue-400 text-black py-3 px-6 rounded-xl font-bold hover:bg-yellow-600">
-                      Regístrate gratis
-                    </button>
-                  </Link>
+                  <button className="w-full rounded-xl bg-amber-400 py-3 font-semibold text-white hover:bg-black-">
+                    Iniciar sesión
+                  </button>
                 </div>
               </div>
             </div>
           )}
-
-          {/* CARRUSEL CON PLANTILLAS REALES */}
-          <div className="bg-white rounded-2xl shadow-lg p-0 mt-20">
+          /* CARRUSEL CON PLANTILLAS REALES */
+          <div className="p-0 mt-8">
             <h3 className="text-lg font-bold mb-4 text-center">
               Elige plantilla
             </h3>
             <div className="overflow-x-auto whitespace-nowrap pb-4 -mx-6 px-6">
               <div className="inline-flex gap-6">
-                {["clasica", "elegant", "creative", "minimal"].map((t) => (
+                {["Clasica", "elegant", "creative", "minimal"].map((t) => (
                   <div key={t} className="shrink-0">
                     <img
                       src={`/previews/${t}.jpg`}
                       alt={t}
-                      className="w-40 h-auto rounded-xl shadow-2xl cursor-pointer hover:scale-105 transition-transform duration-300 border-4 border-transparent hover:border-indigo-500"
-                      onClick={() => setPlantilla(t as any)}
+                      className={`w-40 h-auto rounded-xl shadow-2xl cursor-pointer hover:scale-105 transition border-4
+                                                                                                                   ${plantilla === mapaPlantillas[t] ? "border-blue-500" : "border-transparent"}
+`}
+                      onClick={() => setPlantilla(mapaPlantillas[t])}
                     />
                     <p className="text-center mt-3 text-sm font-medium capitalize">
                       {t}
@@ -489,7 +515,6 @@ export default function CrearFactura() {
               </div>
             </div>
           </div>
-
           {/* LOGO – CORREGIDO Y FUNCIONA 100% */}
           <div className="bg-white rounded-2xl p-6 text-center mb-6 shadow">
             <label className="cursor-pointer block">
@@ -515,7 +540,6 @@ export default function CrearFactura() {
               </p>
             </label>
           </div>
-
           {/* ==================== CONCEPTOS – FUNCIONA 100% EN MÓVIL Y TURBOPACK ==================== */}
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
             <h3 className="font-bold text-gray-800 text-lg mb-5">Conceptos</h3>
@@ -629,11 +653,10 @@ export default function CrearFactura() {
             <p className="text-center text-gray-600 text-sm mb-4">
               Importe final a pagar por el cliente
             </p>
-
             <div className="flex gap-3 justify-center">
               <button
                 onClick={toggleTipo}
-                className="bg-green-600 text-white py-3 px-6 rounded-xl font-bold flex flex-col items-center shadow-xl"
+                className="bg-green-600 text-white py-1 px-3 rounded-xl font-bold flex flex-col items-center shadow-xl"
               >
                 <span className="text-xl">
                   {esPresupuesto
@@ -661,7 +684,6 @@ export default function CrearFactura() {
               </div>
             </div>
           </div>
-
           {/* ==================== NOTAS ==================== */}
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
             <textarea

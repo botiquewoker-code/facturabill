@@ -204,13 +204,13 @@ const InvoicePDF = ({
               {datos.cliente.nombre}
             </Text>
             <Text style={{ fontSize: 11, marginBottom: 1 }}>
-              DNI: {datos.cliente.nif}
+              {datos.cliente.nif}
             </Text>
             <Text style={{ fontSize: 11, marginBottom: 1 }}>
-              TEL: {datos.cliente.telefono}
+              {datos.cliente.telefono}
             </Text>
             <Text style={{ fontSize: 11, marginBottom: 1 }}>
-              EMAIL: {datos.cliente.email}
+              {datos.cliente.email}
             </Text>
           </View>
 
