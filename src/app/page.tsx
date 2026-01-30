@@ -294,7 +294,7 @@ ${nombreEmpresa}`,
           {/* Menú hamburguesa lateral - blanco puro, logo Veri*Factu */}
           {menuOpen && (
             <div
-              className="fixed inset-0 z-50 bg-gray-100/90"
+              className="fixed inset-0 z-50"
               onClick={() => setMenuOpen(false)}
             >
               <div
@@ -355,7 +355,7 @@ ${nombreEmpresa}`,
           )}
           /* CARRUSEL CON PLANTILLAS REALES */
           <div className="p-0 mt-8">
-            <h3 className="text-lg font-bold mb-4 text-center">
+            <h3 className="text-lg font-bold mb-5 text-center">
               Elige plantilla
             </h3>
             <div className="overflow-x-auto whitespace-nowrap pb-4 -mx-6 px-6">
