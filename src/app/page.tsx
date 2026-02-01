@@ -91,8 +91,8 @@ export default function CrearFactura() {
   };
   const añadirItem = () => {
     if (nuevoDesc.trim() && nuevoCant > 0 && nuevoPrecio >= 0) {
-      setItems([
-        ...items,
+      setconceptos([
+        ...conceptos,
         { desc: nuevoDesc, cant: nuevoCant, precio: nuevoPrecio },
       ]);
       setNuevoDesc("");
@@ -119,7 +119,7 @@ export default function CrearFactura() {
     telefono: "",
     email: "",
   });
-  const [items, setItems] = useState<Item[]>([
+  const [conceptos, setconceptos] = useState([
     { desc: "", cant: 1, precio: 0 },
   ]);
   const [logo, setLogo] = useState<string>("");
@@ -127,9 +127,6 @@ export default function CrearFactura() {
   const [showIVASelector, setShowIVASelector] = useState(false);
   const [ivaPorc, setIvaPorc] = useState(21);
   const [verifactuOpen, setVerifactuOpen] = useState(false);
-  const [retencionPorc, setRetencionPorc] = useState(0);
-  const [tipoRetencion, setTipoRetencion] = useState(0); // 0% por defecto
-  const [showRetencionSelector, setShowRetencionSelector] = useState(false);
   useEffect(() => {
     const guardado = localStorage.getItem("datosEmpresa");
     if (guardado) {
@@ -142,7 +139,7 @@ export default function CrearFactura() {
     if (empresa.nombre || empresa.nif || empresa.direccion) {
       localStorage.setItem("datosEmpresa", JSON.stringify(empresa));
     }
-  }, [empresa]); // se ejecuta cada vez que empresa cambia
+  }, [empresa]);
 
   const [notas, setNotas] = useState("");
   useEffect(() => {
@@ -165,10 +162,9 @@ export default function CrearFactura() {
     localStorage.setItem("notasUsuario", notas);
   }, [notas]);
 
-  const subtotal = items.reduce((acc, i) => acc + i.cant * i.precio, 0);
+  const subtotal = conceptos.reduce((acc, i) => acc + i.cant * i.precio, 0);
   const iva = subtotal * (tipoIVA / 100);
-  const retencion = subtotal * (tipoRetencion / 100);
-  const total = subtotal + iva - retencion;
+  const total = subtotal + iva;
 
   const datos = {
     esPresupuesto,
@@ -176,7 +172,7 @@ export default function CrearFactura() {
     fecha,
     empresa,
     cliente,
-    items,
+    conceptos,
     logo,
     plantilla,
     subtotal,
@@ -298,7 +294,7 @@ ${nombreEmpresa}`,
               onClick={() => setMenuOpen(false)}
             >
               <div
-                className="absolute right-3 top-16 w-64 rounded-2xl bg-[#F8f8ff] shadow-2xl p-6"
+                className="absolute right-3 top-16 w-64 rounded-2xl bg-blue-50 shadow-2xl p-6"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* MENÚ */}
@@ -354,11 +350,11 @@ ${nombreEmpresa}`,
             </div>
           )}
           /* CARRUSEL CON PLANTILLAS REALES */
-          <div className="p-0 mt-8">
-            <h3 className="text-lg font-bold mb-5 text-center">
+          <div className="p-0 mt-8 mb-6">
+            <h3 className="text-lg font-bold mb-6 text-center">
               Elige plantilla
             </h3>
-            <div className="overflow-x-auto whitespace-nowrap pb-4 -mx-6 px-6">
+            <div className="overflow-x-auto whitespace-nowrap pb-2 -mx-6 px-6">
               <div className="inline-flex gap-6">
                 {["Clasica", "elegant", "creative", "minimal"].map((t) => (
                   <div key={t} className="shrink-0">
@@ -378,145 +374,167 @@ ${nombreEmpresa}`,
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-white shadow-md rounded p-1 w-max mt-3">
-            <span className="text-blue-500 font-semibold">N° de factura:</span>
-            <input
-              type="text"
-              value={numeroFactura}
-              onChange={handleNumeroChange}
-              className="w-16 p-1 text-center border-blue-300 rounded bg-yellow-300 font-bold"
-              placeholder="001"
-            />
+          <div className="mb-6">
+            <div className="inline-flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-3 py-2 shadow-sm">
+              <span className="text-sm font-semibold text-blue-700">
+                Nº factura
+              </span>
+
+              <input
+                type="text"
+                value={numeroFactura}
+                onChange={handleNumeroChange}
+                placeholder="001"
+                className="w-20 text-center rounded-xl border border-blue-300 bg-white font-bold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none py-1"
+              />
+            </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-6 mb-6">
             {/* EMISOR */}
-            <div className="bg-blue-40 rounded-2xl p-5">
-              <h3 className="font-bold text-blue-500 mb-3 text-sm">Emisor</h3>
-              <div className="space-y-3">
+            <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200 shadow-sm">
+              <h3 className="text-sm font-semibold text-blue-700 mb-5">
+                Datos de su empresa
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input
                   placeholder="Nombre / Razón social"
                   value={empresa.nombre}
                   onChange={(e) =>
                     setEmpresa({ ...empresa, nombre: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
                 />
+
                 <input
                   placeholder="NIF/CIF"
                   value={empresa.nif}
                   onChange={(e) =>
                     setEmpresa({ ...empresa, nif: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
                 />
+
                 <input
                   placeholder="Dirección"
                   value={empresa.direccion}
                   onChange={(e) =>
                     setEmpresa({ ...empresa, direccion: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                  className="md:col-span-2 w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
                 />
+
                 <input
                   placeholder="Ciudad"
                   value={empresa.ciudad}
                   onChange={(e) =>
                     setEmpresa({ ...empresa, ciudad: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
                 />
+
                 <input
                   placeholder="C.P."
                   value={empresa.cp}
                   onChange={(e) =>
                     setEmpresa({ ...empresa, cp: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
                 />
+
                 <input
                   placeholder="Teléfono"
                   value={empresa.telefono}
                   onChange={(e) =>
                     setEmpresa({ ...empresa, telefono: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
                 />
+
                 <input
                   placeholder="Email"
                   value={empresa.email}
                   onChange={(e) =>
                     setEmpresa({ ...empresa, email: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                  className="md:col-span-2 w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
                 />
               </div>
             </div>
-
             {/* CLIENTE */}
-            <div className="bg-blue-40 rounded-2xl p-5">
-              <h3 className="font-bold text-blue-500 mb-3 text-sm">Cliente</h3>
-              <div className="space-y-3">
+            <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200 shadow-sm">
+              <h3 className="text-sm font-semibold text-blue-700 mb-5">
+                Datos de Cliente
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input
                   placeholder="Nombre / Razón social"
                   value={cliente.nombre}
                   onChange={(e) =>
                     setCliente({ ...cliente, nombre: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
                 />
+
                 <input
-                  placeholder="DNI/NIE"
+                  placeholder="DNI / NIE"
                   value={cliente.nif}
                   onChange={(e) =>
                     setCliente({ ...cliente, nif: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
                 />
+
                 <input
                   placeholder="Dirección"
                   value={cliente.direccion}
                   onChange={(e) =>
                     setCliente({ ...cliente, direccion: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                  className="md:col-span-2 w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
                 />
+
                 <input
                   placeholder="Ciudad"
                   value={cliente.ciudad}
                   onChange={(e) =>
                     setCliente({ ...cliente, ciudad: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
                 />
+
                 <input
                   placeholder="C.P."
                   value={cliente.cp}
                   onChange={(e) =>
                     setCliente({ ...cliente, cp: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
                 />
+
                 <input
                   placeholder="Teléfono"
                   value={cliente.telefono}
                   onChange={(e) =>
                     setCliente({ ...cliente, telefono: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
                 />
+
                 <input
                   placeholder="Email"
                   value={cliente.email}
                   onChange={(e) =>
                     setCliente({ ...cliente, email: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-200 text-sm focus:ring-2 focus:ring-blue-400 outline-none"
+                  className="md:col-span-2 w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
                 />
               </div>
             </div>
           </div>
           {/* LOGO – CORREGIDO Y FUNCIONA 100% */}
-          <div className="bg-white rounded-2xl p-6 text-center mb-6 shadow">
+          <div className="bg-blue-50 rounded-2xl p-6 text-center mb-6 shadow">
             <label className="cursor-pointer block">
               <input
                 type="file"
@@ -531,7 +549,7 @@ ${nombreEmpresa}`,
                   className="mx-auto max-h-24 rounded-lg shadow-md"
                 />
               ) : (
-                <div className="h-32 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center">
+                <div className="h-32 border-2 border-dashed border-green-500 rounded-xl flex items-center justify-center">
                   <p className="text-gray-500 text-sm">Toca para subir logo</p>
                 </div>
               )}
@@ -541,96 +559,88 @@ ${nombreEmpresa}`,
             </label>
           </div>
           {/* ==================== CONCEPTOS – FUNCIONA 100% EN MÓVIL Y TURBOPACK ==================== */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-            <h3 className="font-bold text-gray-800 text-lg mb-5">Conceptos</h3>
+          <div className="bg-blue-50 rounded-2xl border border-blue-100 shadow-sm p-6 mb-6">
+            <h3 className="text-lg font-semibold text-blue-700 mb-6">
+              Conceptos
+            </h3>
 
-            {items.map((item, i) => (
+            {conceptos.map((c, i) => (
               <div
                 key={i}
-                className="grid grid-cols-12 gap-3 items-center mb-4"
+                className="grid grid-cols-12 gap-3 items-center mb-3"
               >
-                <div className="col-span-6">
-                  <input
-                    type="text"
-                    placeholder="Descripción del concepto"
-                    value={item.desc}
-                    onChange={(e) => {
-                      const newItems = [...items];
-                      newItems[i].desc = e.target.value;
-                      setItems(newItems);
-                    }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                  />
+                {/* Descripción */}
+                <input
+                  placeholder="Descripción"
+                  value={c.desc}
+                  onChange={(e) => {
+                    const copia = [...conceptos];
+                    copia[i].desc = e.target.value;
+                    setconceptos(copia);
+                  }}
+                  className="col-span-5 px-4 py-2 rounded-xl border border-blue-200 text-sm bg-white focus:ring-2 focus:ring-blue-400 outline-none"
+                />
+
+                {/* Cantidad */}
+                <input
+                  type="number"
+                  min="1"
+                  value={c.cant}
+                  onChange={(e) => {
+                    const copia = [...conceptos];
+                    copia[i].cant = Number(e.target.value);
+                    setconceptos(copia);
+                  }}
+                  className="col-span-2 px-3 py-2 rounded-xl border border-blue-200 text-sm text-center bg-white focus:ring-2 focus:ring-blue-400 outline-none"
+                />
+
+                {/* Precio */}
+                <input
+                  type="number"
+                  step="0.01"
+                  value={c.precio}
+                  onChange={(e) => {
+                    const copia = [...conceptos];
+                    copia[i].precio = Number(e.target.value);
+                    setconceptos(copia);
+                  }}
+                  className="col-span-2 px-3 py-2 rounded-xl border border-blue-200 text-sm text-right bg-white focus:ring-2 focus:ring-blue-400 outline-none"
+                />
+
+                {/* Total */}
+                <div className="col-span-2 px-3 py-2 rounded-xl bg-blue-100 text-sm text-right font-semibold text-blue-700">
+                  {(c.cant * c.precio).toFixed(2)} €
                 </div>
 
-                <div className="col-span-2">
-                  <input
-                    type="tel"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="1"
-                    value={item.cant || ""}
-                    onChange={(e) => {
-                      const val =
-                        e.target.value === ""
-                          ? 0
-                          : Number(e.target.value.replace(/\D/g, "")) || 0;
-                      const newItems = [...items];
-                      newItems[i].cant = val;
-                      setItems(newItems);
-                    }}
-                    className="w-full px-4 py-3 text-center border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <input
-                    type="tel"
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    value={item.precio || ""}
-                    onChange={(e) => {
-                      const raw = e.target.value
-                        .replace(/[^0-9.,]/g, "")
-                        .replace(",", ".");
-                      const val = raw === "" ? 0 : Number(raw) || 0;
-                      const newItems = [...items];
-                      newItems[i].precio = val;
-                      setItems(newItems);
-                    }}
-                    className="w-full px-4 py-3 text-center border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                  />
-                </div>
-
-                <div className="col-span-1 text-right font-bold text-gray-800">
-                  {(item.cant * item.precio || 0).toFixed(2)} €
-                </div>
-
-                <div className="col-span-1">
-                  <button
-                    onClick={() =>
-                      setItems(items.filter((_, idx) => idx !== i))
-                    }
-                    className="w-full flex justify-center"
-                  >
-                    <Trash2 className="h-5 w-5 text-red-600 hover:text-red-800" />
-                  </button>
-                </div>
+                {/* Eliminar */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setconceptos(conceptos.filter((_, index) => index !== i))
+                  }
+                  className="col-span-1 text-red-500 hover:text-red-700 text-sm"
+                >
+                  ✕
+                </button>
               </div>
             ))}
 
+            {/* Añadir */}
             <button
+              type="button"
               onClick={() =>
-                setItems([...items, { desc: "", cant: 0, precio: 0 }])
+                setconceptos([
+                  ...conceptos,
+                  { desc: "", cant: 1, precio: 0 },
+                ])
               }
-              className="flex items-center gap-2 text-indigo-600 font-semibold hover:text-indigo-800 transition"
+              className="mt-3 text-sm font-medium text-blue-600 hover:text-blue-800"
             >
-              <Plus className="h-5 w-5" />
-              Añadir concepto
+              + Añadir concepto
             </button>
           </div>
           {/* Cuadro de totales compacto y bonito */}
-          <div className="bg-orange-50 rounded-2xl p-4 shadow-md mb-8">
+          <div className="bg-orange-50 rounded-2xl p-4 shadow-md mb-6">
             <div className="mb-3">
               <p className="text-base font-bold">Base imponible</p>
               <p className="text-xl font-bold">{subtotal.toFixed(2)} €</p>
@@ -685,7 +695,7 @@ ${nombreEmpresa}`,
             </div>
           </div>
           {/* ==================== NOTAS ==================== */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div className="bg-blue-50 rounded-2xl shadow-lg p-6 mb-8">
             <textarea
               placeholder="Notas, condiciones de pago, IBAN, forma de pago..."
               value={notas}
