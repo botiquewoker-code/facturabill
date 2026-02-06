@@ -629,10 +629,7 @@ ${nombreEmpresa}`,
             <button
               type="button"
               onClick={() =>
-                setconceptos([
-                  ...conceptos,
-                  { desc: "", cant: 1, precio: 0 },
-                ])
+                setconceptos([...conceptos, { desc: "", cant: 1, precio: 0 }])
               }
               className="mt-3 text-sm font-medium text-blue-600 hover:text-blue-800"
             >
