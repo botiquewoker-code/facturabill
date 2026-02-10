@@ -214,22 +214,27 @@ type Item = {
 const PlantillaNueva = ({
   datos,
   numeroFactura,
-  conceptos = [], // ← Añade esto con fallback vacío
+  conceptos = [],
 }: {
   datos: any;
   numeroFactura: string;
+  conceptos?: { desc: string; cant: number; precio: number }[];
 }) => {
   console.log("Datos recibidos en PDF:", datos);
+
   const isPresupuesto = Boolean(datos?.esPresupuesto);
+
   const ivaPct: number = Number(
     datos?.ivaPct ?? datos?.iva ?? datos?.tipoIVA ?? 21,
   );
+
   const baseImponible = conceptos.reduce(
-    (acc: number, item) => acc + (item.precio ?? 0) * (item.cant ?? 1),
+    (acc: number, item) =>
+      acc + (Number(item.precio) || 0) * (Number(item.cant) || 1),
     0,
   );
 
-  const ivaImporte = baseImponible * 0.21;
+  const ivaImporte = baseImponible * (ivaPct / 100);
   const total = baseImponible + ivaImporte;
   return (
     <Document>

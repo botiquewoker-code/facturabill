@@ -224,12 +224,11 @@ export default function CrearFactura() {
       ).toBlob();
 
       const url = URL.createObjectURL(blob);
-const a = document.createElement("a");
-a.href = url;
- a.download = `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`;
-a.click();
-URL.revokeObjectURL(url);
-
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error(error);
     }

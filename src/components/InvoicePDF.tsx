@@ -132,19 +132,27 @@ const styles = StyleSheet.create({
 const InvoicePDF = ({
   datos,
   numeroFactura,
-  conceptos = [], // ← Añade esto con fallback vacío
+  conceptos = [],
+  empresa,
+  cliente,
+  esPresupuesto,
 }: {
   datos: any;
   numeroFactura: string;
   conceptos: { desc: string; cant: number; precio: number }[];
+  empresa?: any;
+  cliente?: any;
+  esPresupuesto?: boolean;
 }) => {
   console.log("Datos recibidos en PDF:", datos);
-  const isPresupuesto = datos.esPresupuesto;
-  const baseImponible =
-    datos.items?.reduce(
-      (acc: number, item: any) => acc + item.precio * item.cant,
-      0,
-    ) || 0;
+
+  const isPresupuesto = Boolean(datos?.esPresupuesto);
+
+  const baseImponible = conceptos.reduce(
+    (acc: number, item) =>
+      acc + (Number(item.precio) || 0) * (Number(item.cant) || 1),
+    0,
+  );
   return (
     <Document>
       <Page size="A4" style={styles.page}>
