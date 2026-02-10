@@ -214,6 +214,7 @@ type Item = {
 const PlantillaNueva = ({
   datos,
   numeroFactura,
+  conceptos = [], // ← Añade esto con fallback vacío
 }: {
   datos: any;
   numeroFactura: string;
@@ -223,8 +224,8 @@ const PlantillaNueva = ({
   const ivaPct: number = Number(
     datos?.ivaPct ?? datos?.iva ?? datos?.tipoIVA ?? 21,
   );
-  const baseImponible = (datos?.items ?? []).reduce(
-    (acc: number, item: any) => acc + Number(item.precio),
+  const baseImponible = conceptos.reduce(
+    (acc: number, item) => acc + (item.precio ?? 0) * (item.cant ?? 1),
     0,
   );
 
@@ -293,58 +294,71 @@ const PlantillaNueva = ({
           </View>
 
           {/* Filas */}
-          {Array.isArray(datos?.items) && datos.items.length > 0 ? (
-            datos.items.map((item: any, i: number) => {
-              const cant = Number(item?.cant ?? 0);
-              const precio = Number(item?.precio ?? 0);
-              const totalLinea = cant * precio;
+          {conceptos.map((item, i) => {
+            const cant = Number(item.cant ?? 1);
+            const precio = Number(item.precio ?? 0);
+            const totalLinea = cant * precio;
 
-              return (
-                <View key={i} style={styles.tableRow}>
-                  <Text style={styles.colConcept}>
-                    {item?.desc && String(item.desc).trim() !== ""
-                      ? item.desc
-                      : "—"}
-                  </Text>
-                  <Text style={styles.colQty}>{cant}</Text>
-                  <Text style={styles.colPrice}>{precio.toFixed(2)} €</Text>
-                  <Text style={styles.colTotal}>{totalLinea.toFixed(2)} €</Text>
-                </View>
-              );
-            })
-          ) : (
-            <View style={styles.tableRow}>
-              <Text style={styles.colConcept}>Sin conceptos</Text>
-              <Text style={styles.colQty}>—</Text>
-              <Text style={styles.colPrice}>—</Text>
-              <Text style={styles.colTotal}>—</Text>
-            </View>
-          )}
+            return (
+              <View key={i} style={styles.tableRow}>
+                <Text style={styles.colConcept}>
+                  {item.desc && String(item.desc).trim() !== ""
+                    ? item.desc
+                    : "-"}
+                </Text>
+                <Text style={styles.colQty}>{cant}</Text>
+                <Text style={styles.colPrice}>{precio.toFixed(2)} €</Text>
+                <Text style={styles.colTotal}>{totalLinea.toFixed(2)} €</Text>
+              </View>
+            );
+          })}
         </View>
-        {/* Subtotal / Base imponible */}
+        ); ) ) : ( ){/* CUADRO DE TOTALES */}
         <View style={styles.totalsCard}>
           <View style={styles.totalsRow}>
             <Text>Base imponible</Text>
-            <Text>{baseImponible.toFixed(2)} €</Text>
+            <Text>
+              {conceptos
+                .reduce(
+                  (acc, item) => acc + (item.precio ?? 0) * (item.cant ?? 1),
+                  0,
+                )
+                .toFixed(2)}{" "}
+              €
+            </Text>
           </View>
 
           <View style={styles.totalsRow}>
-            <Text>IVA (21%)</Text>
-            <Text>{ivaImporte.toFixed(2)} €</Text>
+            <Text>IVA ({datos.tipiIVA || 21}%)</Text>
+            <Text>
+              {(
+                (conceptos.reduce(
+                  (acc, item) => acc + (item.precio ?? 0) * (item.cant ?? 1),
+                  0,
+                ) *
+                  (datos.tipiIVA || 21)) /
+                100
+              ).toFixed(2)}{" "}
+              €
+            </Text>
           </View>
 
           <View style={styles.totalsDivider} />
 
           <View style={styles.totalFinalRow}>
             <Text style={styles.totalFinalText}>TOTAL</Text>
-            <Text style={styles.totalFinalText}>{total.toFixed(2)} €</Text>
+            <Text style={styles.totalFinalText}>
+              {(
+                conceptos.reduce(
+                  (acc, item) => acc + (item.precio ?? 0) * (item.cant ?? 1),
+                  0,
+                ) *
+                (1 + (datos.tipiIVA || 21) / 100)
+              ).toFixed(2)}{" "}
+              €
+            </Text>
           </View>
         </View>
-        <View style={styles.notes}>
-          <Text style={styles.notesTitle}>Notas</Text>
-          <Text style={styles.notesText}>{datos.notas || ""}</Text>
-        </View>
-
         {/* FOOTER */}
         <View style={styles.footer} fixed>
           <View style={styles.footerDivider} />

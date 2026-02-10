@@ -213,15 +213,23 @@ export default function CrearFactura() {
       console.log("InvoicePDF:", InvoicePDF);
 
       const blob = await pdf(
-        <Componente datos={datos} numeroFactura={numeroFactura} />,
+        <Componente
+          datos={datos}
+          numeroFactura={numeroFactura}
+          conceptos={conceptos}
+          empresa={empresa}
+          cliente={cliente}
+          esPresupuesto={esPresupuesto}
+        />,
       ).toBlob();
 
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
+const a = document.createElement("a");
+a.href = url;
+ a.download = `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`;
+a.click();
+URL.revokeObjectURL(url);
+
     } catch (error) {
       console.error(error);
     }
@@ -235,14 +243,21 @@ export default function CrearFactura() {
     const Componente = plantilla === "InvoicePDF" ? InvoicePDF : PlantillaNueva;
 
     const blob = await pdf(
-      <Componente datos={datosUsuario} numeroFactura={numeroFactura} />,
+      <Componente
+        datos={datosUsuario}
+        numeroFactura={numeroFactura}
+        conceptos={conceptos}
+        empresa={empresa}
+        cliente={cliente}
+        esPresupuesto={esPresupuesto}
+      />,
     ).toBlob();
 
     const formData = new FormData();
     formData.append(
       "file",
       blob,
-      `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`,
+      `\( {esPresupuesto ? "Presupuesto" : "Factura"}_ \){numeroFactura}.pdf`,
     );
     formData.append("to", cliente.email);
     formData.append(

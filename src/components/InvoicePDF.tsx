@@ -132,9 +132,11 @@ const styles = StyleSheet.create({
 const InvoicePDF = ({
   datos,
   numeroFactura,
+  conceptos = [], // ← Añade esto con fallback vacío
 }: {
   datos: any;
   numeroFactura: string;
+  conceptos: { desc: string; cant: number; precio: number }[];
 }) => {
   console.log("Datos recibidos en PDF:", datos);
   const isPresupuesto = datos.esPresupuesto;
@@ -239,13 +241,16 @@ const InvoicePDF = ({
             <Text style={styles.colPrice}>Precio</Text>
             <Text style={styles.colTotal}>Total</Text>
           </View>
-          {datos.items?.map((item: any, i: number) => (
+
+          {conceptos.map((item, i) => (
             <View key={i} style={styles.tableRow}>
               <Text style={styles.colConcept}>{item.desc}</Text>
               <Text style={styles.colQty}>{item.cant}</Text>
-              <Text style={styles.colPrice}>{item.precio?.toFixed(2)}€</Text>
+              <Text style={styles.colPrice}>
+                {(item.precio ?? 0).toFixed(2)} €
+              </Text>
               <Text style={styles.colTotal}>
-                {(item.cant * item.precio)?.toFixed(2)}€
+                {((item.cant ?? 1) * (item.precio ?? 0)).toFixed(2)} €
               </Text>
             </View>
           ))}
@@ -256,7 +261,7 @@ const InvoicePDF = ({
           style={{
             borderWidth: 1,
             borderColor: "#e5e7eb",
-            width: 200, // ancho fijo, no tan largo como la tabla
+            width: 200,
             alignSelf: "flex-end",
             marginTop: 10,
           }}
@@ -272,15 +277,15 @@ const InvoicePDF = ({
             }}
           >
             <Text style={{ fontSize: 11, fontWeight: "bold" }}>
-              Base Imponible:
+              Base imponible:
             </Text>
             <Text style={{ fontSize: 11 }}>
-              {datos.items
-                ?.reduce(
-                  (acc: number, item: any) => acc + item.precio * item.cant,
+              {conceptos
+                .reduce(
+                  (acc, item) => acc + (item.precio ?? 0) * (item.cant ?? 1),
                   0,
                 )
-                .toFixed(2)}
+                .toFixed(2)}{" "}
               €
             </Text>
           </View>
@@ -296,16 +301,17 @@ const InvoicePDF = ({
             }}
           >
             <Text style={{ fontSize: 11, fontWeight: "bold" }}>
-              IVA ({datos.tipoIVA || 21}%):
+              IVA ({datos.tipiIVA || 21}%):
             </Text>
             <Text style={{ fontSize: 11 }}>
               {(
-                (datos.items?.reduce(
-                  (acc: number, item: any) => acc + item.precio * item.cant,
+                (conceptos.reduce(
+                  (acc, item) => acc + (item.precio ?? 0) * (item.cant ?? 1),
                   0,
-                ) || 0) *
-                ((datos.tipoIVA || 21) / 100)
-              ).toFixed(2)}
+                ) *
+                  (datos.tipiIVA || 21)) /
+                100
+              ).toFixed(2)}{" "}
               €
             </Text>
           </View>
@@ -322,12 +328,12 @@ const InvoicePDF = ({
             <Text style={{ fontSize: 12, fontWeight: "bold" }}>Total:</Text>
             <Text style={{ fontSize: 12, fontWeight: "bold" }}>
               {(
-                (datos.items?.reduce(
-                  (acc: number, item: any) => acc + item.precio * item.cant,
+                conceptos.reduce(
+                  (acc, item) => acc + (item.precio ?? 0) * (item.cant ?? 1),
                   0,
-                ) || 0) *
-                (1 + (datos.tipoIVA || 21) / 100)
-              ).toFixed(2)}
+                ) *
+                (1 + (datos.tipiIVA || 21) / 100)
+              ).toFixed(2)}{" "}
               €
             </Text>
           </View>

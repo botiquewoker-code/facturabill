@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Crear facturas y Presupuestos facil",
-  description: "Facturas y presupuestos rápidos para autónomos y pequeños negocios",
+  description:
+    "Facturas y presupuestos rápidos para autónomos y pequeños negocios",
   icons: {
     icon: "/favicon.ico",
   },
