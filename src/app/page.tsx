@@ -698,14 +698,13 @@ ${nombreEmpresa}`,
                 </button>
                 <button
                   onClick={() => {
-                    if (window.gtag) {
-                      window.gtag("event", "conversion", {
-                        send_to: "AW-1791812185/PvplCL_mx_obENHy-BC",
-                        value: 1.0,
-                        currency: "EUR",
-                      });
-                    }
-                    enviar();
+                    if (typeof window !== "undefined" && (window as any).gtag) {
+  (window as any).gtag("event", "conversion", {
+    send_to: "AW-1791812185/PvpICL_mx_obENHy-BC",
+    value: 1.0,
+    currency: "EUR",
+  });
+}                    enviar();
                   }}
                   className="bg-white border border-gray-300 text-gray-800 py-1.5 px-5 rounded-xl font-bold text-sm"
                 >
