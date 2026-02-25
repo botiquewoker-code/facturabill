@@ -244,13 +244,13 @@ const PlantillaNueva = ({
 
           <View style={styles.rightColumn}>
             <Text style={styles.title}>
-              {datos.esPresupuesto ? "PRESUPUESTO" : "FACTURA"}
+              {datos?.esPresupuesto ? "PRESUPUESTO" : "FACTURA"}
             </Text>
 
             <Text style={styles.invoiceNumber}>
               {datos.esPresupuesto ? "PRES-" : "FACT-"}
               {numeroFactura} -{" "}
-              {new Date(datos.fecha).toLocaleDateString("es-ES")}
+              {new Date(datos?.fecha).toLocaleDateString("es-ES")}
             </Text>
           </View>
         </View>
@@ -364,6 +364,12 @@ const PlantillaNueva = ({
             </Text>
           </View>
         </View>
+        {datos?.notas && (
+          <View style={styles.notes}>
+            <Text style={styles.notesTitle}>Notas</Text>
+            <Text style={styles.notesText}>{datos.notas}</Text>
+          </View>
+        )}
         {/* FOOTER */}
         <View style={styles.footer} fixed>
           <View style={styles.footerDivider} />

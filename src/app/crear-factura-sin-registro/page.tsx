@@ -15,13 +15,13 @@ export default function Page() {
         </h1>
 
         <p style={{ fontSize: "20px", marginBottom: "15px", color: "#444" }}>
-          Genera tu factura directamente desde el navegador.
-          No necesitas cuenta ni datos personales.
+          Genera tu factura directamente desde el navegador. No necesitas cuenta
+          ni datos personales.
         </p>
 
         <p style={{ fontSize: "18px", marginBottom: "40px", color: "#555" }}>
-          Ideal para cuando necesitas enviar una factura rápida
-          sin perder tiempo creando perfiles.
+          Ideal para cuando necesitas enviar una factura rápida sin perder
+          tiempo creando perfiles.
         </p>
 
         <Link href="/">

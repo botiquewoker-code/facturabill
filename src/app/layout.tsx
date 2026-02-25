@@ -29,21 +29,21 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-  <Script
-    src="https://www.googletagmanager.com/gtag/js?id=AW-17918127185"
-    strategy="afterInteractive"
-  />
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-17918127185"
+          strategy="afterInteractive"
+        />
 
-  <Script id="google-ads" strategy="afterInteractive">
-    {`
+        <Script id="google-ads" strategy="afterInteractive">
+          {`
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'AW-17918127185');
       gtag('config', 'G-XSGT6ME68Y');
     `}
-  </Script>
-</head>
+        </Script>
+      </head>
 
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

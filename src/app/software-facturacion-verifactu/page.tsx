@@ -14,8 +14,8 @@ export default function Page() {
         </p>
 
         <p className="text-lg mb-8">
-          Diseñado para autónomos que buscan una solución sencilla,
-          profesional y preparada para el futuro.
+          Diseñado para autónomos que buscan una solución sencilla, profesional
+          y preparada para el futuro.
         </p>
 
         <Link

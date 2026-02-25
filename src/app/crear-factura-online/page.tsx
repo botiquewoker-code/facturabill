@@ -25,8 +25,8 @@ export default function Page() {
         </p>
 
         <p style={{ fontSize: "18px", marginBottom: "40px", color: "#555" }}>
-          Diseñada para autónomos y pequeñas empresas que necesitan
-          generar y enviar facturas rápidas a sus clientes.
+          Diseñada para autónomos y pequeñas empresas que necesitan generar y
+          enviar facturas rápidas a sus clientes.
         </p>
 
         <Link href="/">

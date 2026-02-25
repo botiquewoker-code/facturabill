@@ -243,7 +243,7 @@ export default function CrearFactura() {
 
     const blob = await pdf(
       <Componente
-        datos={datosUsuario}
+        datos={datos}
         numeroFactura={numeroFactura}
         conceptos={conceptos}
         empresa={empresa}
@@ -278,7 +278,7 @@ ${nombreEmpresa}`,
       body: formData,
     });
 
-    toast[res.ok ? "success" : "error"](res.ok ? "Enviado" : "Error");
+    toast[res.ok ? "success" : "error"](res.ok ? "Enviado con Exito" : "Error");
   };
   return (
     <>
@@ -312,7 +312,7 @@ ${nombreEmpresa}`,
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* MENÚ */}
-                <ul className="space-y-4 text-[17px] font-semibold">
+                <ul className="space-y-4 text-[17px] font-semibold list-none p-0 m-0">
                   <li>
                     <Link href="/" className="block">
                       Historial de facturas
@@ -340,6 +340,12 @@ ${nombreEmpresa}`,
                   <li>
                     <Link href="/" className="block">
                       Precios
+                    </Link>
+                  </li>
+
+                  <li>
+                    <Link href="/feedback" className="block">
+                      Sugerencias
                     </Link>
                   </li>
                 </ul>
@@ -699,12 +705,13 @@ ${nombreEmpresa}`,
                 <button
                   onClick={() => {
                     if (typeof window !== "undefined" && (window as any).gtag) {
-  (window as any).gtag("event", "conversion", {
-    send_to: "AW-1791812185/PvpICL_mx_obENHy-BC",
-    value: 1.0,
-    currency: "EUR",
-  });
-}                    enviar();
+                      (window as any).gtag("event", "conversion", {
+                        send_to: "AW-1791812185/PvpICL_mx_obENHy-BC",
+                        value: 1.0,
+                        currency: "EUR",
+                      });
+                    }
+                    enviar();
                   }}
                   className="bg-white border border-gray-300 text-gray-800 py-1.5 px-5 rounded-xl font-bold text-sm"
                 >
