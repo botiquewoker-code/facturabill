@@ -6,6 +6,10 @@ import ConfigPanel from "@/components/ConfigPanel";
 import PlantillaNueva from "@/components/PlantillaNueva";
 import InvoicePDF from "@/components/InvoicePDF";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { UserGroupIcon } from "@heroicons/react/24/outline";
+import { DocumentTextIcon } from "@heroicons/react/24/outline";
+import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 
 import {
   Upload,
@@ -47,6 +51,7 @@ const mapaPlantillas: Record<string, "InvoicePDF" | "PlantillaNueva"> = {
 
 export default function CrearFactura() {
   const [editarIva, setEditarIva] = useState(false);
+  const [openEmpresa, setOpenEmpresa] = useState(false);
   const [esPresupuesto, setEsPresupuesto] = useState(true);
   const [numero, setNumero] = useState(`PRES-${new Date().getFullYear()}-001`);
   const [fecha] = useState(new Date().toISOString().split("T")[0]);
@@ -287,10 +292,9 @@ ${nombreEmpresa}`,
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
         <div className="max-w-5xl mx-auto p-4 pb-24">
           {/* Cabecera clásica - tu diseño actual corregido */}
-          <header className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-50 shadow-sm">
+          <header className="bg-gray-200 border-b border-gray-200 fixed top-0 left-0 right-0 z-50 shadow-sm">
             <div className="max-w-7xl mx-auto px-6 py-1 flex items-center justify-between">
               {/* Logo Facturabill.net a la izquierda */}
-              <img src="/logo.svg" alt="Facturabill.net" className="h-12" />
 
               {/* Botón menú hamburguesa */}
               <button
@@ -314,18 +318,6 @@ ${nombreEmpresa}`,
                 {/* MENÚ */}
                 <ul className="space-y-4 text-[17px] font-semibold list-none p-0 m-0">
                   <li>
-                    <Link href="/" className="block">
-                      Historial de facturas
-                    </Link>
-                  </li>
-
-                  <li>
-                    <Link href="/" className="block">
-                      Clientes
-                    </Link>
-                  </li>
-
-                  <li>
                     <Link href="/como-funciona" className="block">
                       Cómo funciona
                     </Link>
@@ -334,12 +326,6 @@ ${nombreEmpresa}`,
                   <li>
                     <Link href="/verifactu" className="block">
                       VeriFactu
-                    </Link>
-                  </li>
-
-                  <li>
-                    <Link href="/" className="block">
-                      Precios
                     </Link>
                   </li>
 
@@ -371,379 +357,86 @@ ${nombreEmpresa}`,
           )}
           /* CARRUSEL CON PLANTILLAS REALES */
           <div className="p-0 mt-8 mb-6">
-            <h3 className="text-lg font-bold mb-6 text-center">
-              Elige plantilla
-            </h3>
-            <div className="overflow-x-auto whitespace-nowrap pb-2 -mx-6 px-6">
-              <div className="inline-flex gap-6">
-                {["Clasica", "elegant", "creative", "minimal"].map((t) => (
-                  <div key={t} className="shrink-0">
-                    <img
-                      src={`/previews/${t}.jpg`}
-                      alt={t}
-                      className={`w-40 h-auto rounded-xl shadow-2xl cursor-pointer hover:scale-105 transition border-4
-                                                                                                                   ${plantilla === mapaPlantillas[t] ? "border-blue-500" : "border-transparent"}
-`}
-                      onClick={() => setPlantilla(mapaPlantillas[t])}
-                    />
-                    <p className="text-center mt-3 text-sm font-medium capitalize">
-                      {t}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="mb-6">
-            <div className="inline-flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-3 py-2 shadow-sm">
-              <span className="text-sm font-semibold text-blue-700">
-                Nº factura
-              </span>
+            <div className="flex justify-center">
+              <div className="flex items-center bg-blue-300 rounded-2xl shadow-md px-4 py-2 gap-4">
+                <button className="text-sm font-medium text-black hover:text-blue-600 transition whitespace-nowrap">
+                  Informes
+                </button>
 
-              <input
-                type="text"
-                value={numeroFactura}
-                onChange={handleNumeroChange}
-                placeholder="001"
-                className="w-20 text-center rounded-xl border border-blue-300 bg-white font-bold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none py-1"
-              />
+                <div className="h-5 w-px bg-gray-300" />
+
+                <Link
+                  href="/empresa"
+                  className="flex items-center gap-2 text-black hover:text-black transition"
+                >
+                  Configuración
+                </Link>
+                <div className="h-5 w-px bg-gray-300" />
+
+                <button className="text-sm font-medium text-black hover:text-blue-600 transition whitespace-nowrap">
+                  Soporte
+                </button>
+              </div>
             </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-6 mb-6">
-            {/* EMISOR */}
-            <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200 shadow-sm">
-              <h3 className="text-sm font-semibold text-blue-700 mb-5">
-                Datos de su empresa
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  placeholder="Nombre / Razón social"
-                  value={empresa.nombre}
-                  onChange={(e) =>
-                    setEmpresa({ ...empresa, nombre: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-
-                <input
-                  placeholder="NIF/CIF"
-                  value={empresa.nif}
-                  onChange={(e) =>
-                    setEmpresa({ ...empresa, nif: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-
-                <input
-                  placeholder="Dirección"
-                  value={empresa.direccion}
-                  onChange={(e) =>
-                    setEmpresa({ ...empresa, direccion: e.target.value })
-                  }
-                  className="md:col-span-2 w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-
-                <input
-                  placeholder="Ciudad"
-                  value={empresa.ciudad}
-                  onChange={(e) =>
-                    setEmpresa({ ...empresa, ciudad: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-
-                <input
-                  placeholder="C.P."
-                  value={empresa.cp}
-                  onChange={(e) =>
-                    setEmpresa({ ...empresa, cp: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-
-                <input
-                  placeholder="Teléfono"
-                  value={empresa.telefono}
-                  onChange={(e) =>
-                    setEmpresa({ ...empresa, telefono: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-
-                <input
-                  placeholder="Email"
-                  value={empresa.email}
-                  onChange={(e) =>
-                    setEmpresa({ ...empresa, email: e.target.value })
-                  }
-                  className="md:col-span-2 w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-              </div>
-            </div>
-            {/* CLIENTE */}
-            <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200 shadow-sm">
-              <h3 className="text-sm font-semibold text-blue-700 mb-5">
-                Datos de Cliente
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  placeholder="Nombre / Razón social"
-                  value={cliente.nombre}
-                  onChange={(e) =>
-                    setCliente({ ...cliente, nombre: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-
-                <input
-                  placeholder="DNI / NIE"
-                  value={cliente.nif}
-                  onChange={(e) =>
-                    setCliente({ ...cliente, nif: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-
-                <input
-                  placeholder="Dirección"
-                  value={cliente.direccion}
-                  onChange={(e) =>
-                    setCliente({ ...cliente, direccion: e.target.value })
-                  }
-                  className="md:col-span-2 w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-
-                <input
-                  placeholder="Ciudad"
-                  value={cliente.ciudad}
-                  onChange={(e) =>
-                    setCliente({ ...cliente, ciudad: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-
-                <input
-                  placeholder="C.P."
-                  value={cliente.cp}
-                  onChange={(e) =>
-                    setCliente({ ...cliente, cp: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-
-                <input
-                  placeholder="Teléfono"
-                  value={cliente.telefono}
-                  onChange={(e) =>
-                    setCliente({ ...cliente, telefono: e.target.value })
-                  }
-                  className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-
-                <input
-                  placeholder="Email"
-                  value={cliente.email}
-                  onChange={(e) =>
-                    setCliente({ ...cliente, email: e.target.value })
-                  }
-                  className="md:col-span-2 w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-              </div>
-            </div>
-          </div>
-          {/* LOGO – CORREGIDO Y FUNCIONA 100% */}
-          <div className="bg-blue-50 rounded-2xl p-6 text-center mb-6 shadow">
-            <label className="cursor-pointer block">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleLogo}
-                className="hidden"
-              />
-              {logo ? (
-                <img
-                  src={logo}
-                  alt="Logo"
-                  className="mx-auto max-h-24 rounded-lg shadow-md"
-                />
-              ) : (
-                <div className="h-32 border-2 border-dashed border-green-500 rounded-xl flex items-center justify-center">
-                  <p className="text-gray-500 text-sm">Toca para subir logo</p>
-                </div>
-              )}
-              <p className="text-xs text-gray-600 mt-3">
-                Máximo 2MB · PNG, JPG
-              </p>
-            </label>
-          </div>
-          {/* ==================== CONCEPTOS – FUNCIONA 100% EN MÓVIL Y TURBOPACK ==================== */}
-          <div className="bg-blue-50 rounded-2xl border border-blue-100 shadow-sm p-6 mb-6">
-            <h3 className="text-lg font-semibold text-blue-700 mb-6">
-              Conceptos
-            </h3>
-
-            {conceptos.map((c, i) => (
-              <div
-                key={i}
-                className="grid grid-cols-12 gap-3 items-center mb-3"
+            <div className="mb-4 rounded-xl border border-gray-200 bg-white shadow-sm">
+              <Link
+                href="/crear-factura"
+                className="flex w-full items-center gap-4 p-4 text-left rounded-xl"
               >
-                {/* Descripción */}
-                <input
-                  placeholder="Descripción"
-                  value={c.desc}
-                  onChange={(e) => {
-                    const copia = [...conceptos];
-                    copia[i].desc = e.target.value;
-                    setconceptos(copia);
-                  }}
-                  className="col-span-5 px-4 py-2 rounded-xl border border-blue-200 text-sm bg-white focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-
-                {/* Cantidad */}
-                <input
-                  type="number"
-                  min="1"
-                  value={c.cant}
-                  onChange={(e) => {
-                    const copia = [...conceptos];
-                    copia[i].cant = Number(e.target.value);
-                    setconceptos(copia);
-                  }}
-                  className="col-span-2 px-3 py-2 rounded-xl border border-blue-200 text-sm text-center bg-white focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-
-                {/* Precio */}
-                <input
-                  type="number"
-                  step="0.01"
-                  value={c.precio}
-                  onChange={(e) => {
-                    const copia = [...conceptos];
-                    copia[i].precio = Number(e.target.value);
-                    setconceptos(copia);
-                  }}
-                  className="col-span-2 px-3 py-2 rounded-xl border border-blue-200 text-sm text-right bg-white focus:ring-2 focus:ring-blue-400 outline-none"
-                />
-
-                {/* Total */}
-                <div className="col-span-2 px-3 py-2 rounded-xl bg-blue-100 text-sm text-right font-semibold text-blue-700">
-                  {(c.cant * c.precio).toFixed(2)} €
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
+                  <DocumentTextIcon className="h-6 w-6 text-blue-600" />
                 </div>
 
-                {/* Eliminar */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    setconceptos(conceptos.filter((_, index) => index !== i))
-                  }
-                  className="col-span-1 text-red-500 hover:text-red-700 text-sm"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-
-            {/* Añadir */}
-            <button
-              type="button"
-              onClick={() =>
-                setconceptos([...conceptos, { desc: "", cant: 1, precio: 0 }])
-              }
-              className="mt-3 text-sm font-medium text-blue-600 hover:text-blue-800"
+                <div>
+                  <p className="text-base font-semibold text-gray-900">
+                    Crear Factura
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Generar una nueva factura
+                  </p>
+                </div>
+              </Link>
+            </div>
+          </div>
+          <div className="mb-4 rounded-xl border border-gray-200 bg-white shadow-sm">
+            <Link
+              href="/historial"
+              className="flex w-full items-center gap-4 p-4 text-left rounded-xl"
             >
-              + Añadir concepto
-            </button>
-          </div>
-          {/* Cuadro de totales compacto y bonito */}
-          <div className="bg-orange-50 rounded-2xl p-4 shadow-md mb-6">
-            <div className="mb-3">
-              <p className="text-base font-bold">Base imponible</p>
-              <p className="text-xl font-bold">{subtotal.toFixed(2)} €</p>
-            </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
+                <PaperAirplaneIcon className="h-6 w-6 text-green-600" />
+              </div>
 
-            <div className="flex justify-between items-center mb-3">
               <div>
-                <p className="text-base">IVA ({ivaPorc}%):</p>
-                <button className="text-blue-600 text-xs underline">
-                  cambiar
-                </button>
+                <p className="text-base font-semibold text-gray-900">
+                  Historial de envíos
+                </p>
+                <p className="text-sm text-gray-500">
+                  Facturas y presupuestos enviados
+                </p>
               </div>
-              <p className="text-xl font-bold">{iva.toFixed(2)} €</p>
-            </div>
-
-            <div className="bg-orange-500 text-white rounded-xl p-3 text-center mb-3">
-              <p className="text-2xl font-bold">{total.toFixed(2)} €</p>
-            </div>
-
-            <p className="text-center text-gray-600 text-sm mb-4">
-              Importe final a pagar por el cliente
-            </p>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={toggleTipo}
-                className="bg-green-600 text-white py-1 px-3 rounded-xl font-bold flex flex-col items-center shadow-xl"
-              >
-                <span className="text-xl">
-                  {esPresupuesto
-                    ? "Convertir a factura"
-                    : "Convertir a presupuesto"}
-                </span>
-                <span className="text-sm mt-1 opacity-90">
-                  {esPresupuesto ? "PRES" : "FACT"}-{numeroFactura} ·{" "}
-                  {new Date(datos.fecha).toLocaleDateString("es-ES")}
-                </span>
-              </button>
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={descargar}
-                  className="bg-white border border-gray-300 text-gray-800 py-1.5 px-5 rounded-xl font-bold text-sm"
-                >
-                  Descargar PDF
-                </button>
-                <button
-                  onClick={() => {
-                    if (typeof window !== "undefined" && (window as any).gtag) {
-                      (window as any).gtag("event", "conversion", {
-                        send_to: "AW-1791812185/PvpICL_mx_obENHy-BC",
-                        value: 1.0,
-                        currency: "EUR",
-                      });
-                    }
-                    enviar();
-                  }}
-                  className="bg-white border border-gray-300 text-gray-800 py-1.5 px-5 rounded-xl font-bold text-sm"
-                >
-                  Enviar al cliente
-                </button>
-              </div>
-            </div>
-          </div>
-          {/* ==================== NOTAS ==================== */}
-          <div className="bg-blue-50 rounded-2xl shadow-lg p-6 mb-8">
-            <textarea
-              placeholder="Notas, condiciones de pago, IBAN, forma de pago..."
-              value={notas}
-              onChange={(e) => setNotas(e.target.value)}
-              rows={5}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm resize-none"
-            />
+            </Link>
           </div>
         </div>
+        <div className="mb-4 rounded-xl border border-gray-200 bg-white shadow-sm">
+          <Link
+            href="/clientes"
+            className="flex w-full items-center gap-4 p-4 text-left rounded-xl"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
+              <UserGroupIcon className="h-6 w-6 text-blue-600" />
+            </div>
 
-        {/* QUITAR FLECHAS INPUT NUMBER */}
-        <style jsx global>{`
-          input[type="number"]::-webkit-outer-spin-button,
-          input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-          }
-          input[type="number"] {
-            -moz-appearance: textfield;
-            appearance: textfield;
-          }
-        `}</style>
+            <div>
+              <p className="text-base font-semibold text-gray-900">Clientes</p>
+              <p className="text-sm text-gray-500">
+                Añadir y gestionar clientes
+              </p>
+            </div>
+          </Link>
+        </div>
       </div>
       <footer className="bg-gray-900 text-gray-300 py-12 mt-0">
         <div className="max-w-6xl mx-auto px-6">
