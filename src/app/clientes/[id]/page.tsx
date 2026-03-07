@@ -62,7 +62,7 @@ export default function ClienteDetalle() {
         </p>
 
         <p>
-          <strong>Código postal:</strong> {cliente.cp}
+          <strong>Codigo postal:</strong> {cliente.Codigopostal}
         </p>
 
         <p>
@@ -72,7 +72,7 @@ export default function ClienteDetalle() {
 
       <div className="flex flex-col gap-3 mt-8">
         <button
-          onClick={() => router.push(`/crear-factura?cliente=${params.id}`)}
+          onClick={() => router.push(`/crear-factura?clienteId=${params.id}`)}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg"
         >
           Crear factura

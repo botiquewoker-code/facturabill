@@ -6,14 +6,14 @@ import InvoicePDF from "@/components/InvoicePDF";
 import PlantillaNueva from "@/components/PlantillaNueva";
 import { Toaster, toast } from "react-hot-toast";
 import { Upload, Plus, Trash2, Download, Send } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type Cliente = {
   nombre: string;
   nif: string;
   direccion: string;
   ciudad: string;
-  cp: string;
+  codigoPostal: string;
   telefono: string;
   email: string;
 };
@@ -30,15 +30,38 @@ type Empresa = {
 
 export default function CrearFacturaPage() {
   const router = useRouter();
+
+  const params = new URLSearchParams(
+    typeof window !== "undefined" ? window.location.search : "",
+  );
+
+  const tipo = params.get("tipo");
+  const clienteId = params.get("clienteId");
   const [cliente, setCliente] = useState<Cliente>({
     nombre: "",
     nif: "",
     direccion: "",
     ciudad: "",
-    cp: "",
+    codigoPostal: "",
     telefono: "",
     email: "",
   });
+  useEffect(() => {
+    if (!clienteId) return;
+
+    const guardados = localStorage.getItem("clientes");
+    if (!guardados) return;
+
+    const lista = JSON.parse(guardados);
+
+    // clienteId normalmente llega como string, convertir a número
+    const idNum = parseInt(clienteId || "0", 10);
+
+    const clienteEncontrado = lista[idNum];
+    if (clienteEncontrado) {
+      setCliente(clienteEncontrado);
+    }
+  }, [clienteId]);
 
   const [conceptos, setconceptos] = useState([
     { desc: "", cant: 1, precio: 0 },
@@ -94,6 +117,25 @@ export default function CrearFacturaPage() {
   }, [notas]);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const clienteParam = params.get("clienteId");
+    if (clienteParam) {
+      const guardados = localStorage.getItem("clientes");
+      if (guardados) {
+        try {
+          const lista = JSON.parse(guardados);
+          const clienteEncontrado = lista[parseInt(clienteParam)];
+          if (clienteEncontrado) {
+            setCliente(clienteEncontrado);
+          }
+        } catch (e) {
+          console.error("Error al cargar cliente:", e);
+        }
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     const guardado = localStorage.getItem("datosEmpresa");
     if (guardado) {
       try {
@@ -110,6 +152,21 @@ export default function CrearFacturaPage() {
       localStorage.setItem("datosEmpresa", JSON.stringify(empresa));
     }
   }, [empresa]);
+  useEffect(() => {
+    if (!clienteId || typeof window === "undefined") return;
+
+    const guardados = localStorage.getItem("clientes");
+    if (!guardados) return;
+
+    const lista = JSON.parse(guardados);
+
+    const idNum = parseInt(clienteId, 10);
+    const clienteEncontrado = lista[idNum];
+
+    if (clienteEncontrado) {
+      setCliente(clienteEncontrado);
+    }
+  }, [clienteId]);
 
   const subtotal = conceptos.reduce((acc, i) => acc + i.cant * i.precio, 0);
   const iva = subtotal * (tipoIVA / 100);
@@ -173,7 +230,7 @@ export default function CrearFacturaPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-       a.download = `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`;
+      a.download = `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
 
@@ -205,7 +262,7 @@ export default function CrearFacturaPage() {
       formData.append(
         "file",
         blob,
-        `\( {esPresupuesto ? "Presupuesto" : "Factura"}_ \){numeroFactura}.pdf`,
+        `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`,
       );
       formData.append("to", cliente.email);
       formData.append(
@@ -237,7 +294,8 @@ export default function CrearFacturaPage() {
       <div className="p-0 mt-8 mb-6">
         <div className="inline-flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-3 py-2 shadow-sm">
           <span className="text-sm font-semibold text-blue-700">
-            Nº factura
+            {tipo === "presupuesto" ? "PRES" : "FACT"}-{numeroFactura} ·{" "}
+            {new Date(datos.fecha).toLocaleDateString("es-ES")}
           </span>
 
           <input
@@ -293,9 +351,11 @@ export default function CrearFacturaPage() {
             />
 
             <input
-              placeholder="C.P."
-              value={cliente.cp}
-              onChange={(e) => setCliente({ ...cliente, cp: e.target.value })}
+              placeholder="Código postal"
+              value={cliente?.codigoPostal || ""}
+              onChange={(e) =>
+                setCliente({ ...cliente, codigoPostal: e.target.value })
+              }
               className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
             />
 
@@ -418,20 +478,6 @@ export default function CrearFacturaPage() {
             Importe final a pagar por el cliente
           </p>
           <div className="flex gap-3 justify-center">
-            <button
-              onClick={toggleTipo}
-              className="bg-green-600 text-white py-1 px-2 rounded-xl font-bold flex flex-col items-center shadow-xl"
-            >
-              <span className="text-xlg">
-                {esPresupuesto
-                  ? "Convertir a factura"
-                  : "Convertir a presupuesto"}
-              </span>
-              <span className="text-sm mt-1 opacity-90">
-                {esPresupuesto ? "PRES" : "FACT"}-{numeroFactura} ·{" "}
-                {new Date(datos.fecha).toLocaleDateString("es-ES")}
-              </span>
-            </button>
             <div className="flex flex-col gap-2">
               <button
                 onClick={descargar}

@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { UserGroupIcon } from "@heroicons/react/24/outline";
 import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
+import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 
 import {
   Upload,
@@ -399,43 +400,64 @@ ${nombreEmpresa}`,
                 </div>
               </Link>
             </div>
-          </div>
-          <div className="mb-4 rounded-xl border border-gray-200 bg-white shadow-sm">
-            <Link
-              href="/historial"
-              className="flex w-full items-center gap-4 p-4 text-left rounded-xl"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
-                <PaperAirplaneIcon className="h-6 w-6 text-green-600" />
-              </div>
+            <div className="mb-4 rounded-xl border border-gray-200 bg-white shadow-sm">
+              <Link
+                href="/crear-factura?tipo=presupuesto"
+                className="flex w-full items-center gap-4 p-4 text-left rounded-xl"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100">
+                  <DocumentDuplicateIcon className="h-6 w-6 text-purple-600" />
+                </div>
 
-              <div>
-                <p className="text-base font-semibold text-gray-900">
-                  Historial de envíos
-                </p>
-                <p className="text-sm text-gray-500">
-                  Facturas y presupuestos enviados
-                </p>
-              </div>
-            </Link>
-          </div>
-        </div>
-        <div className="mb-4 rounded-xl border border-gray-200 bg-white shadow-sm">
-          <Link
-            href="/clientes"
-            className="flex w-full items-center gap-4 p-4 text-left rounded-xl"
-          >
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
-              <UserGroupIcon className="h-6 w-6 text-blue-600" />
+                <div>
+                  <p className="text-base font-semibold text-gray-900">
+                    Crear Presupuesto
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Generar un nuevo presupuesto
+                  </p>
+                </div>
+              </Link>
             </div>
+            <div className="mb-4 rounded-xl border border-gray-200 bg-white shadow-sm">
+              <Link
+                href="/historial"
+                className="flex w-full items-center gap-4 p-4 text-left rounded-xl"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
+                  <PaperAirplaneIcon className="h-6 w-6 text-green-600" />
+                </div>
 
-            <div>
-              <p className="text-base font-semibold text-gray-900">Clientes</p>
-              <p className="text-sm text-gray-500">
-                Añadir y gestionar clientes
-              </p>
+                <div>
+                  <p className="text-base font-semibold text-gray-900">
+                    Historial de envíos
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Facturas y presupuestos enviados
+                  </p>
+                </div>
+              </Link>
             </div>
-          </Link>
+            <div className="mb-4 w-full rounded-xl border border-gray-200 bg-white shadow-sm">
+              <Link
+                href="/clientes"
+                className="flex w-full items-center gap-4 p-4 text-left rounded-xl"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
+                  <UserGroupIcon className="h-6 w-6 text-blue-600" />
+                </div>
+
+                <div>
+                  <p className="text-base font-semibold text-gray-900">
+                    Clientes
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Añadir y gestionar clientes
+                  </p>
+                </div>
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
       <footer className="bg-gray-900 text-gray-300 py-12 mt-0">
