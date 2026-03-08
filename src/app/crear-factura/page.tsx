@@ -54,7 +54,6 @@ export default function CrearFacturaPage() {
 
     const lista = JSON.parse(guardados);
 
-    // clienteId normalmente llega como string, convertir a número
     const idNum = parseInt(clienteId || "0", 10);
 
     const clienteEncontrado = lista[idNum];
@@ -91,9 +90,6 @@ export default function CrearFacturaPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const guardadoNumero = localStorage.getItem("numeroFactura");
-    if (guardadoNumero) setNumeroFactura(guardadoNumero);
-
     const datosEmpresa = localStorage.getItem("datosEmpresa");
     if (datosEmpresa) setEmpresa(JSON.parse(datosEmpresa));
 
@@ -102,6 +98,23 @@ export default function CrearFacturaPage() {
 
     const notasGuardadas = localStorage.getItem("notasUsuario");
     if (notasGuardadas) setNotas(notasGuardadas);
+
+    const presupuestoConvertir = localStorage.getItem("presupuestoConvertir");
+
+    if (presupuestoConvertir) {
+      const datos = JSON.parse(presupuestoConvertir);
+
+      if (datos.cliente) setCliente(datos.cliente);
+      if (datos.conceptos) setconceptos(datos.conceptos);
+      if (datos.items) setconceptos(datos.items);
+
+      if (datos.id) {
+        const nuevoNumero = datos.id.replace("PRES", "FAC");
+        setNumeroFactura(nuevoNumero);
+      }
+
+      localStorage.removeItem("presupuestoConvertir");
+    }
   }, []);
 
   useEffect(() => {
@@ -243,6 +256,26 @@ export default function CrearFacturaPage() {
 
   const enviar = async () => {
     if (!cliente.email) return toast.error("Falta email del cliente");
+    const historial = JSON.parse(localStorage.getItem("historial") || "[]");
+
+    const index = historial.findIndex((doc: any) => doc.id === numeroFactura);
+
+    if (index !== -1) {
+      historial[index].tipo = "factura";
+      historial[index].estado = "Factura enviada";
+    } else {
+      historial.unshift({
+        id: numeroFactura,
+        tipo: esPresupuesto ? "presupuesto" : "factura",
+        cliente: cliente,
+        fecha: new Date().toLocaleDateString(),
+        conceptos: conceptos,
+        total: total,
+        estado: esPresupuesto ? "Presupuesto enviado" : "Factura enviada",
+      });
+    }
+
+    localStorage.setItem("historial", JSON.stringify(historial));
 
     try {
       const Componente =
@@ -278,6 +311,21 @@ export default function CrearFacturaPage() {
         method: "POST",
         body: formData,
       });
+      if (res.ok) {
+        const historial = JSON.parse(localStorage.getItem("historial") || "[]");
+
+        historial.push({
+          id: numeroFactura,
+          tipo: esPresupuesto ? "presupuesto" : "factura",
+
+          cliente: cliente,
+          fecha: new Date().toISOString(),
+          total: total,
+          estado: "Enviado",
+        });
+
+        localStorage.setItem("historial", JSON.stringify(historial));
+      }
 
       toast[res.ok ? "success" : "error"](
         res.ok ? "Enviado con éxito" : "Error al enviar",

@@ -62,7 +62,7 @@ export default function ClienteDetalle() {
         </p>
 
         <p>
-          <strong>Codigo postal:</strong> {cliente.Codigopostal}
+          <strong>Codigo Postal:</strong> {cliente.CodigoPostal}
         </p>
 
         <p>

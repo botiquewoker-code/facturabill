@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { SESClient, SendRawEmailCommand } from "@aws-sdk/client-ses";
+
+const ses = new SESClient({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+});
 
 export async function POST(req: Request) {
   try {
@@ -10,31 +18,41 @@ export async function POST(req: Request) {
     const text = formData.get("text") as string;
     const file = formData.get("file") as File;
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const fileBase64 = fileBuffer.toString("base64");
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    const boundary = "NextPart";
 
-    await transporter.sendMail({
-      from: `"Facturabill" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      text,
-      attachments: [
-        {
-          filename: "factura.pdf",
-          content: buffer,
+    const rawEmail = `From: facturabill.net@gmail.com
+To: ${to}
+Subject: ${subject}
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="${boundary}"
+
+--${boundary}
+Content-Type: text/plain; charset="UTF-8"
+
+${text}
+
+--${boundary}
+Content-Type: application/pdf; name="factura.pdf"
+Content-Disposition: attachment; filename="factura.pdf"
+Content-Transfer-Encoding: base64
+
+${fileBase64}
+--${boundary}--`;
+
+    await ses.send(
+      new SendRawEmailCommand({
+        RawMessage: {
+          Data: Buffer.from(rawEmail),
         },
-      ],
-    });
+      }),
+    );
 
     return NextResponse.json({ ok: true });
-  } catch (e) {
+  } catch (error) {
+    console.error(error);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 }

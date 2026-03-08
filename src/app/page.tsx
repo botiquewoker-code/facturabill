@@ -360,7 +360,10 @@ ${nombreEmpresa}`,
           <div className="p-0 mt-8 mb-6">
             <div className="flex justify-center">
               <div className="flex items-center bg-blue-300 rounded-2xl shadow-md px-4 py-2 gap-4">
-                <button className="text-sm font-medium text-black hover:text-blue-600 transition whitespace-nowrap">
+                <button
+                  onClick={() => (window.location.href = "/informes")}
+                  className="text-sm font-medium text-black hover:text-blue-600 transition whitespace-nowrap"
+                >
                   Informes
                 </button>
 

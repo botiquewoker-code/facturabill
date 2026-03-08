@@ -39,7 +39,7 @@ export default function Historial() {
 
             <p>Cliente: {doc.cliente?.nombre || "Sin cliente"}</p>
             <p>Fecha: {doc.fecha}</p>
-            <p>Total: {doc.total} €</p>
+            <p className="text-black font-bold">Total: {doc.total} €</p>
 
             <p className="mt-2">
               Estado: <span className="font-semibold">{doc.estado}</span>
@@ -47,9 +47,15 @@ export default function Historial() {
 
             {doc.tipo === "presupuesto" && (
               <button
-                onClick={() =>
-                  router.push(`/crear-factura?convertir=${doc.id}`)
-                }
+                onClick={() => {
+                  console.log(doc);
+                  localStorage.setItem(
+                    "presupuestoConvertir",
+                    JSON.stringify(doc),
+                  );
+
+                  router.push("/crear-factura");
+                }}
                 className="mt-4 bg-green-600 text-white px-4 py-2 rounded-xl font-bold"
               >
                 Convertir a factura
