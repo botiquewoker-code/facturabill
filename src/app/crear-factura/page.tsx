@@ -65,10 +65,10 @@ export default function CrearFacturaPage() {
   const [conceptos, setconceptos] = useState([
     { desc: "", cant: 1, precio: 0 },
   ]);
-  const [esPresupuesto, setEsPresupuesto] = useState(true);
+  const [esPresupuesto, setEsPresupuesto] = useState(false);
   const [editarIva, setEditarIva] = useState(false);
   const [fecha] = useState(new Date().toISOString().split("T")[0]);
-  const [numero, setNumero] = useState(`PRES-${new Date().getFullYear()}-001`);
+  const [numero, setNumero] = useState(`FAC-${new Date().getFullYear()}-001`);
   const [numeroFactura, setNumeroFactura] = useState("001");
   const [empresa, setEmpresa] = useState<Empresa>({
     nombre: "",
@@ -128,6 +128,13 @@ export default function CrearFacturaPage() {
   useEffect(() => {
     localStorage.setItem("notasUsuario", notas);
   }, [notas]);
+
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("tipo") === "presupuesto") {
+    setEsPresupuesto(true);
+  }
+}, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
