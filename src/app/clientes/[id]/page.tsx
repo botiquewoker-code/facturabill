@@ -77,6 +77,17 @@ export default function ClienteDetalle() {
         >
           Crear factura
         </button>
+        <button
+          onClick={() => {
+            localStorage.setItem("tipoDocumento", "presupuesto");
+            router.push(
+              `/crear-factura?clienteId=${params.id}&tipo=presupuesto`,
+            );
+          }}
+          className="bg-green-600 text-white px-4 py-2 rounded-lg"
+        >
+          Crear presupuesto
+        </button>
 
         <button className="border px-4 py-2 rounded-lg">Editar cliente</button>
 

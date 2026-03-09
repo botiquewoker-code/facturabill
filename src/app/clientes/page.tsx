@@ -120,13 +120,6 @@ export default function ClientesPage() {
         >
           Nuevo cliente
         </button>
-
-        <button
-          onClick={() => router.push("/clientes/base-datos")}
-          className="border px-4 py-2 rounded-lg"
-        >
-          Ver base de datos
-        </button>
       </div>
 
       {/* resultados */}

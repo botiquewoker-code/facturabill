@@ -80,6 +80,14 @@ export default function CrearFactura() {
   const [nuevoCant, setNuevoCant] = useState(1);
   const [menuOpen, setMenuOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
+  const [logo, setLogo] = useState("");
+
+  useEffect(() => {
+    const guardado = localStorage.getItem("logoUsuario");
+    if (guardado) {
+      setLogo(guardado);
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -128,7 +136,6 @@ export default function CrearFactura() {
   const [conceptos, setconceptos] = useState([
     { desc: "", cant: 1, precio: 0 },
   ]);
-  const [logo, setLogo] = useState<string>("");
   const [tipoIVA, setTipoIVA] = useState(21);
   const [showIVASelector, setShowIVASelector] = useState(false);
   const [ivaPorc, setIvaPorc] = useState(21);
@@ -294,13 +301,13 @@ ${nombreEmpresa}`,
         <div className="max-w-5xl mx-auto p-4 pb-24">
           {/* Cabecera clásica - tu diseño actual corregido */}
           <header className="bg-gray-200 border-b border-gray-200 fixed top-0 left-0 right-0 z-50 shadow-sm">
-            <div className="max-w-7xl mx-auto px-6 py-1 flex items-center justify-between">
+            <div className="max-w-7xl mx-auto px-0 py-1 flex items-center justify-between">
               {/* Logo Facturabill.net a la izquierda */}
-
+              {logo && <img src={logo} alt="Logo" className="h-8 ml-3 rounded-full" />}
               {/* Botón menú hamburguesa */}
               <button
                 onClick={() => setMenuOpen(true)}
-                className="text-2xl text-gray-800 hover:text-gray-900"
+                className="text-2xl text-gray-800 hover:text-gray-900 mr-3"
               >
                 ☰
               </button>
@@ -479,6 +486,15 @@ ${nombreEmpresa}`,
             <div>
               <h4 className="text-white font-semibold mb-4">Legal</h4>
               <ul className="space-y-3 text-sm">
+                <li>
+                  <a
+                    href="/aviso-legal"
+                    className="hover:text-white transition"
+                  >
+                    Aviso legal
+                  </a>
+                </li>
+
                 <li>
                   <a href="/terminos" className="hover:text-white transition">
                     Términos de uso

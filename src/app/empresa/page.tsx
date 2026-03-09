@@ -90,7 +90,12 @@ export default function ConfiguracionEmpresa() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = () => setLogo(reader.result as string);
+
+    reader.onload = () => {
+      const imagen = reader.result as string;
+      setLogo(imagen);
+      localStorage.setItem("logoUsuario", imagen);
+    };
     reader.readAsDataURL(file);
   };
   const handleGuardarEmpresa = () => {

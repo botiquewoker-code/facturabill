@@ -109,7 +109,7 @@ export default function CrearFacturaPage() {
       if (datos.items) setconceptos(datos.items);
 
       if (datos.id) {
-        const nuevoNumero = datos.id.replace("PRES", "FAC");
+        const nuevoNumero = String(datos.id).replace("PRES", "FAC");
         setNumeroFactura(nuevoNumero);
       }
 
@@ -129,12 +129,12 @@ export default function CrearFacturaPage() {
     localStorage.setItem("notasUsuario", notas);
   }, [notas]);
 
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("tipo") === "presupuesto") {
-    setEsPresupuesto(true);
-  }
-}, []);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("tipo") === "presupuesto") {
+      setEsPresupuesto(true);
+    }
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -265,10 +265,12 @@ useEffect(() => {
     if (!cliente.email) return toast.error("Falta email del cliente");
     const historial = JSON.parse(localStorage.getItem("historial") || "[]");
 
-    const index = historial.findIndex((doc: any) => doc.id === numeroFactura);
+    const index = historial.findIndex(
+      (doc: any) => doc.numero === numeroFactura,
+    );
 
     if (index !== -1) {
-      historial[index].tipo = "factura";
+      historial[index].tipo = esPresupuesto ? "presupuesto" : "factura";
       historial[index].estado = "Factura enviada";
     } else {
       historial.unshift({
