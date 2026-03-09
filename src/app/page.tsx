@@ -301,9 +301,8 @@ ${nombreEmpresa}`,
         <div className="max-w-5xl mx-auto p-4 pb-24">
           {/* Cabecera clásica - tu diseño actual corregido */}
           <header className="bg-gray-200 border-b border-gray-200 fixed top-0 left-0 right-0 z-50 shadow-sm">
-            <div className="max-w-7xl mx-auto px-0 py-1 flex items-center justify-between">
+            <div className="max-w-7xl mx-auto px-0 py-1 flex items-center justify-end">
               {/* Logo Facturabill.net a la izquierda */}
-              {logo && <img src={logo} alt="Logo" className="h-8 ml-3 rounded-full" />}
               {/* Botón menú hamburguesa */}
               <button
                 onClick={() => setMenuOpen(true)}
