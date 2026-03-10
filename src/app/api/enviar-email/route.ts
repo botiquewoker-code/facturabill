@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
     const boundary = "NextPart";
 
-    const rawEmail = `From: no-reply@facturabill.net
+    const rawEmail = `From: facturabill.net@gmail.com
 To: ${to}
 Subject: ${subject}
 MIME-Version: 1.0
