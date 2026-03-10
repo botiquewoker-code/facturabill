@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { SESClient, SendRawEmailCommand } from "@aws-sdk/client-ses";
 
 const ses = new SESClient({
-  region: process.env.AWS_REGION,
+  region: process.env.SES_REGION!,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.SES_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.SES_SECRET_ACCESS_KEY!,
   },
 });
 
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
     const boundary = "NextPart";
 
-    const rawEmail = `From: facturabill.net@gmail.com
+    const rawEmail = `From: no-reply@facturabill.net
 To: ${to}
 Subject: ${subject}
 MIME-Version: 1.0
