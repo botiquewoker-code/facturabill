@@ -6,6 +6,7 @@ const ses = new SESClient({
 });
 
 export async function POST(req: Request) {
+console.log("API enviar-email ejecutada");
   try {
     const formData = await req.formData();
 
