@@ -12,7 +12,7 @@ export default function SoportePage() {
 
   const router = useRouter();
 
-  const enviarConsulta = async (e:any) => {
+  const enviarConsulta = async (e: any) => {
     e.preventDefault();
 
     await fetch("/api/soporte", {
@@ -32,57 +32,41 @@ export default function SoportePage() {
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-10">
-
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">
-        Soporte
-      </h1>
+      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Soporte</h1>
 
       {/* Preguntas frecuentes */}
       <div className="mb-10">
-        <h2 className="text-lg font-semibold mb-4">
-          Preguntas frecuentes
-        </h2>
+        <h2 className="text-lg font-semibold mb-4">Preguntas frecuentes</h2>
 
         <div className="space-y-4 text-sm text-gray-700">
-
           <div>
-            <p className="font-medium">
-              ¿Cómo creo mi primera factura?
-            </p>
+            <p className="font-medium">¿Cómo creo mi primera factura?</p>
             <p className="text-gray-600">
-              Primero añade un cliente y después crea una factura desde el panel principal.
+              Primero añade un cliente y después crea una factura desde el panel
+              principal.
             </p>
           </div>
 
           <div>
-            <p className="font-medium">
-              ¿Puedo descargar la factura en PDF?
-            </p>
+            <p className="font-medium">¿Puedo descargar la factura en PDF?</p>
             <p className="text-gray-600">
               Sí, puedes descargar la factura en PDF o enviarla directamente.
             </p>
           </div>
 
           <div>
-            <p className="font-medium">
-              ¿La herramienta es gratuita?
-            </p>
+            <p className="font-medium">¿La herramienta es gratuita?</p>
             <p className="text-gray-600">
               Sí, Facturabill es una herramienta gratuita y sin publicidad.
             </p>
           </div>
-
         </div>
       </div>
 
       {/* Formulario soporte */}
       {!enviado ? (
-
         <form onSubmit={enviarConsulta} className="space-y-4">
-
-          <h2 className="text-lg font-semibold">
-            Contactar con soporte
-          </h2>
+          <h2 className="text-lg font-semibold">Contactar con soporte</h2>
 
           <input
             type="text"
@@ -124,23 +108,16 @@ export default function SoportePage() {
           >
             Enviar consulta
           </button>
-
         </form>
-
       ) : (
-
         <div className="bg-green-100 border border-green-300 p-4 rounded-lg">
           <p className="text-green-800 font-medium">
             Consulta enviada correctamente
           </p>
 
-          <p className="text-green-700 text-sm">
-            Volviendo al inicio...
-          </p>
+          <p className="text-green-700 text-sm">Volviendo al inicio...</p>
         </div>
-
       )}
-
     </div>
   );
 }

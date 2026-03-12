@@ -14,9 +14,9 @@ export async function POST(req: Request) {
 
     const params = {
       Source: process.env.EMAIL_FROM,
-Destination: {
-  ToAddresses: [process.env.EMAIL_TO!],
-},
+      Destination: {
+        ToAddresses: [process.env.EMAIL_TO!],
+      },
 
       ReplyToAddresses: email ? [email] : [],
       Message: {
@@ -43,7 +43,6 @@ ${mensaje}
     await ses.send(new SendEmailCommand(params));
 
     return Response.json({ ok: true });
-
   } catch (error) {
     console.error("Error enviando soporte:", error);
     return Response.json({ ok: false }, { status: 500 });

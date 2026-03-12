@@ -3,10 +3,6 @@ import { SESClient, SendRawEmailCommand } from "@aws-sdk/client-ses";
 
 const ses = new SESClient({
   region: process.env.SES_REGION,
-  credentials: {
-    accessKeyId: process.env.SES_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.SES_SECRET_ACCESS_KEY!,
-  },
 });
 
 export async function POST(req: Request) {
@@ -21,10 +17,10 @@ export async function POST(req: Request) {
     const fileBuffer = Buffer.from(await file.arrayBuffer());
     const fileBase64 = fileBuffer.toString("base64");
 
-    const boundary = "NextPart";
+    const boundary = "NextPart_" + Date.now();
 
     const rawEmail = `From: ${process.env.EMAIL_FROM}
-To: facturabill.net@gmail.com
+To: ${to}
 Subject: ${subject}
 MIME-Version: 1.0
 Content-Type: multipart/mixed; boundary="${boundary}"
@@ -47,11 +43,10 @@ ${fileBase64}
         RawMessage: {
           Data: Buffer.from(rawEmail),
         },
-      })
+      }),
     );
 
     return NextResponse.json({ ok: true });
-
   } catch (error) {
     console.error(error);
     return NextResponse.json({ ok: false }, { status: 500 });
