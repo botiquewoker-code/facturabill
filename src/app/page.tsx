@@ -11,6 +11,7 @@ import { UserGroupIcon } from "@heroicons/react/24/outline";
 import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
+import { HeartIcon } from "@heroicons/react/24/outline";
 
 import {
   Upload,
@@ -383,7 +384,10 @@ ${nombreEmpresa}`,
                 </Link>
                 <div className="h-5 w-px bg-gray-300" />
 
-                <button className="text-sm font-medium text-black hover:text-blue-600 transition whitespace-nowrap">
+                <button
+                  onClick={() => (window.location.href = "/soporte")}
+                  className="text-sm font-medium text-black hover:text-blue-600 transition whitespace-nowrap"
+                >
                   Soporte
                 </button>
               </div>
@@ -469,6 +473,18 @@ ${nombreEmpresa}`,
           </div>
         </div>
       </div>
+      <div className="flex flex-col items-center text-center">
+        <p className="text-xs text-gray-500">
+          Si esta herramienta te resulta útil
+        </p>
+
+        <Link href="/apoyar" className="text-blue-600 text-sm font-medium">
+          Apoya este proyecto
+        </Link>
+
+        <p className="text-xs text-gray-400">para mantenerlo gratis</p>
+      </div>
+
       <footer className="bg-gray-900 text-gray-300 py-12 mt-0">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 text-center md:text-left">
