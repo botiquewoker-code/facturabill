@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const boundary = "NextPart";
 
     const rawEmail = `From: ${process.env.EMAIL_FROM}
-To: ${to}
+To: facturabill.net@gmail.com
 Subject: ${subject}
 MIME-Version: 1.0
 Content-Type: multipart/mixed; boundary="${boundary}"
