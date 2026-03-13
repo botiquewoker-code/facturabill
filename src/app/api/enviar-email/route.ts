@@ -3,10 +3,14 @@ import { SESClient, SendRawEmailCommand } from "@aws-sdk/client-ses";
 
 const ses = new SESClient({
   region: process.env.SES_REGION,
+  credentials: {
+    accessKeyId: process.env.SES_ACCESS_KEY!,
+    secretAccessKey: process.env.SES_SECRET_KEY!,
+  },
 });
 
 export async function POST(req: Request) {
-console.log("API enviar-email ejecutada");
+  console.log("API enviar-email ejecutada");
   try {
     const formData = await req.formData();
 
