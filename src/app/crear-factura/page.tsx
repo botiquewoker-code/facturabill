@@ -188,7 +188,10 @@ export default function CrearFacturaPage() {
     }
   }, [clienteId]);
 
-  const subtotal = conceptos.reduce((acc, i) => acc + i.cant * i.precio, 0);
+  const subtotal = conceptos.reduce(
+    (acc, i) => acc + Number(i.cant || 0) * Number(i.precio || 0),
+    0,
+  );
   const iva = subtotal * (tipoIVA / 100);
   const total = subtotal + iva;
 
@@ -440,17 +443,30 @@ export default function CrearFacturaPage() {
           <h3 className="text-lg font-semibold text-blue-700 mb-6">
             Conceptos
           </h3>
+          <div className="grid grid-cols-12 gap-3 mb-2 text-xs font-semibold text-blue-700">
+            <div className="col-span-5">Descripción</div>
+            <div className="col-span-2 text-center">Cant.</div>
+            <div className="col-span-2 text-right">Precio</div>
+            <div className="col-span-2 text-right">Total</div>
+            <div className="col-span-1"></div>
+          </div>
 
           {conceptos.map((c, i) => (
             <div key={i} className="grid grid-cols-12 gap-3 items-center mb-3">
               {/* Descripción */}
-              <input
+              <textarea
                 placeholder="Descripción"
                 value={c.desc}
+                rows={1}
                 onChange={(e) => {
                   const copia = [...conceptos];
                   copia[i].desc = e.target.value;
                   setconceptos(copia);
+                }}
+                onInput={(e) => {
+                  const el = e.target as HTMLTextAreaElement;
+                  el.style.height = "auto";
+                  el.style.height = el.scrollHeight + "px";
                 }}
                 className="col-span-5 px-4 py-2 rounded-xl border border-blue-200 text-sm bg-white focus:ring-2 focus:ring-blue-400 outline-none"
               />
@@ -458,8 +474,8 @@ export default function CrearFacturaPage() {
               {/* Cantidad */}
               <input
                 type="number"
-                min="1"
-                value={c.cant}
+                value={c.cant === 0 ? "" : c.cant}
+                placeholder="Cant."
                 onChange={(e) => {
                   const copia = [...conceptos];
                   copia[i].cant = Number(e.target.value);
@@ -472,7 +488,8 @@ export default function CrearFacturaPage() {
               <input
                 type="number"
                 step="0.01"
-                value={c.precio}
+                value={c.precio === 0 ? "" : c.precio}
+                placeholder="€"
                 onChange={(e) => {
                   const copia = [...conceptos];
                   copia[i].precio = Number(e.target.value);
@@ -503,7 +520,7 @@ export default function CrearFacturaPage() {
           <button
             type="button"
             onClick={() =>
-              setconceptos([...conceptos, { desc: "", cant: 1, precio: 0 }])
+              setconceptos([...conceptos, { desc: "", cant: 0, precio: 0 }])
             }
             className="mt-3 text-sm font-medium text-blue-600 hover:text-blue-800"
           >

@@ -42,7 +42,7 @@ export default function Informes() {
     let totalPres = 0;
     let total = 0;
 
-    historial.forEach((doc: any) => {
+    (historial || []).forEach((doc: any) => {
       if (doc.tipo === "factura") {
         totalFacturas++;
         total += Number(doc.total || 0);
@@ -50,7 +50,7 @@ export default function Informes() {
         const fecha = new Date(doc.fecha);
         const mes = fecha.getMonth();
 
-        meses[mes].total += Number(doc.total || 0);
+        meses[mes] && (meses[mes].total += Number(doc.total || 0));
       }
 
       if (doc.tipo === "presupuesto") {

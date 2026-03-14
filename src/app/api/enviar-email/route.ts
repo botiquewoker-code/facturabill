@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { SESClient, SendRawEmailCommand } from "@aws-sdk/client-ses";
 
 const ses = new SESClient({
-  region: process.env.SES_REGION,
+  region: process.env.SES_REGION || "eu-west-1",
   credentials: {
     accessKeyId: process.env.SES_ACCESS_KEY!,
     secretAccessKey: process.env.SES_SECRET_KEY!,

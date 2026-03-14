@@ -306,13 +306,12 @@ const PlantillaNueva = ({
 
             return (
               <View key={i} style={styles.tableRow}>
-                <Text style={styles.colConcept}>
-                  {item.desc && String(item.desc).trim() !== ""
-                    ? item.desc
-                    : "-"}
-                </Text>
+                <Text style={styles.colConcept}>{item.desc}</Text>
+
                 <Text style={styles.colQty}>{cant}</Text>
+
                 <Text style={styles.colPrice}>{precio.toFixed(2)} €</Text>
+
                 <Text style={styles.colTotal}>{totalLinea.toFixed(2)} €</Text>
               </View>
             );

@@ -253,12 +253,16 @@ const InvoicePDF = ({
           {conceptos.map((item, i) => (
             <View key={i} style={styles.tableRow}>
               <Text style={styles.colConcept}>{item.desc}</Text>
-              <Text style={styles.colQty}>{item.cant}</Text>
+
+              <Text style={styles.colQty}>{Number(item.cant ?? 1)}</Text>
+
               <Text style={styles.colPrice}>
-                {(item.precio ?? 0).toFixed(2)} €
+                {Number(item.precio ?? 0).toFixed(2)} €
               </Text>
+
               <Text style={styles.colTotal}>
-                {((item.cant ?? 1) * (item.precio ?? 0)).toFixed(2)} €
+                {(Number(item.cant ?? 1) * Number(item.precio ?? 0)).toFixed(2)}{" "}
+                €
               </Text>
             </View>
           ))}
