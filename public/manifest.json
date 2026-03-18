@@ -1,10 +1,10 @@
 {
   "name": "FacturaBill",
-  "short_name": "Factura",
+  "short_name": "Facturas",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#00167A",
-  "theme_color": "#000000",
+  "theme_color": "#00167A",
   "icons": [
     {
       "src": "/icon-192x192.png",
