@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   title: "Crear facturas y Presupuestos facil",
   description:
     "Facturas y presupuestos rápidos para autónomos y pequeños negocios",
+  manifest: "/manifest.json",
   icons: {
     icon: "/favicon.ico",
   },
@@ -49,6 +50,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+      }
+    `,
+          }}
+        />
       </body>
     </html>
   );
