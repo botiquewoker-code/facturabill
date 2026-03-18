@@ -356,7 +356,7 @@ ${nombreEmpresa}`,
                     Registro en desarrollo
                   </button>
 
-                  <button className="w-full rounded-xl bg-amber-400 py-3 font-semibold text-white hover:bg-black-">
+                  <button className="w-full rounded-xl bg-amber-400 py-3 font-semibold text-gray-900 hover:bg-black-">
                     Iniciar sesión
                   </button>
                 </div>
@@ -546,14 +546,22 @@ ${nombreEmpresa}`,
                 </li>
               </ul>
             </div>
+            <li>
+              <a
+                href="/eliminar-cuenta"
+                className="hover:text-white transition"
+              >
+                Eliminar cuenta
+              </a>
+            </li>
+          </div>
 
-            <div>
-              <h4 className="text-white font-semibold mb-4">Contacto</h4>
-              <p className="text-sm">facturabill.net@gmail.com</p>
-              <p className="text-sm mt-6">
-                © 2025 Facturabill.net Todos los derechos reservados.
-              </p>
-            </div>
+          <div>
+            <h4 className="text-white font-semibold mb-4">Contacto</h4>
+            <p className="text-sm">facturabill.net@gmail.com</p>
+            <p className="text-sm mt-6">
+              © 2025 Facturabill.net Todos los derechos reservados.
+            </p>
           </div>
         </div>
       </footer>
