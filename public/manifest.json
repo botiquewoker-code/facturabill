@@ -3,7 +3,7 @@
   "short_name": "Factura",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#00167A",
   "theme_color": "#000000",
   "icons": [
     {
