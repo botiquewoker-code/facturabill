@@ -37,12 +37,12 @@ export default function RootLayout({
 
         <Script id="google-ads" strategy="afterInteractive">
           {`
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'AW-17918127185');
-      gtag('config', 'G-XSGT6ME68Y');
-    `}
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'AW-17918127185');
+          gtag('config', 'G-XSGT6ME68Y');
+        `}
         </Script>
       </head>
 
@@ -50,15 +50,16 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js');
-      }
-    `,
-          }}
-        />
+
+        <Script id="sw-register" strategy="afterInteractive">
+          {`
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+              navigator.serviceWorker.register('/sw.js');
+            });
+          }
+        `}
+        </Script>
       </body>
     </html>
   );

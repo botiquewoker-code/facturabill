@@ -19,8 +19,8 @@
     "path": "C:\\Users\\ibrahim\\facturabill\\android.keystore",
     "alias": "android"
   },
-  "appVersionName": "11.0",
-  "appVersionCode": 10,
+  "appVersionName": "18.08.0",
+  "appVersionCode": 17,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://facturabill.net/manifest.json",
@@ -42,5 +42,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": [],
-  "appVersion": "11.0"
+  "appVersion": "18.08.0"
 }
