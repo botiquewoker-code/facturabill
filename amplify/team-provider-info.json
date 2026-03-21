@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-facturabill-dev-f8699-authRole",
+      "UnauthRoleArn": "arn:aws:iam::194449349175:role/amplify-facturabill-dev-f8699-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::194449349175:role/amplify-facturabill-dev-f8699-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-facturabill-dev-f8699-deployment",
+      "UnauthRoleName": "amplify-facturabill-dev-f8699-unauthRole",
+      "StackName": "amplify-facturabill-dev-f8699",
+      "StackId": "arn:aws:cloudformation:us-east-1:194449349175:stack/amplify-facturabill-dev-f8699/6d028000-2539-11f1-a603-123c062ada85",
+      "AmplifyAppId": "d3tq4cjsmdbk12"
+    },
+    "categories": {
+      "auth": {
+        "facturabill0b67ef74": {}
+      }
+    }
+  }
+}

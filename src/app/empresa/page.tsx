@@ -126,7 +126,9 @@ export default function ConfiguracionEmpresa() {
     <div className="max-w-4xl mx-auto p-6 space-y-8">
       {/* PLANTILLAS */}
       <div className="p-0 mt-8 mb-6">
-        <h3 className="text-lg font-bold mb-6 text-center">Elige plantilla</h3>
+        <h3 className="text-lg font-bold mb-6 text-center text-black">
+          Elige plantilla
+        </h3>
         <div className="overflow-x-auto whitespace-nowrap pb-2 -mx-6 px-6">
           <div className="inline-flex gap-6">
             {["Clasica", "elegant", "creative", "minimal"].map((t) => (
@@ -139,7 +141,7 @@ export default function ConfiguracionEmpresa() {
 `}
                   onClick={() => seleccionarPlantilla(mapaPlantillas[t])}
                 />
-                <p className="text-center mt-3 text-sm font-medium capitalize">
+                <p className="text-center mt-3 text-sm font-medium capitalize text-black">
                   {t}
                 </p>
               </div>
@@ -164,7 +166,7 @@ export default function ConfiguracionEmpresa() {
             />
           ) : (
             <div className="h-32 border-2 border-dashed border-green-500 rounded-xl flex items-center justify-center">
-              <p className="text-gray-500 text-sm">Toca para subir logo</p>
+              <p className="text-black text-sm">Toca para subir logo</p>
             </div>
           )}
           <p className="text-xs text-gray-600 mt-3">Máximo 2MB · PNG, JPG</p>
@@ -172,7 +174,7 @@ export default function ConfiguracionEmpresa() {
       </div>
       {/* 3️⃣ DATOS EMPRESA */}
       <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200 shadow-sm">
-        <h3 className="text-sm font-semibold text-blue-700 mb-5">
+        <h3 className="text-sm font-semibold text-black mb-5">
           Datos de su empresa
         </h3>
 
@@ -181,14 +183,14 @@ export default function ConfiguracionEmpresa() {
             placeholder="Nombre / Razón social"
             value={empresa.nombre}
             onChange={(e) => setEmpresa({ ...empresa, nombre: e.target.value })}
-            className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
+            className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm text-black placeholder-black bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
           />
 
           <input
             placeholder="NIF/CIF"
             value={empresa.nif}
             onChange={(e) => setEmpresa({ ...empresa, nif: e.target.value })}
-            className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
+            className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm text-black placeholder-black bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
           />
 
           <input
@@ -197,21 +199,21 @@ export default function ConfiguracionEmpresa() {
             onChange={(e) =>
               setEmpresa({ ...empresa, direccion: e.target.value })
             }
-            className="md:col-span-2 w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
+            className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm text-black placeholder-black bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
           />
 
           <input
             placeholder="Ciudad"
             value={empresa.ciudad}
             onChange={(e) => setEmpresa({ ...empresa, ciudad: e.target.value })}
-            className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
+            className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm text-black placeholder-black bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
           />
 
           <input
             placeholder="C.P."
             value={empresa.cp}
             onChange={(e) => setEmpresa({ ...empresa, cp: e.target.value })}
-            className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
+            className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm text-black placeholder-black bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
           />
 
           <input
@@ -220,14 +222,14 @@ export default function ConfiguracionEmpresa() {
             onChange={(e) =>
               setEmpresa({ ...empresa, telefono: e.target.value })
             }
-            className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
+            className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm text-black placeholder-black bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
           />
 
           <input
             placeholder="Email"
             value={empresa.email}
             onChange={(e) => setEmpresa({ ...empresa, email: e.target.value })}
-            className="md:col-span-2 w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
+            className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm text-black placeholder-black bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
           />
         </div>
       </div>
@@ -239,7 +241,7 @@ export default function ConfiguracionEmpresa() {
           value={notas}
           onChange={(e) => setNotas(e.target.value)}
           rows={5}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none"
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl text-black placeholder-black bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-500 outline-none"
         />
       </div>
 
@@ -247,7 +249,7 @@ export default function ConfiguracionEmpresa() {
       <button
         type="button"
         onClick={handleGuardarEmpresa}
-        className="w-full mt-6 bg-green-100 hover:bg-green-200 text-green-800 font-semibold py-3 px-4 rounded-xl shadow-sm transition duration-200 active:scale-95"
+        className="w-full mt-6 bg-green-100 hover:bg-green-200 text-black font-semibold py-3 px-4 rounded-xl shadow-sm transition duration-200 active:scale-95"
       >
         Guardar configuración
       </button>

@@ -382,14 +382,16 @@ export default function CrearFacturaPage() {
               onChange={(e) =>
                 setCliente({ ...cliente, nombre: e.target.value })
               }
-              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
+              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white text-black placeholder-gray-500"
+              style={{ colorScheme: "light" }}
             />
 
             <input
               placeholder="DNI / NIE"
               value={cliente.nif}
               onChange={(e) => setCliente({ ...cliente, nif: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
+              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white text-black placeholder-gray-500"
+              style={{ colorScheme: "light" }}
             />
 
             <input
@@ -398,7 +400,8 @@ export default function CrearFacturaPage() {
               onChange={(e) =>
                 setCliente({ ...cliente, direccion: e.target.value })
               }
-              className="md:col-span-2 w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
+              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white text-black placeholder-gray-500"
+              style={{ colorScheme: "light" }}
             />
 
             <input
@@ -407,7 +410,8 @@ export default function CrearFacturaPage() {
               onChange={(e) =>
                 setCliente({ ...cliente, ciudad: e.target.value })
               }
-              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
+              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white text-black placeholder-gray-500"
+              style={{ colorScheme: "light" }}
             />
 
             <input
@@ -416,7 +420,8 @@ export default function CrearFacturaPage() {
               onChange={(e) =>
                 setCliente({ ...cliente, codigoPostal: e.target.value })
               }
-              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
+              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white text-black placeholder-gray-500"
+              style={{ colorScheme: "light" }}
             />
 
             <input
@@ -425,7 +430,8 @@ export default function CrearFacturaPage() {
               onChange={(e) =>
                 setCliente({ ...cliente, telefono: e.target.value })
               }
-              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
+              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white text-black placeholder-gray-500"
+              style={{ colorScheme: "light" }}
             />
 
             <input
@@ -434,7 +440,8 @@ export default function CrearFacturaPage() {
               onChange={(e) =>
                 setCliente({ ...cliente, email: e.target.value })
               }
-              className="md:col-span-2 w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-400 outline-none"
+              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white text-black placeholder-gray-500"
+              style={{ colorScheme: "light" }}
             />
           </div>
         </div>
@@ -468,9 +475,9 @@ export default function CrearFacturaPage() {
                   el.style.height = "auto";
                   el.style.height = el.scrollHeight + "px";
                 }}
-                className="col-span-5 px-4 py-2 rounded-xl border border-blue-200 text-sm bg-white focus:ring-2 focus:ring-blue-400 outline-none"
+                className="col-span-5 px-4 py-2 rounded-xl border border-blue-200 text-sm bg-white text-black placeholder-gray-500 focus:ring-2 focus:ring-blue-400 outline-none"
+                style={{ colorScheme: "light" }}
               />
-
               {/* Cantidad */}
               <input
                 type="number"
@@ -481,7 +488,8 @@ export default function CrearFacturaPage() {
                   copia[i].cant = Number(e.target.value);
                   setconceptos(copia);
                 }}
-                className="col-span-2 px-3 py-2 rounded-xl border border-blue-200 text-sm text-center bg-white focus:ring-2 focus:ring-blue-400 outline-none"
+                className="col-span-2 px-3 py-2 rounded-xl border border-blue-200 text-sm text-center bg-white text-black placeholder-gray-500 focus:ring-2 focus:ring-blue-400 outline-none"
+                style={{ colorScheme: "light" }}
               />
 
               {/* Precio */}
@@ -495,7 +503,8 @@ export default function CrearFacturaPage() {
                   copia[i].precio = Number(e.target.value);
                   setconceptos(copia);
                 }}
-                className="col-span-2 px-3 py-2 rounded-xl border border-blue-200 text-sm text-right bg-white focus:ring-2 focus:ring-blue-400 outline-none"
+                className="col-span-2 px-3 py-2 rounded-xl border border-blue-200 text-sm text-right bg-white text-black placeholder-gray-500 focus:ring-2 focus:ring-blue-400 outline-none"
+                style={{ colorScheme: "light" }}
               />
 
               {/* Total */}
@@ -530,25 +539,27 @@ export default function CrearFacturaPage() {
         {/* Cuadro de totales compacto y bonito */}
         <div className="bg-orange-50 rounded-2xl p-4 shadow-md mb-6">
           <div className="mb-3">
-            <p className="text-base font-bold">Base imponible</p>
-            <p className="text-xl font-bold">{subtotal.toFixed(2)} €</p>
+            <p className="text-base font-bold text-black">Base imponible</p>
+            <p className="text-xl font-bold text-black">
+              {subtotal.toFixed(2)} €
+            </p>
           </div>
 
           <div className="flex justify-between items-center mb-3">
             <div>
-              <p className="text-base">IVA ({ivaPorc}%):</p>
+              <p className="text-base text-black">IVA ({ivaPorc}%):</p>
               <button className="text-blue-600 text-xs underline">
                 cambiar
               </button>
             </div>
-            <p className="text-xl font-bold">{iva.toFixed(2)} €</p>
+            <p className="text-xl font-bold text-black">{iva.toFixed(2)} €</p>
           </div>
 
           <div className="bg-orange-500 text-white rounded-xl p-3 text-center mb-3">
             <p className="text-2xl font-bold">{total.toFixed(2)} €</p>
           </div>
 
-          <p className="text-center text-gray-600 text-sm mb-4">
+          <p className="text-center text-black text-sm mb-4">
             Importe final a pagar por el cliente
           </p>
           <div className="flex gap-3 justify-center">

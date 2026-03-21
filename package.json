@@ -9,10 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@aws-amplify/ui-react": "^6.15.2",
     "@aws-sdk/client-ses": "^3.1007.0",
     "@heroicons/react": "^2.2.0",
     "@react-pdf/renderer": "^4.3.1",
     "@supabase/supabase-js": "^2.89.0",
+    "aws-amplify": "^6.16.3",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.4",
     "lucide-react": "^0.562.0",

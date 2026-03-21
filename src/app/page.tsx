@@ -82,6 +82,7 @@ export default function CrearFactura() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
   const [logo, setLogo] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     const guardado = localStorage.getItem("logoUsuario");
@@ -298,7 +299,7 @@ ${nombreEmpresa}`,
     <>
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-black">
         <div className="max-w-5xl mx-auto p-4 pb-24">
           {/* Cabecera clásica - tu diseño actual corregido */}
           <header className="bg-gray-200 border-b border-gray-200 fixed top-0 left-0 right-0 z-50 shadow-sm">
@@ -307,7 +308,7 @@ ${nombreEmpresa}`,
               {/* Botón menú hamburguesa */}
               <button
                 onClick={() => setMenuOpen(true)}
-                className="text-2xl text-gray-800 hover:text-gray-900 mr-3"
+                className="text-2xl text-black hover:text-gray-900 mr-3"
               >
                 ☰
               </button>
@@ -324,7 +325,7 @@ ${nombreEmpresa}`,
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* MENÚ */}
-                <ul className="space-y-4 text-[17px] font-semibold list-none p-0 m-0">
+                <ul className="space-y-4 text-[17px] font-semibold text-black list-none p-0 m-0">
                   <li>
                     <Link href="/como-funciona" className="block">
                       Cómo funciona
@@ -350,13 +351,13 @@ ${nombreEmpresa}`,
                 {/* BOTONES */}
                 <div className="space-y-3">
                   <button
-                    disabled
-                    className="w-full rounded-xl bg-grren-100 py-3 font-semibold text-gray-900 cursor-not-allowed"
+                    onClick={() => router.push("/login")}
+                    className="w-full rounded-xl bg-green-100 py-3 font-semibold text-black"
                   >
-                    Registro en desarrollo
+                    Registro
                   </button>
 
-                  <button className="w-full rounded-xl bg-amber-400 py-3 font-semibold text-gray-900 hover:bg-black-">
+                  <button className="w-full rounded-xl bg-amber-400 py-3 font-semibold text-black hover:bg-black hover:text-white">
                     Iniciar sesión
                   </button>
                 </div>
