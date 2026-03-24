@@ -384,7 +384,7 @@ ${nombreEmpresa}`,
                     onClick={() => router.push("/login")}
                     className="w-full rounded-xl  py-3 font-semibold text-black"
                   >
-                    regístrate 
+                    regístrate
                   </button>
 
                   <button className="w-full rounded-xl bg-amber-400 py-3 font-semibold text-black hover:bg-black hover:text-white">
@@ -515,28 +515,6 @@ ${nombreEmpresa}`,
 
         <p className="text-xs text-gray-400">para mantenerlo gratis</p>
       </div>
-
-      <footer className="bg-gray-900 text-gray-300 py-12 mt-0">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 text-center md:text-left">
-            <div>
-              <h3 className="text-white font-bold text-xl mb-4">
-                Facturabill.net
-              </h3>
-              <p className="text-sm leading-relaxed">
-                Tu herramienta sencilla y profesional para crear facturas al
-                instante.
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm mt-6">
-                © 2025 Facturabill.net Todos los derechos reservados.
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
     </>
   );
 }

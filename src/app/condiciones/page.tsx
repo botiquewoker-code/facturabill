@@ -138,7 +138,7 @@ export default function Condiciones() {
               generales, contacta con nosotros en:
               <br />
               <a
-                href="mailto:facturabill.net@gmail.com"
+                href="mailto:soporte@facturabill.net"
                 className="text-blue-600 hover:underline"
               >
                 soporte@facturabill.net
