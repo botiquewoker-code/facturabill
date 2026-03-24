@@ -16,11 +16,11 @@
   "iconUrl": "https://facturabill.net/icon-512x512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
-    "path": "C:\\Users\\ibrahim\\facturabill\\android.keystore",
+    "path": "C:\\keystore-backup\\android.keystore",
     "alias": "android"
   },
-  "appVersionName": "18.08.0",
-  "appVersionCode": 17,
+  "appVersionName": "24.1.0",
+  "appVersionCode": 25,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://facturabill.net/manifest.json",
@@ -42,5 +42,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": [],
-  "appVersion": "18.08.0"
+  "appVersion": "24.1.0"
 }

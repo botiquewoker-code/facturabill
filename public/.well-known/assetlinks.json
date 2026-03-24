@@ -1,11 +1,15 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.facturabill.app",
       "sha256_cert_fingerprints": [
-        "05:D8:56:9E:87:F1:5A:FD:DC:33:21:FA:E8:79:FE:06:FE:E3:B8:06:8D:D7:08:31:E3:7E:8A:6E:5E:F1:8D:15"
+        "05:D8:56:9E:87:F1:5A:FD:DC:33:21:FA:E8:79:FE:06:FE:E3:B8:06:8D:D7:08:31:E3:7E:8A:6E:5E:F1:8D:15",
+        "8F:39:50:FA:E1:03:73:BB:E4:E2:F8:DB:86:F1:A7:13:7C:D5:A0:95:50:95:5E:7A:65:D6:CF:B9:EE:0E:10:AD"
       ]
     }
   }
