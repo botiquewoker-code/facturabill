@@ -339,6 +339,36 @@ ${nombreEmpresa}`,
                   </li>
 
                   <li>
+                    <Link href="/eliminar-cuenta" className="block">
+                      Eliminar cuenta
+                    </Link>
+                  </li>
+
+                  <li>
+                    <Link href="/aviso-legal" className="block">
+                      Aviso legal
+                    </Link>
+                  </li>
+
+                  <li>
+                    <Link href="/terminos" className="block">
+                      Términos de uso
+                    </Link>
+                  </li>
+
+                  <li>
+                    <Link href="/privacidad" className="block">
+                      Política de privacidad
+                    </Link>
+                  </li>
+
+                  <li>
+                    <Link href="/condiciones" className="block">
+                      Condiciones generales
+                    </Link>
+                  </li>
+
+                  <li>
                     <Link href="/feedback" className="block">
                       Sugerencias
                     </Link>
@@ -352,9 +382,9 @@ ${nombreEmpresa}`,
                 <div className="space-y-3">
                   <button
                     onClick={() => router.push("/login")}
-                    className="w-full rounded-xl bg-green-100 py-3 font-semibold text-black"
+                    className="w-full rounded-xl  py-3 font-semibold text-black"
                   >
-                    Registro
+                    regístrate 
                   </button>
 
                   <button className="w-full rounded-xl bg-amber-400 py-3 font-semibold text-black hover:bg-black hover:text-white">
@@ -500,69 +530,10 @@ ${nombreEmpresa}`,
             </div>
 
             <div>
-              <h4 className="text-white font-semibold mb-4">Legal</h4>
-              <ul className="space-y-3 text-sm">
-                <li>
-                  <a
-                    href="/aviso-legal"
-                    className="hover:text-white transition"
-                  >
-                    Aviso legal
-                  </a>
-                </li>
-
-                <li>
-                  <a href="/terminos" className="hover:text-white transition">
-                    Términos de uso
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/condiciones"
-                    className="hover:text-white transition"
-                  >
-                    Condiciones generales
-                  </a>
-                </li>
-                <li>
-                  <a href="/privacidad" className="hover:text-white transition">
-                    Política de privacidad
-                  </a>
-                </li>
-              </ul>
+              <p className="text-sm mt-6">
+                © 2025 Facturabill.net Todos los derechos reservados.
+              </p>
             </div>
-
-            <div>
-              <h4 className="text-white font-semibold mb-4">Soporte</h4>
-              <ul className="space-y-3 text-sm">
-                <li>
-                  <a href="/ayuda" className="hover:text-white transition">
-                    Ayuda y FAQ
-                  </a>
-                </li>
-                <li>
-                  <a href="/contacto" className="hover:text-white transition">
-                    Contacto
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <li>
-              <a
-                href="/eliminar-cuenta"
-                className="hover:text-white transition"
-              >
-                Eliminar cuenta
-              </a>
-            </li>
-          </div>
-
-          <div>
-            <h4 className="text-white font-semibold mb-4">Contacto</h4>
-            <p className="text-sm">facturabill.net@gmail.com</p>
-            <p className="text-sm mt-6">
-              © 2025 Facturabill.net Todos los derechos reservados.
-            </p>
           </div>
         </div>
       </footer>

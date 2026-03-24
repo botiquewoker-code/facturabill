@@ -141,13 +141,13 @@ export default function Condiciones() {
                 href="mailto:facturabill.net@gmail.com"
                 className="text-blue-600 hover:underline"
               >
-                facturabill.net@gmail.com
+                soporte@facturabill.net
               </a>
             </p>
           </section>
 
           <p className="text-center text-gray-500 mt-16 text-base">
-            Última actualización: 24 de diciembre de 2025
+            Última actualización: 24 de diciembre de 2024
           </p>
 
           <div className="text-center mt-12">

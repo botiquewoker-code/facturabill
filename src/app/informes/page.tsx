@@ -72,7 +72,7 @@ export default function Informes() {
   const colors = ["#4f46e5", "#22c55e"];
 
   return (
-      <div className="min-h-screen bg-white p-6">
+    <div className="min-h-screen bg-white p-6">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">Tablero de informes</h1>
 

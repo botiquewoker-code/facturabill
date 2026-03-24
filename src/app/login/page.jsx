@@ -11,22 +11,22 @@ export default function Login() {
   const [password, setPassword] = useState("");
 
   const entrar = async () => {
-  try {
-    await signIn({
-      username: email,
-      password: password,
-    });
+    try {
+      await signIn({
+        username: email,
+        password: password,
+      });
 
-    alert("Inicio de sesión correcto");
-    window.location.href = "/";
-  } catch (error) {
-    if (error.message.includes("already a signed in user")) {
-      alert("Ya hay una sesión iniciada");
-    } else {
-      alert(error.message);
+      alert("Inicio de sesión correcto");
+      window.location.href = "/";
+    } catch (error) {
+      if (error.message.includes("already a signed in user")) {
+        alert("Ya hay una sesión iniciada");
+      } else {
+        alert(error.message);
+      }
     }
-  }
-}
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
