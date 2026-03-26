@@ -63,6 +63,7 @@ export default function CrearFactura() {
   const [direccion, setDireccion] = useState("");
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
+const [search, setSearch] = useState("");
   const [plantilla, setPlantilla] = useState<"InvoicePDF" | "PlantillaNueva">(
     "InvoicePDF",
   );
@@ -304,17 +305,26 @@ ${nombreEmpresa}`,
         <div className="max-w-5xl mx-auto p-4 pb-24">
           {/* Cabecera clásica - tu diseño actual corregido */}
           <header className="bg-gray-200 border-b border-gray-200 fixed top-0 left-0 right-0 z-50 shadow-sm">
-            <div className="max-w-7xl mx-auto px-0 py-1 flex items-center justify-end">
-              {/* Logo Facturabill.net a la izquierda */}
-              {/* Botón menú hamburguesa */}
-              <button
-                onClick={() => setMenuOpen(true)}
-                className="text-2xl text-black hover:text-gray-900 mr-3"
-              >
-                ☰
-              </button>
-            </div>
-          </header>
+  <div className="max-w-7xl mx-auto px-2 py-2 flex items-center justify-between">
+    
+    {/* Buscador */}
+    <input
+  placeholder="🔍 Buscar"
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  className="w-75 px-4 py-3 rounded-xl bg-white text-black placeholder-blue-600 shadow-sm"
+/>
+
+    {/* Botón menú */}
+    <button
+      onClick={() => setMenuOpen(true)}
+      className="text-2xl text-black"
+    >
+      ☰
+    </button>
+
+  </div>
+</header>
           {/* Menú hamburguesa lateral - blanco puro, logo Veri*Factu */}
           {menuOpen && (
             <div
