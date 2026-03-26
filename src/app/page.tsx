@@ -141,6 +141,7 @@ export default function CrearFactura() {
   const [tipoIVA, setTipoIVA] = useState(21);
   const [showIVASelector, setShowIVASelector] = useState(false);
   const [ivaPorc, setIvaPorc] = useState(21);
+  const [open, setOpen] = useState(false);
   const [verifactuOpen, setVerifactuOpen] = useState(false);
   useEffect(() => {
     const guardado = localStorage.getItem("datosEmpresa");
@@ -327,49 +328,93 @@ ${nombreEmpresa}`,
                 {/* MENÚ */}
                 <ul className="space-y-4 text-[17px] font-semibold text-black list-none p-0 m-0">
                   <li>
-                    <Link href="/como-funciona" className="block">
+                    <Link
+                      href="/como-funciona"
+                      className="block hover:text-blue-600 transition"
+                    >
                       Cómo funciona
                     </Link>
                   </li>
 
                   <li>
-                    <Link href="/verifactu" className="block">
+                    <Link
+                      href="/verifactu"
+                      className="block hover:text-blue-600 transition"
+                    >
                       VeriFactu
                     </Link>
                   </li>
 
                   <li>
-                    <Link href="/eliminar-cuenta" className="block">
+                    <Link
+                      href="/eliminar-cuenta"
+                      className="block hover:text-blue-600 transition"
+                    >
                       Eliminar cuenta
                     </Link>
                   </li>
 
+                  {/* LEGAL */}
                   <li>
-                    <Link href="/aviso-legal" className="block">
-                      Aviso legal
-                    </Link>
+                    <button
+                      onClick={() => setOpen(!open)}
+                      className="flex items-center justify-between w-full hover:text-blue-600 transition"
+                    >
+                      Legal
+                      <span
+                        className={`transform transition-transform ${open ? "rotate-180" : ""}`}
+                      >
+                        ▼
+                      </span>
+                    </button>
+
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ${
+                        open ? "max-h-40 mt-2" : "max-h-0"
+                      }`}
+                    >
+                      <ul className="ml-3 space-y-2 text-sm text-gray-600 border-l pl-3">
+                        <li>
+                          <Link
+                            href="/aviso-legal"
+                            className="block hover:text-blue-600"
+                          >
+                            Aviso legal
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            href="/terminos"
+                            className="block hover:text-blue-600"
+                          >
+                            Términos de uso
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            href="/privacidad"
+                            className="block hover:text-blue-600"
+                          >
+                            Política de privacidad
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            href="/condiciones"
+                            className="block hover:text-blue-600"
+                          >
+                            Condiciones generales
+                          </Link>
+                        </li>
+                      </ul>
+                    </div>
                   </li>
 
                   <li>
-                    <Link href="/terminos" className="block">
-                      Términos de uso
-                    </Link>
-                  </li>
-
-                  <li>
-                    <Link href="/privacidad" className="block">
-                      Política de privacidad
-                    </Link>
-                  </li>
-
-                  <li>
-                    <Link href="/condiciones" className="block">
-                      Condiciones generales
-                    </Link>
-                  </li>
-
-                  <li>
-                    <Link href="/feedback" className="block">
+                    <Link
+                      href="/feedback"
+                      className="block hover:text-blue-600 transition"
+                    >
                       Sugerencias
                     </Link>
                   </li>
@@ -377,7 +422,6 @@ ${nombreEmpresa}`,
 
                 {/* SEPARADOR */}
                 <div className="my-6 h-px bg-gray-200" />
-
                 {/* BOTONES */}
                 <div className="space-y-3">
                   <button
@@ -387,7 +431,7 @@ ${nombreEmpresa}`,
                     regístrate
                   </button>
 
-                  <button className="w-full rounded-xl bg-amber-400 py-3 font-semibold text-black hover:bg-black hover:text-white">
+                  <button className="w-full rounded-xl border py-3 font-semibold text- hover:text-gray-800">
                     Iniciar sesión
                   </button>
                 </div>
@@ -409,7 +453,7 @@ ${nombreEmpresa}`,
 
                 <Link
                   href="/empresa"
-                  className="flex items-center gap-2 text-black hover:text-black transition"
+                  className="text-sm font-medium text-black hover:text-blue-600 transition whitespace-nowrap"
                 >
                   Configuración
                 </Link>
@@ -503,17 +547,6 @@ ${nombreEmpresa}`,
             </div>
           </div>
         </div>
-      </div>
-      <div className="flex flex-col items-center text-center">
-        <p className="text-xs text-gray-500">
-          Si esta herramienta te resulta útil
-        </p>
-
-        <Link href="/apoyar" className="text-blue-600 text-sm font-medium">
-          Apoya este proyecto
-        </Link>
-
-        <p className="text-xs text-gray-400">para mantenerlo gratis</p>
       </div>
     </>
   );
