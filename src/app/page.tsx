@@ -312,7 +312,7 @@ ${nombreEmpresa}`,
   placeholder="🔍 Buscar"
   value={search}
   onChange={(e) => setSearch(e.target.value)}
-  className="w-75 px-4 py-3 rounded-xl bg-white text-black placeholder-blue-600 shadow-sm"
+  className="w-65 px-3 py-2 rounded-xl bg-white text-black placeholder-blue-600 shadow-sm"
 />
 
     {/* Botón menú */}
