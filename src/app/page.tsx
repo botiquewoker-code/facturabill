@@ -307,18 +307,10 @@ ${nombreEmpresa}`,
           <header className="bg-gray-200 border-b border-gray-200 fixed top-0 left-0 right-0 z-50 shadow-sm">
   <div className="max-w-7xl mx-auto px-2 py-2 flex items-center justify-between">
     
-    {/* Buscador */}
-    <input
-  placeholder="🔍 Buscar"
-  value={search}
-  onChange={(e) => setSearch(e.target.value)}
-  className="w-65 px-3 py-2 rounded-xl bg-white text-black placeholder-blue-600 shadow-sm"
-/>
-
     {/* Botón menú */}
     <button
       onClick={() => setMenuOpen(true)}
-      className="text-2xl text-black"
+      className="text-2xl text-black ml-auto mr-3"
     >
       ☰
     </button>
