@@ -586,14 +586,6 @@ ${nombreEmpresa}`,
         </div>
 
         <div
-          onClick={() => setActivo("articulos")}
-          className={`text-center ${activo === "articulos" ? "text-blue-600" : "text-black"}`}
-        >
-          <FaBox />
-          <p>Artículos</p>
-        </div>
-
-        <div
           onClick={() => setActivo("mas")}
           className={`text-center ${activo === "mas" ? "text-blue-600" : "text-black"}`}
         >
