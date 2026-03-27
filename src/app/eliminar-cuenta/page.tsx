@@ -36,10 +36,8 @@ export default function EliminarCuenta() {
         }}
       >
         <h1 style={{ color: "#d32f2f" }}>Eliminar cuenta</h1>
-        <p>
-          Si deseas eliminar tu cuenta Sigue los pasos:
-        </p>
-  
+        <p>Si deseas eliminar tu cuenta Sigue los pasos:</p>
+
         <p>
           Eliminaremos tu cuenta y datos asociados en un plazo máximo de 48
           horas.
@@ -121,4 +119,3 @@ export default function EliminarCuenta() {
     </main>
   );
 }
-

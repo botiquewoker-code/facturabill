@@ -12,6 +12,14 @@ import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { HeartIcon } from "@heroicons/react/24/outline";
+import {
+  FaFileInvoice,
+  FaCalculator,
+  FaUsers,
+  FaBox,
+  FaEllipsisH,
+} from "react-icons/fa";
+import { FaRegFileAlt } from "react-icons/fa";
 
 import {
   Upload,
@@ -63,7 +71,7 @@ export default function CrearFactura() {
   const [direccion, setDireccion] = useState("");
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
-const [search, setSearch] = useState("");
+  const [search, setSearch] = useState("");
   const [plantilla, setPlantilla] = useState<"InvoicePDF" | "PlantillaNueva">(
     "InvoicePDF",
   );
@@ -143,6 +151,7 @@ const [search, setSearch] = useState("");
   const [showIVASelector, setShowIVASelector] = useState(false);
   const [ivaPorc, setIvaPorc] = useState(21);
   const [open, setOpen] = useState(false);
+  const [activo, setActivo] = useState("facturas");
   const [verifactuOpen, setVerifactuOpen] = useState(false);
   useEffect(() => {
     const guardado = localStorage.getItem("datosEmpresa");
@@ -305,18 +314,16 @@ ${nombreEmpresa}`,
         <div className="max-w-5xl mx-auto p-4 pb-24">
           {/* Cabecera clásica - tu diseño actual corregido */}
           <header className="bg-gray-200 border-b border-gray-200 fixed top-0 left-0 right-0 z-50 shadow-sm">
-  <div className="max-w-7xl mx-auto px-2 py-2 flex items-center justify-between">
-    
-    {/* Botón menú */}
-    <button
-      onClick={() => setMenuOpen(true)}
-      className="text-2xl text-black ml-auto mr-3"
-    >
-      ☰
-    </button>
-
-  </div>
-</header>
+            <div className="max-w-7xl mx-auto px-2 py-2 flex items-center justify-between">
+              {/* Botón menú */}
+              <button
+                onClick={() => setMenuOpen(true)}
+                className="text-2xl text-black ml-auto mr-3"
+              >
+                ☰
+              </button>
+            </div>
+          </header>
           {/* Menú hamburguesa lateral - blanco puro, logo Veri*Factu */}
           {menuOpen && (
             <div
@@ -550,6 +557,50 @@ ${nombreEmpresa}`,
           </div>
         </div>
       </div>
+      <nav className="fixed bottom-0 w-full bg-white flex justify-around border-t p-2">
+        <div
+          onClick={() => {
+            setActivo("Borradores");
+            router.push("/borradores");
+          }}
+          className={`text-center ${activo === "Borradores" ? "text-blue-600" : "text-black"}`}
+        >
+          <FaRegFileAlt />
+          <p>Borradores</p>
+        </div>
+
+        <div
+          onClick={() => setActivo("presupuestos")}
+          className={`text-center ${activo === "presupuestos" ? "text-blue-600" : "text-black"}`}
+        >
+          <FaCalculator />
+          <p>Presupuestos</p>
+        </div>
+
+        <div
+          onClick={() => setActivo("clientes")}
+          className={`text-center ${activo === "clientes" ? "text-blue-600" : "text-black"}`}
+        >
+          <FaUsers />
+          <p>Clientes</p>
+        </div>
+
+        <div
+          onClick={() => setActivo("articulos")}
+          className={`text-center ${activo === "articulos" ? "text-blue-600" : "text-black"}`}
+        >
+          <FaBox />
+          <p>Artículos</p>
+        </div>
+
+        <div
+          onClick={() => setActivo("mas")}
+          className={`text-center ${activo === "mas" ? "text-blue-600" : "text-black"}`}
+        >
+          <FaEllipsisH />
+          <p>Más</p>
+        </div>
+      </nav>
     </>
   );
 }
