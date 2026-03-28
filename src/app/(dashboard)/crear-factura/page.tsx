@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { pdf } from "@react-pdf/renderer";
-import InvoicePDF from "@/components/InvoicePDF";
-import PlantillaNueva from "@/components/PlantillaNueva";
+import InvoicePDF from "@/features/invoices/components/InvoicePDF";
+import PlantillaNueva from "@/features/invoices/components/PlantillaNueva";
 import { Toaster, toast } from "react-hot-toast";
 import { Upload, Plus, Trash2, Download, Send } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 type Cliente = {
   nombre: string;
@@ -28,24 +28,95 @@ type Empresa = {
   email: string;
 };
 
+type Concepto = {
+  desc: string;
+  cant: number;
+  precio: number;
+};
+
+type DraftInvoice = {
+  id: string;
+  tipo: "factura" | "presupuesto";
+  numero: string;
+  fecha: string;
+  cliente: Cliente;
+  empresa: Empresa;
+  conceptos: Concepto[];
+  logo: string;
+  notas: string;
+  tipoIVA: number;
+  ivaPorc: number;
+  plantilla: "InvoicePDF" | "PlantillaNueva";
+  updatedAt: string;
+};
+
+type HistoryItem = {
+  id?: string;
+  numero?: string;
+  tipo: "factura" | "presupuesto";
+  cliente: Cliente;
+  fecha: string;
+  conceptos?: Concepto[];
+  total: number;
+  estado: string;
+};
+
+declare global {
+  interface Window {
+    gtag?: (
+      command: "event",
+      eventName: string,
+      params: Record<string, string | number>,
+    ) => void;
+  }
+}
+
+const DRAFTS_STORAGE_KEY = "borradores";
+const ACTIVE_DRAFT_STORAGE_KEY = "borradorActivo";
+const EMPTY_CLIENTE: Cliente = {
+  nombre: "",
+  nif: "",
+  direccion: "",
+  ciudad: "",
+  codigoPostal: "",
+  telefono: "",
+  email: "",
+};
+const EMPTY_EMPRESA: Empresa = {
+  nombre: "",
+  nif: "",
+  direccion: "",
+  ciudad: "",
+  codigoPostal: "",
+  telefono: "",
+  email: "",
+};
+
+function hasMeaningfulDraftContent(draft: DraftInvoice) {
+  const hasCliente = Object.values(draft.cliente).some((value) =>
+    value.trim().length > 0,
+  );
+  const hasEmpresa = Object.values(draft.empresa).some((value) =>
+    value.trim().length > 0,
+  );
+  const hasConceptos = draft.conceptos.some(
+    (item) => item.desc.trim() || item.cant > 0 || item.precio > 0,
+  );
+
+  return hasCliente || hasEmpresa || hasConceptos || draft.notas.trim().length > 0;
+}
+
 export default function CrearFacturaPage() {
   const router = useRouter();
+  const draftIdRef = useRef<string | null>(null);
+  const latestDraftRef = useRef<DraftInvoice | null>(null);
 
   const params = new URLSearchParams(
     typeof window !== "undefined" ? window.location.search : "",
   );
 
-  const tipo = params.get("tipo");
   const clienteId = params.get("clienteId");
-  const [cliente, setCliente] = useState<Cliente>({
-    nombre: "",
-    nif: "",
-    direccion: "",
-    ciudad: "",
-    codigoPostal: "",
-    telefono: "",
-    email: "",
-  });
+  const [cliente, setCliente] = useState<Cliente>(EMPTY_CLIENTE);
   useEffect(() => {
     if (!clienteId) return;
 
@@ -62,7 +133,7 @@ export default function CrearFacturaPage() {
     }
   }, [clienteId]);
 
-  const [conceptos, setconceptos] = useState([
+  const [conceptos, setconceptos] = useState<Concepto[]>([
     { desc: "", cant: 1, precio: 0 },
   ]);
   const [esPresupuesto, setEsPresupuesto] = useState(false);
@@ -70,15 +141,7 @@ export default function CrearFacturaPage() {
   const [fecha] = useState(new Date().toISOString().split("T")[0]);
   const [numero, setNumero] = useState(`FAC-${new Date().getFullYear()}-001`);
   const [numeroFactura, setNumeroFactura] = useState("001");
-  const [empresa, setEmpresa] = useState<Empresa>({
-    nombre: "",
-    nif: "",
-    direccion: "",
-    ciudad: "",
-    codigoPostal: "",
-    telefono: "",
-    email: "",
-  });
+  const [empresa, setEmpresa] = useState<Empresa>(EMPTY_EMPRESA);
   const [logo, setLogo] = useState<string>("");
   const [ivaPorc, setIvaPorc] = useState(21);
   const [notas, setNotas] = useState("");
@@ -86,6 +149,25 @@ export default function CrearFacturaPage() {
   const [plantilla, setPlantilla] = useState<"InvoicePDF" | "PlantillaNueva">(
     "InvoicePDF",
   );
+
+  const saveDraft = (draft: DraftInvoice | null) => {
+    if (typeof window === "undefined" || !draft) return;
+    if (!hasMeaningfulDraftContent(draft)) return;
+
+    try {
+      const guardados = JSON.parse(
+        localStorage.getItem(DRAFTS_STORAGE_KEY) || "[]",
+      ) as DraftInvoice[];
+      const restantes = guardados.filter((item) => item.id !== draft.id);
+
+      localStorage.setItem(
+        DRAFTS_STORAGE_KEY,
+        JSON.stringify([draft, ...restantes]),
+      );
+    } catch (error) {
+      console.error("Error guardando borrador:", error);
+    }
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -114,6 +196,37 @@ export default function CrearFacturaPage() {
       }
 
       localStorage.removeItem("presupuestoConvertir");
+    }
+
+    const borradorActivo = localStorage.getItem(ACTIVE_DRAFT_STORAGE_KEY);
+    if (borradorActivo) {
+      try {
+        const draft = JSON.parse(borradorActivo) as DraftInvoice;
+        const esBorradorPresupuesto = draft.tipo === "presupuesto";
+
+        draftIdRef.current = draft.id;
+        setEsPresupuesto(esBorradorPresupuesto);
+        setNumero(
+          esBorradorPresupuesto
+            ? `PRES-${new Date().getFullYear()}-001`
+            : `FAC-${new Date().getFullYear()}-001`,
+        );
+        setNumeroFactura(draft.numero || "001");
+        setCliente(draft.cliente || EMPTY_CLIENTE);
+        setEmpresa(draft.empresa || EMPTY_EMPRESA);
+        setconceptos(
+          draft.conceptos?.length ? draft.conceptos : [{ desc: "", cant: 1, precio: 0 }],
+        );
+        setLogo(draft.logo || "");
+        setNotas(draft.notas || "");
+        setTipoIVA(draft.tipoIVA || 21);
+        setIvaPorc(draft.ivaPorc || 21);
+        setPlantilla(draft.plantilla || "InvoicePDF");
+      } catch (error) {
+        console.error("Error cargando borrador activo:", error);
+      } finally {
+        localStorage.removeItem(ACTIVE_DRAFT_STORAGE_KEY);
+      }
     }
   }, []);
 
@@ -210,6 +323,64 @@ export default function CrearFacturaPage() {
     notas,
   };
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const draft: DraftInvoice = {
+      id:
+        draftIdRef.current ||
+        `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+      tipo: esPresupuesto ? "presupuesto" : "factura",
+      numero: numeroFactura,
+      fecha,
+      cliente,
+      empresa,
+      conceptos,
+      logo,
+      notas,
+      tipoIVA,
+      ivaPorc,
+      plantilla,
+      updatedAt: new Date().toISOString(),
+    };
+
+    draftIdRef.current = draft.id;
+    latestDraftRef.current = draft;
+  }, [
+    cliente,
+    conceptos,
+    empresa,
+    esPresupuesto,
+    fecha,
+    ivaPorc,
+    logo,
+    notas,
+    numeroFactura,
+    plantilla,
+    tipoIVA,
+  ]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const persistLatestDraft = () => {
+      saveDraft(latestDraftRef.current);
+    };
+
+    const handleBeforeUnload = () => {
+      persistLatestDraft();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("pagehide", persistLatestDraft);
+
+    return () => {
+      persistLatestDraft();
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("pagehide", persistLatestDraft);
+    };
+  }, []);
+
   const handleNumeroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNumeroFactura(e.target.value);
   };
@@ -266,10 +437,12 @@ export default function CrearFacturaPage() {
 
   const enviar = async () => {
     if (!cliente.email) return toast.error("Falta email del cliente");
-    const historial = JSON.parse(localStorage.getItem("historial") || "[]");
+    const historial = JSON.parse(
+      localStorage.getItem("historial") || "[]",
+    ) as HistoryItem[];
 
     const index = historial.findIndex(
-      (doc: any) => doc.numero === numeroFactura,
+      (doc) => doc.numero === numeroFactura,
     );
 
     if (index !== -1) {
@@ -354,7 +527,7 @@ export default function CrearFacturaPage() {
       <div className="p-0 mt-8 mb-6">
         <div className="inline-flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-3 py-2 shadow-sm">
           <span className="text-sm font-semibold text-blue-700">
-            {tipo === "presupuesto" ? "PRES" : "FACT"}-{numeroFactura} ·{" "}
+            {esPresupuesto ? "PRES" : "FACT"}-{numeroFactura} ·{" "}
             {new Date(datos.fecha).toLocaleDateString("es-ES")}
           </span>
 
@@ -572,8 +745,8 @@ export default function CrearFacturaPage() {
               </button>
               <button
                 onClick={() => {
-                  if (typeof window !== "undefined" && (window as any).gtag) {
-                    (window as any).gtag("event", "conversion", {
+                  if (typeof window !== "undefined" && window.gtag) {
+                    window.gtag("event", "conversion", {
                       send_to: "AW-1791812185/PvpICL_mx_obENHy-BC",
                       value: 1.0,
                       currency: "EUR",

@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
-import ConfigPanel from "@/components/ConfigPanel";
-import PlantillaNueva from "@/components/PlantillaNueva";
-import InvoicePDF from "@/components/InvoicePDF";
+import PlantillaNueva from "@/features/invoices/components/PlantillaNueva";
+import InvoicePDF from "@/features/invoices/components/InvoicePDF";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { UserGroupIcon } from "@heroicons/react/24/outline";

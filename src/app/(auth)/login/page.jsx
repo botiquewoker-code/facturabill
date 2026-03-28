@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Amplify } from "aws-amplify";
 import { signIn } from "aws-amplify/auth";
-import awsconfig from "../../../aws-exports";
+import awsconfig from "@/config/aws-exports";
+
 Amplify.configure(awsconfig);
 
 export default function Login() {

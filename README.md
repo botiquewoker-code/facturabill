@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FacturaBill
 
-## Getting Started
+FacturaBill is a Next.js application for creating invoices and quotes, generating PDF documents, and sending them by email.
 
-First, run the development server:
+## Stack
+
+- Next.js App Router
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- `@react-pdf/renderer` for PDF generation
+- AWS SES / Nodemailer for email routes
+- AWS Amplify auth config for the login flow
+
+## Project Structure
+
+```text
+src/
+  app/
+    (auth)/          login and registration routes
+    (dashboard)/     main product flows: home, invoices, clients, reports
+    (legal)/         legal and policy pages
+    (marketing)/     landing and SEO-focused pages
+    (support)/       support, contact, feedback, help
+    api/             server routes for email and support
+    globals.css
+    layout.tsx
+  features/
+    invoices/
+      components/    PDF invoice templates
+public/              PWA manifest, icons, previews, service worker
+amplify/             Amplify backend configuration
+gradle/              Android/TWA packaging support
+```
+
+## Main Areas
+
+- `src/app/(dashboard)` contains the primary app experience.
+- `src/features/invoices/components` contains reusable PDF renderers used by invoice pages.
+- `src/app/api` contains the small backend surface used by the frontend.
+
+## Commands
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run build
+npm run start
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Cleanup Applied
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Grouped App Router pages by concern using route groups
+- Moved invoice PDF components into a dedicated feature folder
+- Removed legacy React entry files that were not used by Next.js
+- Removed backup `.save` pages and unused helper/components
+- Removed local `.next` build output from the workspace
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Notes
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The current app still relies heavily on `localStorage` for business data.
+- `npm run lint` still reports pre-existing code quality issues inside active pages; structural cleanup is complete, but the app would benefit from a separate lint and typing pass.
