@@ -1,24 +1,29 @@
-import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import { NextResponse } from "next/server";
+import { SendEmailCommand } from "@aws-sdk/client-ses";
+import {
+  EmailConfigError,
+  getEmailFrom,
+  getEmailInbox,
+  getSesClient,
+} from "@/features/server/email";
 
-const ses = new SESClient({
-  region: process.env.SES_REGION,
-  credentials: {
-    accessKeyId: process.env.SES_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.SES_SECRET_ACCESS_KEY!,
-  },
-});
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
     const { nombre, email, mensaje, urgente } = await req.json();
+    const ses = getSesClient();
+    const emailFrom = getEmailFrom();
+    const emailInbox = getEmailInbox();
 
     const params = {
-      Source: process.env.EMAIL_FROM,
+      Source: emailFrom,
       Destination: {
-        ToAddresses: [process.env.EMAIL_TO!],
+        ToAddresses: [emailInbox],
       },
 
-      ReplyToAddresses: email ? [email] : [],
+      ReplyToAddresses:
+        typeof email === "string" && email.trim() ? [email.trim()] : [],
       Message: {
         Subject: {
           Data: urgente
@@ -42,9 +47,18 @@ ${mensaje}
 
     await ses.send(new SendEmailCommand(params));
 
-    return Response.json({ ok: true });
+    return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Error enviando soporte:", error);
-    return Response.json({ ok: false }, { status: 500 });
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          error instanceof EmailConfigError
+            ? "Support email service is not configured correctly"
+            : "Unable to send support request",
+      },
+      { status: 500 },
+    );
   }
 }

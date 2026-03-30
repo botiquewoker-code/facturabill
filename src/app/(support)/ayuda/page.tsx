@@ -1,101 +1,77 @@
 import Link from "next/link";
 
-export default function Ayuda() {
+export default function AyudaPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-6 py-16">
-        <h1 className="text-5xl font-bold text-center mb-12 text-gray-800">
-          Ayuda y Preguntas frecuentes (FAQ)
+      <div className="mx-auto max-w-4xl px-6 py-16">
+        <h1 className="mb-12 text-center text-4xl font-bold text-gray-800 sm:text-5xl">
+          Ayuda y preguntas frecuentes
         </h1>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 space-y-12 text-gray-700 leading-relaxed text-lg">
+        <div className="space-y-12 rounded-2xl bg-white p-8 text-lg leading-relaxed text-gray-700 shadow-lg md:p-12">
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
-              ¿Cómo crear una factura?
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
+              Como crear una factura
             </h2>
-            <ol className="list-decimal pl-8 space-y-4">
+            <ol className="list-decimal space-y-4 pl-8">
               <li>Rellena los datos de tu empresa y del cliente.</li>
-              <li>
-                Añade los conceptos/servicios con cantidad y precio unitario.
-              </li>
+              <li>Anade los conceptos con cantidad y precio unitario.</li>
               <li>Selecciona el tipo de IVA aplicable.</li>
+              <li>Revisa totales, fecha y vencimiento si corresponde.</li>
               <li>
-                El subtotal, impuestos y total se calculan automáticamente.
-              </li>
-              <li>
-                Pulsa "Descargar PDF" o "Enviar email" para obtener tu factura.
+                Pulsa &quot;Descargar PDF&quot; o &quot;Enviar email&quot; para finalizar.
               </li>
             </ol>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
-              ¿Puedo personalizar la factura?
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
+              Se puede personalizar la factura
             </h2>
-            <p>Sí. Puedes:</p>
-            <ul className="list-disc pl-8 mt-4 space-y-3">
-              <li>Elegir entre diferentes plantillas profesionales.</li>
-              <li>Añadir notas, condiciones de pago, IBAN o forma de pago.</li>
-              <li>Incluir numeración automática o personalizada.</li>
-              <li>Próximamente: subir tu logo y colores corporativos.</li>
+            <p>Si. Puedes:</p>
+            <ul className="mt-4 list-disc space-y-3 pl-8">
+              <li>Elegir entre diferentes plantillas.</li>
+              <li>Anadir notas predeterminadas desde el perfil de empresa.</li>
+              <li>Configurar logo, datos de empresa y estilo base.</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
-              ¿Es seguro usar Facturabill.net?
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
+              Funciona en movil y tablet
             </h2>
             <p>
-              Totalmente. Toda la generación de facturas se realiza en tu
-              navegador. Tus datos nunca se envían ni se almacenan en servidores
-              externos.
+              Si. La aplicacion esta pensada para usarse desde movil, tablet y
+              escritorio. Aun asi, antes de enviar documentos importantes,
+              recomendamos revisar el PDF final.
             </p>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
-              ¿Puedo guardar o editar facturas anteriores?
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
+              Donde se guardan los datos
             </h2>
             <p>
-              Actualmente las facturas se generan en tiempo real. Recomendamos
-              guardar el PDF descargado.
-              <br />
-              Próximamente: historial de facturas y edición de borradores.
+              Muchas funciones actuales utilizan almacenamiento local del
+              navegador. Eso significa que los datos pueden no aparecer en otro
+              dispositivo o si se borra el almacenamiento del navegador.
             </p>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
-              ¿Funciona en móvil y tablet?
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
+              Puedo editar documentos anteriores
             </h2>
             <p>
-              Sí, Facturabill.net es completamente responsive y funciona
-              perfectamente en teléfonos, tablets y ordenadores.
+              Puedes recuperar borradores y reutilizar presupuestos desde el
+              historial. Para documentos ya enviados, recomendamos conservar el
+              PDF y generar una nueva version si necesitas cambios.
             </p>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
-              ¿Hay límite de facturas?
-            </h2>
-            <p>
-              No. Puedes generar todas las facturas que necesites sin límites.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
-              ¿Puedo facturar con retención o recargo de equivalencia?
-            </h2>
-            <p>
-              Sí. En la configuración avanzada puedes activar retenciones IRPF o
-              recargo de equivalencia.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
-              ¿Necesito ayuda adicional?
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
+              Necesitas ayuda adicional
             </h2>
             <p>
               Escribe a{" "}
@@ -105,16 +81,16 @@ export default function Ayuda() {
               >
                 facturabill.net@gmail.com
               </a>{" "}
-              y te responderemos en menos de 24 horas.
+              y te responderemos lo antes posible.
             </p>
           </section>
 
-          <div className="text-center mt-16">
+          <div className="mt-16 text-center">
             <Link
               href="/"
-              className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition font-medium"
+              className="inline-block rounded-lg bg-blue-600 px-8 py-3 font-medium text-white transition hover:bg-blue-700"
             >
-              ← Volver a Facturabill.net
+              Volver a Facturabill.net
             </Link>
           </div>
         </div>

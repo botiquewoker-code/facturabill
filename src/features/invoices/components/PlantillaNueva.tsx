@@ -8,10 +8,6 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 
-const PURPLE = "#5B2D8B";
-const LIGHT = "#F2EEF6";
-const GRAY = "#E5E1EC";
-
 const styles = StyleSheet.create({
   page: {
     padding: 40,
@@ -208,38 +204,67 @@ const styles = StyleSheet.create({
     color: "#444",
   },
 });
-type Item = {
-  precio: number | string;
+
+type PdfParty = {
+  nombre?: string;
+  nif?: string;
+  dni?: string;
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  ciudad?: string;
+  cp?: string;
+  codigoPostal?: string;
 };
+
+type PdfDatos = {
+  esPresupuesto?: boolean;
+  fecha?: string;
+  fechaVencimiento?: string;
+  logo?: string;
+  cliente?: PdfParty;
+  empresa?: PdfParty;
+  notas?: string;
+  ivaPct?: number;
+  iva?: number;
+  tipoIVA?: number;
+  tipiIVA?: number;
+};
+
+type PdfConcepto = {
+  desc: string;
+  cant: number;
+  precio: number;
+};
+
+const formatDocumentDate = (value: unknown) => {
+  if (typeof value !== "string" || !value.trim()) {
+    return "";
+  }
+
+  const parsed = new Date(value);
+
+  return Number.isNaN(parsed.getTime())
+    ? value
+    : parsed.toLocaleDateString("es-ES");
+};
+
 const PlantillaNueva = ({
   datos,
   numeroFactura,
   conceptos = [],
 }: {
-  datos: any;
+  datos: PdfDatos;
   numeroFactura: string;
-  conceptos?: { desc: string; cant: number; precio: number }[];
+  conceptos?: PdfConcepto[];
 }) => {
-  console.log("Datos recibidos en PDF:", datos);
-
   const isPresupuesto = Boolean(datos?.esPresupuesto);
 
-  const ivaPct: number = Number(
-    datos?.ivaPct ?? datos?.iva ?? datos?.tipoIVA ?? 21,
-  );
-
-  const baseImponible = conceptos.reduce(
-    (acc: number, item) =>
-      acc + (Number(item.precio) || 0) * (Number(item.cant) || 1),
-    0,
-  );
-
-  const ivaImporte = baseImponible * (ivaPct / 100);
-  const total = baseImponible + ivaImporte;
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
           {datos.logo && <Image style={styles.logo} src={datos.logo} />}
 
           <View style={styles.rightColumn}>
@@ -248,10 +273,16 @@ const PlantillaNueva = ({
             </Text>
 
             <Text style={styles.invoiceNumber}>
-              {datos.esPresupuesto ? "PRES-" : "FACT-"}
-              {numeroFactura} -{" "}
-              {new Date(datos?.fecha).toLocaleDateString("es-ES")}
+              {datos.esPresupuesto ? "PRES-" : "FACT-"}{numeroFactura}
             </Text>
+            <Text style={styles.date}>
+              Fecha: {formatDocumentDate(datos?.fecha)}
+            </Text>
+            {!isPresupuesto && datos?.fechaVencimiento ? (
+              <Text style={styles.date}>
+                Vencimiento: {formatDocumentDate(datos?.fechaVencimiento)}
+              </Text>
+            ) : null}
           </View>
         </View>
         {/* CLIENTE */}

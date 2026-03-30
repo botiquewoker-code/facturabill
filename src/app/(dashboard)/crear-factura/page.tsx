@@ -1,12 +1,32 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { pdf } from "@react-pdf/renderer";
+import {
+  CalendarDays,
+  Download,
+  Palette,
+  Plus,
+  Search,
+  Save,
+  Send,
+  Sparkles,
+  Trash2,
+  UsersRound,
+  Wallet,
+} from "lucide-react";
 import InvoicePDF from "@/features/invoices/components/InvoicePDF";
 import PlantillaNueva from "@/features/invoices/components/PlantillaNueva";
-import { Toaster, toast } from "react-hot-toast";
-import { Upload, Plus, Trash2, Download, Send } from "lucide-react";
-import { useRouter } from "next/navigation";
+import {
+  findClientById,
+  readClients,
+  type ClientRecord,
+} from "@/features/clients/storage";
+import {
+  showSuccessToast,
+  showWarningToast,
+} from "@/features/notifications/toast";
 
 type Cliente = {
   nombre: string;
@@ -23,22 +43,19 @@ type Empresa = {
   nif: string;
   direccion: string;
   ciudad: string;
-  codigoPostal: string;
+  cp: string;
   telefono: string;
   email: string;
 };
 
-type Concepto = {
-  desc: string;
-  cant: number;
-  precio: number;
-};
-
+type Concepto = { desc: string; cant: number; precio: number };
 type DraftInvoice = {
   id: string;
   tipo: "factura" | "presupuesto";
   numero: string;
   fecha: string;
+  fechaVencimiento?: string;
+  linkedClientId?: string;
   cliente: Cliente;
   empresa: Empresa;
   conceptos: Concepto[];
@@ -48,17 +65,6 @@ type DraftInvoice = {
   ivaPorc: number;
   plantilla: "InvoicePDF" | "PlantillaNueva";
   updatedAt: string;
-};
-
-type HistoryItem = {
-  id?: string;
-  numero?: string;
-  tipo: "factura" | "presupuesto";
-  cliente: Cliente;
-  fecha: string;
-  conceptos?: Concepto[];
-  total: number;
-  estado: string;
 };
 
 declare global {
@@ -71,8 +77,9 @@ declare global {
   }
 }
 
-const DRAFTS_STORAGE_KEY = "borradores";
-const ACTIVE_DRAFT_STORAGE_KEY = "borradorActivo";
+const DRAFTS_KEY = "borradores";
+const ACTIVE_DRAFT_KEY = "borradorActivo";
+const HISTORY_KEY = "historial";
 const EMPTY_CLIENTE: Cliente = {
   nombre: "",
   nif: "",
@@ -87,691 +94,912 @@ const EMPTY_EMPRESA: Empresa = {
   nif: "",
   direccion: "",
   ciudad: "",
-  codigoPostal: "",
+  cp: "",
   telefono: "",
   email: "",
 };
+const EMPTY_CONCEPTO: Concepto = { desc: "", cant: 1, precio: 0 };
+const inputClass =
+  "h-14 w-full rounded-[22px] border border-white/70 bg-white/80 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.4)]";
 
-function hasMeaningfulDraftContent(draft: DraftInvoice) {
-  const hasCliente = Object.values(draft.cliente).some((value) =>
-    value.trim().length > 0,
-  );
-  const hasEmpresa = Object.values(draft.empresa).some((value) =>
-    value.trim().length > 0,
-  );
-  const hasConceptos = draft.conceptos.some(
-    (item) => item.desc.trim() || item.cant > 0 || item.precio > 0,
-  );
+const today = () => new Date().toISOString().split("T")[0];
+const addDays = (baseDate: string, days: number) => {
+  const [year, month, day] = baseDate.split("-").map((value) => Number(value));
 
-  return hasCliente || hasEmpresa || hasConceptos || draft.notas.trim().length > 0;
+  if (!year || !month || !day) {
+    return today();
+  }
+
+  const date = new Date(year, month - 1, day);
+  date.setDate(date.getDate() + days);
+
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+};
+const s = (v: unknown) => (typeof v === "string" ? v : "");
+const num = (v: unknown, fallback: number) => {
+  const parsed = Number(v);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+const draftId = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `draft-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+const isPlantilla = (v: string): v is "InvoicePDF" | "PlantillaNueva" =>
+  v === "InvoicePDF" || v === "PlantillaNueva";
+const normalizeNumero = (v: unknown) =>
+  s(v).trim().replace(/^PRES-?/i, "").replace(/^FACT?-?/i, "") || "001";
+const money = (v: number) =>
+  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+const clientMatchesSearch = (client: ClientRecord, query: string) =>
+  [client.nombre, client.nif, client.email, client.telefono]
+    .join(" ")
+    .toLowerCase()
+    .includes(query);
+const normalizeCliente = (v: unknown): Cliente => {
+  const x = v && typeof v === "object" ? (v as Record<string, unknown>) : {};
+  return {
+    nombre: s(x.nombre),
+    nif: s(x.nif ?? x.dni),
+    direccion: s(x.direccion),
+    ciudad: s(x.ciudad),
+    codigoPostal: s(x.codigoPostal ?? x.cp),
+    telefono: s(x.telefono),
+    email: s(x.email),
+  };
+};
+const normalizeEmpresa = (v: unknown): Empresa => {
+  const x = v && typeof v === "object" ? (v as Record<string, unknown>) : {};
+  return {
+    nombre: s(x.nombre),
+    nif: s(x.nif),
+    direccion: s(x.direccion),
+    ciudad: s(x.ciudad),
+    cp: s(x.cp ?? x.codigoPostal),
+    telefono: s(x.telefono),
+    email: s(x.email),
+  };
+};
+const normalizeConceptos = (v: unknown): Concepto[] =>
+  Array.isArray(v) && v.length
+    ? v.map((item) => {
+        const x =
+          item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+        return {
+          desc: s(x.desc),
+          cant: Math.max(1, num(x.cant, 1)),
+          precio: Math.max(0, num(x.precio, 0)),
+        };
+      })
+    : [EMPTY_CONCEPTO];
+
+function hasContent(d: DraftInvoice) {
+  return (
+    Object.values(d.cliente).some((v) => v.trim()) ||
+    Object.values(d.empresa).some((v) => v.trim()) ||
+    d.conceptos.some((c) => c.desc.trim() || c.cant > 0 || c.precio > 0)
+  );
 }
 
 export default function CrearFacturaPage() {
-  const router = useRouter();
-  const draftIdRef = useRef<string | null>(null);
   const latestDraftRef = useRef<DraftInvoice | null>(null);
+  const draftIdRef = useRef<string | null>(null);
 
-  const params = new URLSearchParams(
-    typeof window !== "undefined" ? window.location.search : "",
-  );
-
-  const clienteId = params.get("clienteId");
   const [cliente, setCliente] = useState<Cliente>(EMPTY_CLIENTE);
-  useEffect(() => {
-    if (!clienteId) return;
-
-    const guardados = localStorage.getItem("clientes");
-    if (!guardados) return;
-
-    const lista = JSON.parse(guardados);
-
-    const idNum = parseInt(clienteId || "0", 10);
-
-    const clienteEncontrado = lista[idNum];
-    if (clienteEncontrado) {
-      setCliente(clienteEncontrado);
-    }
-  }, [clienteId]);
-
-  const [conceptos, setconceptos] = useState<Concepto[]>([
-    { desc: "", cant: 1, precio: 0 },
-  ]);
-  const [esPresupuesto, setEsPresupuesto] = useState(false);
-  const [editarIva, setEditarIva] = useState(false);
-  const [fecha] = useState(new Date().toISOString().split("T")[0]);
-  const [numero, setNumero] = useState(`FAC-${new Date().getFullYear()}-001`);
-  const [numeroFactura, setNumeroFactura] = useState("001");
+  const [clientesGuardados, setClientesGuardados] = useState<ClientRecord[]>([]);
   const [empresa, setEmpresa] = useState<Empresa>(EMPTY_EMPRESA);
-  const [logo, setLogo] = useState<string>("");
-  const [ivaPorc, setIvaPorc] = useState(21);
+  const [conceptos, setConceptos] = useState<Concepto[]>([EMPTY_CONCEPTO]);
+  const [esPresupuesto, setEsPresupuesto] = useState(false);
+  const [fecha, setFecha] = useState(today());
+  const [fechaVencimiento, setFechaVencimiento] = useState(addDays(today(), 30));
+  const [numeroFactura, setNumeroFactura] = useState("001");
+  const [logo, setLogo] = useState("");
   const [notas, setNotas] = useState("");
   const [tipoIVA, setTipoIVA] = useState(21);
   const [plantilla, setPlantilla] = useState<"InvoicePDF" | "PlantillaNueva">(
     "InvoicePDF",
   );
-
-  const saveDraft = (draft: DraftInvoice | null) => {
-    if (typeof window === "undefined" || !draft) return;
-    if (!hasMeaningfulDraftContent(draft)) return;
-
-    try {
-      const guardados = JSON.parse(
-        localStorage.getItem(DRAFTS_STORAGE_KEY) || "[]",
-      ) as DraftInvoice[];
-      const restantes = guardados.filter((item) => item.id !== draft.id);
-
-      localStorage.setItem(
-        DRAFTS_STORAGE_KEY,
-        JSON.stringify([draft, ...restantes]),
-      );
-    } catch (error) {
-      console.error("Error guardando borrador:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const datosEmpresa = localStorage.getItem("datosEmpresa");
-    if (datosEmpresa) setEmpresa(JSON.parse(datosEmpresa));
-
-    const logoGuardado = localStorage.getItem("logoUsuario");
-    if (logoGuardado) setLogo(logoGuardado);
-
-    const notasGuardadas = localStorage.getItem("notasUsuario");
-    if (notasGuardadas) setNotas(notasGuardadas);
-
-    const presupuestoConvertir = localStorage.getItem("presupuestoConvertir");
-
-    if (presupuestoConvertir) {
-      const datos = JSON.parse(presupuestoConvertir);
-
-      if (datos.cliente) setCliente(datos.cliente);
-      if (datos.conceptos) setconceptos(datos.conceptos);
-      if (datos.items) setconceptos(datos.items);
-
-      if (datos.id) {
-        const nuevoNumero = String(datos.id).replace("PRES", "FAC");
-        setNumeroFactura(nuevoNumero);
-      }
-
-      localStorage.removeItem("presupuestoConvertir");
-    }
-
-    const borradorActivo = localStorage.getItem(ACTIVE_DRAFT_STORAGE_KEY);
-    if (borradorActivo) {
-      try {
-        const draft = JSON.parse(borradorActivo) as DraftInvoice;
-        const esBorradorPresupuesto = draft.tipo === "presupuesto";
-
-        draftIdRef.current = draft.id;
-        setEsPresupuesto(esBorradorPresupuesto);
-        setNumero(
-          esBorradorPresupuesto
-            ? `PRES-${new Date().getFullYear()}-001`
-            : `FAC-${new Date().getFullYear()}-001`,
-        );
-        setNumeroFactura(draft.numero || "001");
-        setCliente(draft.cliente || EMPTY_CLIENTE);
-        setEmpresa(draft.empresa || EMPTY_EMPRESA);
-        setconceptos(
-          draft.conceptos?.length ? draft.conceptos : [{ desc: "", cant: 1, precio: 0 }],
-        );
-        setLogo(draft.logo || "");
-        setNotas(draft.notas || "");
-        setTipoIVA(draft.tipoIVA || 21);
-        setIvaPorc(draft.ivaPorc || 21);
-        setPlantilla(draft.plantilla || "InvoicePDF");
-      } catch (error) {
-        console.error("Error cargando borrador activo:", error);
-      } finally {
-        localStorage.removeItem(ACTIVE_DRAFT_STORAGE_KEY);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("numeroFactura", numeroFactura);
-  }, [numeroFactura]);
-
-  useEffect(() => {
-    localStorage.setItem("logoUsuario", logo);
-  }, [logo]);
-
-  useEffect(() => {
-    localStorage.setItem("notasUsuario", notas);
-  }, [notas]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("tipo") === "presupuesto") {
-      setEsPresupuesto(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const clienteParam = params.get("clienteId");
-    if (clienteParam) {
-      const guardados = localStorage.getItem("clientes");
-      if (guardados) {
-        try {
-          const lista = JSON.parse(guardados);
-          const clienteEncontrado = lista[parseInt(clienteParam)];
-          if (clienteEncontrado) {
-            setCliente(clienteEncontrado);
-          }
-        } catch (e) {
-          console.error("Error al cargar cliente:", e);
-        }
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const guardado = localStorage.getItem("datosEmpresa");
-    if (guardado) {
-      try {
-        const datos = JSON.parse(guardado);
-        setEmpresa(datos);
-      } catch (e) {
-        console.error("Error al cargar datosEmpresa:", e);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (empresa.nombre || empresa.nif || empresa.direccion) {
-      localStorage.setItem("datosEmpresa", JSON.stringify(empresa));
-    }
-  }, [empresa]);
-  useEffect(() => {
-    if (!clienteId || typeof window === "undefined") return;
-
-    const guardados = localStorage.getItem("clientes");
-    if (!guardados) return;
-
-    const lista = JSON.parse(guardados);
-
-    const idNum = parseInt(clienteId, 10);
-    const clienteEncontrado = lista[idNum];
-
-    if (clienteEncontrado) {
-      setCliente(clienteEncontrado);
-    }
-  }, [clienteId]);
-
-  const subtotal = conceptos.reduce(
-    (acc, i) => acc + Number(i.cant || 0) * Number(i.precio || 0),
-    0,
-  );
+  const [linkedClientId, setLinkedClientId] = useState("");
+  const [clientSearch, setClientSearch] = useState("");
+  const subtotal = conceptos.reduce((acc, item) => acc + item.cant * item.precio, 0);
   const iva = subtotal * (tipoIVA / 100);
   const total = subtotal + iva;
+  const clientesFiltrados = useMemo(() => {
+    const query = clientSearch.trim().toLowerCase();
+    const base = query
+      ? clientesGuardados.filter((item) => clientMatchesSearch(item, query))
+      : clientesGuardados;
 
-  const datos = {
+    return base.filter((item) => item.id !== linkedClientId).slice(0, 6);
+  }, [clientSearch, clientesGuardados, linkedClientId]);
+  const pdfData = {
     esPresupuesto,
-    numero,
+    numero: numeroFactura,
     fecha,
+    fechaVencimiento: esPresupuesto ? "" : fechaVencimiento,
     empresa,
-    cliente,
+    cliente: { ...cliente, cp: cliente.codigoPostal },
     conceptos,
     logo,
     plantilla,
     subtotal,
     iva,
+    ivaPct: tipoIVA,
+    tipiIVA: tipoIVA,
+    tipoIVA,
     total,
     notas,
   };
+  const documentPrefix = esPresupuesto ? "PRES" : "FACT";
+  const formattedDate = new Date(fecha).toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+  const formattedDueDate = fechaVencimiento
+    ? new Date(fechaVencimiento).toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "";
+  const modeCopy = esPresupuesto
+    ? {
+        workspace: "Propuestas",
+        title: "Crear presupuesto",
+        subtitle:
+          "Prepara una propuesta clara, con importe estimado y lista para compartir con el cliente.",
+        heroEyebrow: "Modo presupuesto",
+        heroTitle: "Una propuesta lista para revisar",
+        heroDescription:
+          "Mantiene el mismo flujo del dashboard, pero con lenguaje y acciones pensadas para una propuesta comercial.",
+        heroBadge: "Sin compromiso",
+        heroHint:
+          "Cuando el cliente lo apruebe, podras convertir este presupuesto en factura desde el historial.",
+        clientSearchDescription:
+          "Carga un cliente guardado y arma el presupuesto sin repetir sus datos.",
+        selectedClientLabel: "Cliente para el presupuesto",
+        conceptsTitle: "Lineas del presupuesto",
+        conceptLineLabel: "Linea de propuesta",
+        conceptPlaceholder:
+          "Describe el alcance, el entregable o el servicio propuesto",
+        conceptAdd: "Anadir linea",
+        conceptTotal: "Importe estimado",
+        summaryEyebrow: "Propuesta",
+        summaryTitle: "Valor estimado y acciones",
+        totalLabel: "Total estimado",
+        downloadLabel: "Descargar presupuesto",
+        sendLabel: "Enviar presupuesto",
+        sendHint: (email: string) => `Se enviara el presupuesto a ${email}`,
+        emptyEmailHint:
+          "Recomendacion: anade el email del cliente si quieres enviar el presupuesto desde aqui",
+      }
+    : {
+        workspace: "Facturacion",
+        title: "Crear factura",
+        subtitle:
+          "Una vista mas clara para preparar el documento, revisar importes y enviarlo sin salir del flujo.",
+        heroEyebrow: "",
+        heroTitle: "",
+        heroDescription: "",
+        heroBadge: "",
+        heroHint: "",
+        clientSearchDescription:
+          "Carga un cliente guardado y usa sus datos directamente en esta factura.",
+        selectedClientLabel: "Cliente seleccionado",
+        conceptsTitle: "Lineas de factura",
+        conceptLineLabel: "Linea de factura",
+        conceptPlaceholder: "Descripcion del servicio o producto",
+        conceptAdd: "Anadir concepto",
+        conceptTotal: "Total linea",
+        summaryEyebrow: "Resumen",
+        summaryTitle: "Totales y acciones",
+        totalLabel: "Total final",
+        downloadLabel: "Descargar PDF",
+        sendLabel: "Enviar al cliente",
+        sendHint: (email: string) => `Se enviara a ${email}`,
+        emptyEmailHint:
+          "Recomendacion: anade el email del cliente si quieres enviar el documento desde aqui",
+      };
+  const primaryActionClass = esPresupuesto
+    ? "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#8a5a33] px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(138,90,51,0.9)] transition hover:bg-[#754a28]"
+    : "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition hover:bg-slate-800";
+  const totalCardClass = esPresupuesto
+    ? "mt-3 rounded-[24px] bg-[linear-gradient(135deg,#8a5a33,#b97a45)] px-4 py-4 text-white shadow-[0_22px_38px_-26px_rgba(138,90,51,0.82)]"
+    : "mt-3 rounded-[24px] bg-slate-950 px-4 py-4 text-white shadow-[0_22px_38px_-26px_rgba(15,23,42,0.92)]";
+  const selectedClientCardClass = esPresupuesto
+    ? "mt-4 rounded-[26px] border border-[#edcfab] bg-[#fff5e9] p-4 shadow-[0_16px_30px_-24px_rgba(185,122,69,0.35)]"
+    : "mt-4 rounded-[26px] border border-emerald-200 bg-emerald-50/85 p-4 shadow-[0_16px_30px_-24px_rgba(16,185,129,0.45)]";
+  const selectedClientEyebrowClass = esPresupuesto
+    ? "text-[#9a6338]"
+    : "text-emerald-700";
+  const detachButtonClass = esPresupuesto
+    ? "shrink-0 rounded-full border border-[#e7c39a] bg-white px-4 py-2 text-sm font-semibold text-[#8a5a33] transition hover:bg-[#fff4e5]"
+    : "shrink-0 rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50";
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const frame = window.requestAnimationFrame(() => {
+      const params = new URLSearchParams(window.location.search);
+      const storedClients = readClients();
+      const routeClientId = params.get("clienteId") || "";
 
-    const draft: DraftInvoice = {
-      id:
-        draftIdRef.current ||
-        `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+      setClientesGuardados(storedClients);
+
+      const rawCompany = localStorage.getItem("datosEmpresa");
+      if (rawCompany) try { setEmpresa(normalizeEmpresa(JSON.parse(rawCompany))); } catch {}
+      const rawLogo = localStorage.getItem("logoUsuario");
+      if (rawLogo) setLogo(rawLogo);
+      const rawNotes = localStorage.getItem("notasUsuario");
+      if (rawNotes) setNotas(rawNotes);
+      const rawTemplate =
+        localStorage.getItem("plantillaSeleccionada") ||
+        localStorage.getItem("plantillaUsuario") ||
+        localStorage.getItem("plantillaElegida");
+      if (rawTemplate && isPlantilla(rawTemplate)) setPlantilla(rawTemplate);
+
+      const activeDraft = localStorage.getItem(ACTIVE_DRAFT_KEY);
+      if (activeDraft) {
+        try {
+          const draft = JSON.parse(activeDraft) as Partial<DraftInvoice>;
+          draftIdRef.current = s(draft.id) || draftId();
+          setEsPresupuesto(draft.tipo === "presupuesto");
+          setFecha(s(draft.fecha) || today());
+          setFechaVencimiento(
+            s(draft.fechaVencimiento) || addDays(s(draft.fecha) || today(), 30),
+          );
+          setNumeroFactura(normalizeNumero(draft.numero));
+          setLinkedClientId(s(draft.linkedClientId));
+          setCliente(normalizeCliente(draft.cliente));
+          setEmpresa(normalizeEmpresa(draft.empresa));
+          setConceptos(normalizeConceptos(draft.conceptos));
+          setLogo(s(draft.logo));
+          setNotas(s(draft.notas) || rawNotes || "");
+          setTipoIVA(num(draft.tipoIVA, 21));
+          const nextTemplate = s(draft.plantilla);
+          if (isPlantilla(nextTemplate)) setPlantilla(nextTemplate);
+        } catch {}
+        localStorage.removeItem(ACTIVE_DRAFT_KEY);
+        return;
+      }
+
+      const convertDraft = localStorage.getItem("presupuestoConvertir");
+      if (convertDraft) {
+        try {
+          const parsed = JSON.parse(convertDraft) as Record<string, unknown>;
+          if (parsed.cliente) setCliente(normalizeCliente(parsed.cliente));
+          if (parsed.conceptos || parsed.items) {
+            setConceptos(normalizeConceptos(parsed.conceptos || parsed.items));
+          }
+          if (parsed.fechaVencimiento) {
+            setFechaVencimiento(s(parsed.fechaVencimiento));
+          }
+          setNumeroFactura(normalizeNumero(parsed.numero || parsed.id));
+        } catch {}
+        localStorage.removeItem("presupuestoConvertir");
+      }
+
+      if (routeClientId) {
+        const { client } = findClientById(storedClients, routeClientId);
+        if (client) {
+          setLinkedClientId(client.id);
+          setCliente(normalizeCliente(client));
+        }
+      }
+
+      if (params.get("tipo") === "presupuesto") setEsPresupuesto(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    const nextDraft: DraftInvoice = {
+      id: draftIdRef.current || draftId(),
       tipo: esPresupuesto ? "presupuesto" : "factura",
       numero: numeroFactura,
       fecha,
+      fechaVencimiento: esPresupuesto ? "" : fechaVencimiento,
+      linkedClientId,
       cliente,
       empresa,
       conceptos,
       logo,
       notas,
       tipoIVA,
-      ivaPorc,
+      ivaPorc: tipoIVA,
       plantilla,
       updatedAt: new Date().toISOString(),
     };
-
-    draftIdRef.current = draft.id;
-    latestDraftRef.current = draft;
-  }, [
-    cliente,
-    conceptos,
-    empresa,
-    esPresupuesto,
-    fecha,
-    ivaPorc,
-    logo,
-    notas,
-    numeroFactura,
-    plantilla,
-    tipoIVA,
-  ]);
+    draftIdRef.current = nextDraft.id;
+    latestDraftRef.current = nextDraft;
+  }, [cliente, conceptos, empresa, esPresupuesto, fecha, fechaVencimiento, linkedClientId, logo, notas, numeroFactura, plantilla, tipoIVA]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const persistLatestDraft = () => {
-      saveDraft(latestDraftRef.current);
+    const persist = () => {
+      const draft = latestDraftRef.current;
+      if (!draft || !hasContent(draft) || typeof window === "undefined") return;
+      try {
+        const saved = JSON.parse(localStorage.getItem(DRAFTS_KEY) || "[]") as DraftInvoice[];
+        const rest = saved.filter((item) => item.id !== draft.id);
+        localStorage.setItem(DRAFTS_KEY, JSON.stringify([draft, ...rest]));
+      } catch {}
     };
-
-    const handleBeforeUnload = () => {
-      persistLatestDraft();
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    window.addEventListener("pagehide", persistLatestDraft);
-
+    window.addEventListener("beforeunload", persist);
+    window.addEventListener("pagehide", persist);
     return () => {
-      persistLatestDraft();
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.removeEventListener("pagehide", persistLatestDraft);
+      persist();
+      window.removeEventListener("beforeunload", persist);
+      window.removeEventListener("pagehide", persist);
     };
   }, []);
 
-  const handleNumeroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNumeroFactura(e.target.value);
+  const updateConcept = (index: number, field: keyof Concepto, value: string | number) =>
+    setConceptos((current) =>
+      current.map((item, itemIndex) =>
+        itemIndex === index
+          ? { ...item, [field]: field === "desc" ? String(value) : Math.max(field === "cant" ? 1 : 0, num(value, field === "cant" ? 1 : 0)) }
+          : item,
+      ),
+    );
+  const removeConcept = (index: number) =>
+    setConceptos((current) => (current.length === 1 ? [EMPTY_CONCEPTO] : current.filter((_, itemIndex) => itemIndex !== index)));
+  const selectClient = (selectedClient: ClientRecord) => {
+    setLinkedClientId(selectedClient.id);
+    setCliente(normalizeCliente(selectedClient));
+    setClientSearch("");
   };
-
-  const handleLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => setLogo(reader.result as string);
-      reader.readAsDataURL(file);
+  const detachClient = () => {
+    setLinkedClientId("");
+    setClientSearch("");
+  };
+  const updateCliente = (field: keyof Cliente, value: string) => {
+    setCliente((current) => ({ ...current, [field]: value }));
+    if (linkedClientId) {
+      setLinkedClientId("");
     }
   };
-
-  const toggleTipo = () => {
-    setEsPresupuesto((prev) => !prev);
-    setNumero((prev) =>
-      prev.startsWith("PRES")
-        ? prev.replace("PRES", "FACT")
-        : prev.replace("FACT", "PRES"),
-    );
-    toast.success(
-      esPresupuesto ? "Convertido a Factura" : "Convertido a Presupuesto",
-    );
+  const saveDraftNow = () => {
+    const draft = latestDraftRef.current;
+    if (!draft || !hasContent(draft)) {
+      return showWarningToast(
+        "Recomendacion: anade algun dato antes de guardar el borrador.",
+      );
+    }
+    try {
+      const saved = JSON.parse(localStorage.getItem(DRAFTS_KEY) || "[]") as DraftInvoice[];
+      const rest = saved.filter((item) => item.id !== draft.id);
+      localStorage.setItem(DRAFTS_KEY, JSON.stringify([draft, ...rest]));
+      showSuccessToast("Borrador guardado");
+    } catch {
+      showWarningToast("No se pudo guardar el borrador");
+    }
   };
+  const validate = (requireEmail?: boolean) => {
+    const recommendations: string[] = [];
 
+    if (!empresa.nombre.trim() || !empresa.nif.trim()) {
+      recommendations.push("revisa los datos basicos de tu empresa");
+    }
+
+    if (!cliente.nombre.trim()) {
+      recommendations.push("anade al menos el nombre del cliente");
+    }
+
+    if (!conceptos.some((item) => item.desc.trim() && item.cant > 0)) {
+      recommendations.push(
+        "incluye algun concepto para que el documento quede mas claro",
+      );
+    }
+
+    if (recommendations.length > 0) {
+      showWarningToast(`Recomendacion: ${recommendations.join(", ")}.`);
+    }
+
+    if (requireEmail && !cliente.email.trim()) {
+      return (
+        showWarningToast(
+          "Advertencia: anade el email del cliente si quieres enviar el documento desde aqui.",
+        ),
+        false
+      );
+    }
+
+    return true;
+  };
+  const updateHistory = (estado: string) => {
+    const item = {
+      id: numeroFactura,
+      numero: numeroFactura,
+      tipo: esPresupuesto ? "presupuesto" : "factura",
+      cliente,
+      fecha: new Date(fecha).toLocaleDateString("es-ES"),
+      fechaVencimiento:
+        !esPresupuesto && fechaVencimiento
+          ? new Date(fechaVencimiento).toLocaleDateString("es-ES")
+          : "",
+      conceptos,
+      total,
+      estado,
+    };
+    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]") as Array<Record<string, unknown>>;
+    const index = history.findIndex((doc) => s(doc.numero || doc.id) === numeroFactura);
+    if (index >= 0) history[index] = { ...history[index], ...item };
+    else history.unshift(item);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  };
   const descargar = async () => {
+    if (!validate()) return;
     try {
-      const Componente =
-        plantilla === "InvoicePDF" ? InvoicePDF : PlantillaNueva;
-      const blob = await pdf(
-        <Componente
-          datos={datos}
-          numeroFactura={numeroFactura}
-          conceptos={conceptos}
-          empresa={empresa}
-          cliente={cliente}
-          esPresupuesto={esPresupuesto}
-        />,
-      ).toBlob();
-
+      const Component = plantilla === "InvoicePDF" ? InvoicePDF : PlantillaNueva;
+      const blob = await pdf(<Component datos={pdfData} numeroFactura={numeroFactura} conceptos={conceptos} />).toBlob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`;
-      a.click();
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`;
+      link.click();
       URL.revokeObjectURL(url);
-
-      toast.success("PDF descargado");
-    } catch (error) {
-      toast.error("Error al generar PDF");
-      console.error(error);
+      updateHistory(esPresupuesto ? "Presupuesto descargado" : "Factura descargada");
+      showSuccessToast("PDF descargado");
+    } catch {
+      showWarningToast("No se pudo generar el PDF");
     }
   };
-
   const enviar = async () => {
-    if (!cliente.email) return toast.error("Falta email del cliente");
-    const historial = JSON.parse(
-      localStorage.getItem("historial") || "[]",
-    ) as HistoryItem[];
-
-    const index = historial.findIndex(
-      (doc) => doc.numero === numeroFactura,
-    );
-
-    if (index !== -1) {
-      historial[index].tipo = esPresupuesto ? "presupuesto" : "factura";
-      historial[index].estado = "Factura enviada";
-    } else {
-      historial.unshift({
-        id: numeroFactura,
-        tipo: esPresupuesto ? "presupuesto" : "factura",
-        cliente: cliente,
-        fecha: new Date().toLocaleDateString(),
-        conceptos: conceptos,
-        total: total,
-        estado: esPresupuesto ? "Presupuesto enviado" : "Factura enviada",
-      });
-    }
-
-    localStorage.setItem("historial", JSON.stringify(historial));
-
+    if (!validate(true)) return;
     try {
-      const Componente =
-        plantilla === "InvoicePDF" ? InvoicePDF : PlantillaNueva;
-      const blob = await pdf(
-        <Componente
-          datos={datos}
-          numeroFactura={numeroFactura}
-          conceptos={conceptos}
-          empresa={empresa}
-          cliente={cliente}
-          esPresupuesto={esPresupuesto}
-        />,
-      ).toBlob();
-
+      const Component = plantilla === "InvoicePDF" ? InvoicePDF : PlantillaNueva;
+      const blob = await pdf(<Component datos={pdfData} numeroFactura={numeroFactura} conceptos={conceptos} />).toBlob();
       const formData = new FormData();
-      formData.append(
-        "file",
-        blob,
-        `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`,
-      );
+      formData.append("file", blob, `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`);
       formData.append("to", cliente.email);
-      formData.append(
-        "subject",
-        `${esPresupuesto ? "Presupuesto" : "Factura"} ${numeroFactura}`,
-      );
-      formData.append(
-        "text",
-        `Hola,\n\nAdjunto ${esPresupuesto ? "el presupuesto" : "la factura"} \( {numeroFactura}.\n\nGracias.\n \){empresa.nombre || "Tu empresa"}`,
-      );
-
-      const res = await fetch("/api/enviar-email", {
-        method: "POST",
-        body: formData,
-      });
-      if (res.ok) {
-        const historial = JSON.parse(localStorage.getItem("historial") || "[]");
-
-        historial.push({
-          id: numeroFactura,
-          tipo: esPresupuesto ? "presupuesto" : "factura",
-
-          cliente: cliente,
-          fecha: new Date().toISOString(),
-          total: total,
-          estado: "Enviado",
-        });
-
-        localStorage.setItem("historial", JSON.stringify(historial));
-      }
-
-      toast[res.ok ? "success" : "error"](
-        res.ok ? "Enviado con éxito" : "Error al enviar",
-      );
-    } catch (error) {
-      toast.error("Error al enviar");
-      console.error(error);
+      formData.append("subject", `${esPresupuesto ? "Presupuesto" : "Factura"} ${numeroFactura}`);
+      formData.append("text", `Hola,\n\nAdjunto ${esPresupuesto ? "el presupuesto" : "la factura"} ${numeroFactura}.\n\nGracias.\n${empresa.nombre || "Tu empresa"}`);
+      const res = await fetch("/api/enviar-email", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("send failed");
+      if (window.gtag) window.gtag("event", "conversion", { send_to: "AW-1791812185/PvpICL_mx_obENHy-BC", value: total, currency: "EUR" });
+      updateHistory(esPresupuesto ? "Presupuesto enviado" : "Factura enviada");
+      showSuccessToast("Documento enviado");
+    } catch {
+      showWarningToast("No se pudo enviar el documento");
     }
   };
 
   return (
-    <>
-      <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
-      <div className="p-0 mt-8 mb-6">
-        <div className="inline-flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-3 py-2 shadow-sm">
-          <span className="text-sm font-semibold text-blue-700">
-            {esPresupuesto ? "PRES" : "FACT"}-{numeroFactura} ·{" "}
-            {new Date(datos.fecha).toLocaleDateString("es-ES")}
-          </span>
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#f7f4ee_0%,#edf3fb_42%,#eef2f7_100%)] text-slate-950">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.88),_transparent_70%)]" />
+      <div className="pointer-events-none absolute -left-16 top-20 h-44 w-44 rounded-full bg-[#f4d7bc]/45 blur-3xl" />
+      <div className="pointer-events-none absolute -right-12 top-64 h-52 w-52 rounded-full bg-[#dce8ff]/80 blur-3xl" />
 
-          <input
-            type="text"
-            value={numeroFactura}
-            onChange={handleNumeroChange}
-            placeholder="001"
-            className="w-20 text-center rounded-xl border border-blue-300 bg-white font-bold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none py-1"
-          />
-        </div>
-      </div>
-
-      <div className="grid sm:grid-cols-2 gap-6 mb-6">
-        {/* CLIENTE */}
-        <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200 shadow-sm">
-          <h3 className="text-sm font-semibold text-blue-700 mb-5">
-            Datos de Cliente
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              placeholder="Nombre / Razón social"
-              value={cliente.nombre}
-              onChange={(e) =>
-                setCliente({ ...cliente, nombre: e.target.value })
-              }
-              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white text-black placeholder-gray-500"
-              style={{ colorScheme: "light" }}
-            />
-
-            <input
-              placeholder="DNI / NIE"
-              value={cliente.nif}
-              onChange={(e) => setCliente({ ...cliente, nif: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white text-black placeholder-gray-500"
-              style={{ colorScheme: "light" }}
-            />
-
-            <input
-              placeholder="Dirección"
-              value={cliente.direccion}
-              onChange={(e) =>
-                setCliente({ ...cliente, direccion: e.target.value })
-              }
-              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white text-black placeholder-gray-500"
-              style={{ colorScheme: "light" }}
-            />
-
-            <input
-              placeholder="Ciudad"
-              value={cliente.ciudad}
-              onChange={(e) =>
-                setCliente({ ...cliente, ciudad: e.target.value })
-              }
-              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white text-black placeholder-gray-500"
-              style={{ colorScheme: "light" }}
-            />
-
-            <input
-              placeholder="Código postal"
-              value={cliente?.codigoPostal || ""}
-              onChange={(e) =>
-                setCliente({ ...cliente, codigoPostal: e.target.value })
-              }
-              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white text-black placeholder-gray-500"
-              style={{ colorScheme: "light" }}
-            />
-
-            <input
-              placeholder="Teléfono"
-              value={cliente.telefono}
-              onChange={(e) =>
-                setCliente({ ...cliente, telefono: e.target.value })
-              }
-              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white text-black placeholder-gray-500"
-              style={{ colorScheme: "light" }}
-            />
-
-            <input
-              placeholder="Email"
-              value={cliente.email}
-              onChange={(e) =>
-                setCliente({ ...cliente, email: e.target.value })
-              }
-              className="w-full px-4 py-3 rounded-xl border border-blue-300 text-sm bg-white text-black placeholder-gray-500"
-              style={{ colorScheme: "light" }}
-            />
-          </div>
-        </div>
-        {/* CONCEPTOS */}
-        <div className="bg-blue-50 rounded-2xl border border-blue-100 shadow-sm p-6 mb-6">
-          <h3 className="text-lg font-semibold text-blue-700 mb-6">
-            Conceptos
-          </h3>
-          <div className="grid grid-cols-12 gap-3 mb-2 text-xs font-semibold text-blue-700">
-            <div className="col-span-5">Descripción</div>
-            <div className="col-span-2 text-center">Cant.</div>
-            <div className="col-span-2 text-right">Precio</div>
-            <div className="col-span-2 text-right">Total</div>
-            <div className="col-span-1"></div>
-          </div>
-
-          {conceptos.map((c, i) => (
-            <div key={i} className="grid grid-cols-12 gap-3 items-center mb-3">
-              {/* Descripción */}
-              <textarea
-                placeholder="Descripción"
-                value={c.desc}
-                rows={1}
-                onChange={(e) => {
-                  const copia = [...conceptos];
-                  copia[i].desc = e.target.value;
-                  setconceptos(copia);
-                }}
-                onInput={(e) => {
-                  const el = e.target as HTMLTextAreaElement;
-                  el.style.height = "auto";
-                  el.style.height = el.scrollHeight + "px";
-                }}
-                className="col-span-5 px-4 py-2 rounded-xl border border-blue-200 text-sm bg-white text-black placeholder-gray-500 focus:ring-2 focus:ring-blue-400 outline-none"
-                style={{ colorScheme: "light" }}
-              />
-              {/* Cantidad */}
-              <input
-                type="number"
-                value={c.cant === 0 ? "" : c.cant}
-                placeholder="Cant."
-                onChange={(e) => {
-                  const copia = [...conceptos];
-                  copia[i].cant = Number(e.target.value);
-                  setconceptos(copia);
-                }}
-                className="col-span-2 px-3 py-2 rounded-xl border border-blue-200 text-sm text-center bg-white text-black placeholder-gray-500 focus:ring-2 focus:ring-blue-400 outline-none"
-                style={{ colorScheme: "light" }}
-              />
-
-              {/* Precio */}
-              <input
-                type="number"
-                step="0.01"
-                value={c.precio === 0 ? "" : c.precio}
-                placeholder="€"
-                onChange={(e) => {
-                  const copia = [...conceptos];
-                  copia[i].precio = Number(e.target.value);
-                  setconceptos(copia);
-                }}
-                className="col-span-2 px-3 py-2 rounded-xl border border-blue-200 text-sm text-right bg-white text-black placeholder-gray-500 focus:ring-2 focus:ring-blue-400 outline-none"
-                style={{ colorScheme: "light" }}
-              />
-
-              {/* Total */}
-              <div className="col-span-2 px-3 py-2 rounded-xl bg-blue-100 text-sm text-right font-semibold text-blue-700">
-                {(c.cant * c.precio).toFixed(2)} €
-              </div>
-
-              {/* Eliminar */}
-              <button
-                type="button"
-                onClick={() =>
-                  setconceptos(conceptos.filter((_, index) => index !== i))
-                }
-                className="col-span-1 text-red-500 hover:text-red-700 text-sm"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-
-          {/* Añadir */}
-          <button
-            type="button"
-            onClick={() =>
-              setconceptos([...conceptos, { desc: "", cant: 0, precio: 0 }])
-            }
-            className="mt-3 text-sm font-medium text-blue-600 hover:text-blue-800"
-          >
-            + Añadir concepto
-          </button>
-        </div>
-        {/* Cuadro de totales compacto y bonito */}
-        <div className="bg-orange-50 rounded-2xl p-4 shadow-md mb-6">
-          <div className="mb-3">
-            <p className="text-base font-bold text-black">Base imponible</p>
-            <p className="text-xl font-bold text-black">
-              {subtotal.toFixed(2)} €
+      <main
+        className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-5 pt-6 font-sans"
+        style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}
+      >
+        <header className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
+              {modeCopy.workspace}
+            </p>
+            <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
+              {modeCopy.title}
+            </h1>
+            <p className="mt-3 max-w-xs text-[15px] leading-6 text-slate-500">
+              {modeCopy.subtitle}
             </p>
           </div>
-
-          <div className="flex justify-between items-center mb-3">
-            <div>
-              <p className="text-base text-black">IVA ({ivaPorc}%):</p>
-              <button className="text-blue-600 text-xs underline">
-                cambiar
-              </button>
-            </div>
-            <p className="text-xl font-bold text-black">{iva.toFixed(2)} €</p>
-          </div>
-
-          <div className="bg-orange-500 text-white rounded-xl p-3 text-center mb-3">
-            <p className="text-2xl font-bold">{total.toFixed(2)} €</p>
-          </div>
-
-          <p className="text-center text-black text-sm mb-4">
-            Importe final a pagar por el cliente
-          </p>
-          <div className="flex gap-3 justify-center">
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={descargar}
-                className="bg-white border border-gray-300 text-gray-800 py-1.5 px-5 rounded-xl font-bold text-sm"
-              >
-                Descargar PDF
-              </button>
-              <button
-                onClick={() => {
-                  if (typeof window !== "undefined" && window.gtag) {
-                    window.gtag("event", "conversion", {
-                      send_to: "AW-1791812185/PvpICL_mx_obENHy-BC",
-                      value: 1.0,
-                      currency: "EUR",
-                    });
-                  }
-                  enviar();
-                }}
-                className="bg-white border border-gray-300 text-gray-800 py-1.5 px-5 rounded-xl font-bold text-sm"
-              >
-                Enviar al cliente
-              </button>
-            </div>
-          </div>
-        </div>
-        {/* ==================== NOTAS ==================== */}
-        <div className="mt-6 text-center">
           <button
             type="button"
-            onClick={() => router.push("/")}
-            className="bg-gray-800 text-white py-2 px-6 rounded-xl font-bold"
+            onClick={saveDraftNow}
+            className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)] transition hover:bg-slate-800"
           >
-            Volver al inicio
+            <Save className="h-[18px] w-[18px]" strokeWidth={2.1} />
           </button>
-        </div>
-      </div>
-    </>
+        </header>
+
+        {esPresupuesto ? (
+          <section className="mt-6 rounded-[34px] border border-[#ecd3ba] bg-[linear-gradient(180deg,rgba(255,248,240,0.98),rgba(255,255,255,0.92))] p-6 shadow-[0_34px_80px_-44px_rgba(185,122,69,0.38)] backdrop-blur-xl">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#8a5a33] text-white shadow-[0_18px_28px_-18px_rgba(138,90,51,0.9)]">
+                  <Sparkles className="h-[18px] w-[18px]" strokeWidth={2.1} />
+                </span>
+                <div>
+                  <p className="text-sm font-medium uppercase tracking-[0.18em] text-[#9a6338]">
+                    {modeCopy.heroEyebrow}
+                  </p>
+                  <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+                    {modeCopy.heroTitle}
+                  </h2>
+                  <p className="mt-2 max-w-xs text-[14px] leading-6 text-slate-600">
+                    {modeCopy.heroDescription}
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-full border border-[#e6c4a0] bg-white/85 px-3 py-1.5 text-xs font-semibold text-[#8a5a33]">
+                {modeCopy.heroBadge}
+              </div>
+            </div>
+            <div className="mt-6 grid grid-cols-3 gap-3">
+              <div className="rounded-[24px] border border-white/70 bg-white/88 p-3 shadow-[0_16px_30px_-24px_rgba(138,90,51,0.2)]">
+                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                  Referencia
+                </p>
+                <p className="mt-2 text-sm font-semibold text-slate-900">
+                  {documentPrefix}-{numeroFactura}
+                </p>
+              </div>
+              <div className="rounded-[24px] border border-white/70 bg-white/88 p-3 shadow-[0_16px_30px_-24px_rgba(138,90,51,0.2)]">
+                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                  Fecha
+                </p>
+                <p className="mt-2 text-sm font-semibold text-slate-900">
+                  {formattedDate}
+                </p>
+              </div>
+              <div className="rounded-[24px] border border-white/70 bg-white/88 p-3 shadow-[0_16px_30px_-24px_rgba(138,90,51,0.2)]">
+                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                  Estimado
+                </p>
+                <p className="mt-2 text-sm font-semibold text-slate-900">
+                  {money(total)}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 rounded-[24px] border border-white/70 bg-white/84 px-4 py-4 text-[14px] leading-6 text-slate-600">
+              {modeCopy.heroHint}
+            </div>
+          </section>
+        ) : null}
+
+        <section className={`${esPresupuesto ? "mt-5" : "mt-6"} rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl`}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <span className={`flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)] ${esPresupuesto ? "bg-[#8a5a33]" : "bg-slate-950"}`}>
+                <Search className="h-[18px] w-[18px]" strokeWidth={2.1} />
+              </span>
+              <div>
+                <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
+                  Cliente
+                </p>
+                <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+                  Buscar cliente existente
+                </h2>
+                <p className="mt-2 max-w-xs text-[14px] leading-6 text-slate-500">
+                  {modeCopy.clientSearchDescription}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/clientes"
+              className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Clientes
+            </Link>
+          </div>
+          <div className="relative mt-6">
+            <Search
+              className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+              strokeWidth={2}
+            />
+            <input
+              value={clientSearch}
+              onChange={(event) => {
+                setClientSearch(event.target.value);
+                if (linkedClientId) {
+                  setLinkedClientId("");
+                }
+              }}
+              placeholder={
+                clientesGuardados.length
+                  ? "Buscar por nombre, NIF, email o telefono"
+                  : "No hay clientes guardados todavia"
+              }
+              disabled={!clientesGuardados.length}
+              className={`${inputClass} pl-11`}
+            />
+          </div>
+          {linkedClientId ? (
+            <div className={selectedClientCardClass}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className={`text-[11px] font-medium uppercase tracking-[0.16em] ${selectedClientEyebrowClass}`}>
+                    {modeCopy.selectedClientLabel}
+                  </p>
+                  <p className="mt-2 truncate text-sm font-semibold text-slate-950">
+                    {cliente.nombre.trim() || "Cliente sin nombre"}
+                  </p>
+                  <p className="mt-1 text-[13px] leading-5 text-slate-600">
+                    {[cliente.nif, cliente.email, cliente.telefono]
+                      .filter((value) => value.trim())
+                      .join(" / ") || "Datos cargados en el formulario inferior."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={detachClient}
+                  className={detachButtonClass}
+                >
+                  Desvincular
+                </button>
+              </div>
+            </div>
+          ) : null}
+          {!clientesGuardados.length ? (
+            <div className="mt-4 rounded-[24px] border border-dashed border-slate-200 bg-white/70 px-4 py-4 text-sm text-slate-500">
+              No hay clientes guardados. Crea uno en la seccion de clientes y volvera a aparecer aqui.
+            </div>
+          ) : !linkedClientId ? (
+            <div className="mt-4 space-y-2">
+              {clientesFiltrados.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => selectClient(item)}
+                  className="flex w-full items-start justify-between gap-3 rounded-[24px] border border-white/70 bg-white/85 px-4 py-4 text-left shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)] transition hover:border-slate-200 hover:bg-white"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-950">
+                      {item.nombre || "Cliente sin nombre"}
+                    </p>
+                    <p className="mt-1 text-[13px] leading-5 text-slate-500">
+                      {[item.nif, item.email, item.telefono]
+                        .filter((value) => value.trim())
+                        .join(" / ") || "Sin datos de contacto"}
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600">
+                    Usar
+                  </span>
+                </button>
+              ))}
+              {!clientesFiltrados.length && clientSearch.trim() ? (
+                <div className="rounded-[24px] border border-dashed border-slate-200 bg-white/70 px-4 py-4 text-sm text-slate-500">
+                  No hay coincidencias para esa busqueda.
+                </div>
+              ) : null}
+            </div>
+          ) : null
+          }
+        </section>
+
+        {!esPresupuesto ? (
+          <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <div className="flex items-start gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
+                <CalendarDays className="h-[18px] w-[18px]" strokeWidth={2.1} />
+              </span>
+              <div>
+                <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
+                  Documento
+                </p>
+                <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+                  Fecha y vencimiento
+                </h3>
+                <p className="mt-2 max-w-xs text-[14px] leading-6 text-slate-500">
+                  El vencimiento se aplicara a la factura y aparecera tambien en el PDF.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-[22px] border border-slate-200 bg-white/85 px-4 py-3">
+              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                Referencia
+              </p>
+              <p className="mt-2 text-sm font-semibold text-slate-950">
+                {documentPrefix}-{numeroFactura}
+              </p>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-slate-600">
+                  Fecha de emision
+                </span>
+                <input
+                  type="date"
+                  value={fecha}
+                  onChange={(event) => setFecha(event.target.value)}
+                  className={inputClass}
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-slate-600">
+                  Fecha de vencimiento
+                </span>
+                <input
+                  type="date"
+                  value={fechaVencimiento}
+                  onChange={(event) => setFechaVencimiento(event.target.value)}
+                  className={inputClass}
+                />
+              </label>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between gap-3 rounded-[22px] bg-slate-50 px-4 py-3 text-sm text-slate-500">
+              <span>Vencimiento actual</span>
+              <span className="font-semibold text-slate-900">
+                {formattedDueDate || "Sin fecha"}
+              </span>
+            </div>
+          </section>
+        ) : null}
+
+        <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+
+          <div className="flex items-start gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
+              <UsersRound className="h-[18px] w-[18px]" strokeWidth={2.1} />
+            </span>
+            <div>
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
+                Cliente
+              </p>
+              <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+                Datos del cliente
+              </h3>
+            </div>
+          </div>
+          <div className="mt-6 space-y-3">
+            <input placeholder="Nombre o razon social" value={cliente.nombre} onChange={(e) => updateCliente("nombre", e.target.value)} className={inputClass} />
+            <input placeholder="NIF / DNI" value={cliente.nif} onChange={(e) => updateCliente("nif", e.target.value)} className={inputClass} />
+            <input placeholder="Direccion" value={cliente.direccion} onChange={(e) => updateCliente("direccion", e.target.value)} className={inputClass} />
+            <div className="grid grid-cols-2 gap-3">
+              <input placeholder="Ciudad" value={cliente.ciudad} onChange={(e) => updateCliente("ciudad", e.target.value)} className={inputClass} />
+              <input placeholder="Codigo postal" value={cliente.codigoPostal} onChange={(e) => updateCliente("codigoPostal", e.target.value)} className={inputClass} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <input placeholder="Telefono" value={cliente.telefono} onChange={(e) => updateCliente("telefono", e.target.value)} className={inputClass} />
+              <input placeholder="Email" value={cliente.email} onChange={(e) => updateCliente("email", e.target.value)} className={inputClass} />
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+          <div className="flex items-start gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
+              <Palette className="h-[18px] w-[18px]" strokeWidth={2.1} />
+            </span>
+            <div>
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
+                Conceptos
+              </p>
+              <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+                {modeCopy.conceptsTitle}
+              </h3>
+            </div>
+          </div>
+          <div className="mt-6 space-y-4">
+            {conceptos.map((item, index) => (
+              <div key={index} className="rounded-[28px] border border-white/70 bg-white/85 p-4 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                      Concepto {String(index + 1).padStart(2, "0")}
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-slate-500">
+                      {modeCopy.conceptLineLabel}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeConcept(index)}
+                    className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:border-red-200 hover:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4" strokeWidth={2.1} />
+                  </button>
+                </div>
+                <textarea
+                  rows={3}
+                  placeholder={modeCopy.conceptPlaceholder}
+                  value={item.desc}
+                  onChange={(e) => updateConcept(index, "desc", e.target.value)}
+                  className="mt-4 min-h-[96px] w-full rounded-[22px] border border-white/70 bg-white/80 px-4 py-3 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.4)]"
+                />
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={item.cant}
+                    onChange={(e) =>
+                      updateConcept(index, "cant", Math.max(1, num(e.target.value, 1)))
+                    }
+                    className={inputClass}
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={item.precio === 0 ? "" : item.precio}
+                    onChange={(e) =>
+                      updateConcept(index, "precio", Math.max(0, num(e.target.value, 0)))
+                    }
+                    placeholder="Precio unitario"
+                    className={inputClass}
+                  />
+                </div>
+                <div className="mt-3 flex items-center justify-between rounded-[22px] bg-[#f7f6f3] px-4 py-3">
+                  <p className="text-sm font-medium text-slate-500">{modeCopy.conceptTotal}</p>
+                  <p className="text-base font-semibold text-slate-950">
+                    {money(item.cant * item.precio)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setConceptos([...conceptos, EMPTY_CONCEPTO])}
+            className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            <Plus className="h-4 w-4" strokeWidth={2.2} />
+            {modeCopy.conceptAdd}
+          </button>
+        </section>
+
+        <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+          <div className="flex items-start gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
+              <Wallet className="h-[18px] w-[18px]" strokeWidth={2.1} />
+            </span>
+            <div>
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
+                {modeCopy.summaryEyebrow}
+              </p>
+              <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+                {modeCopy.summaryTitle}
+              </h3>
+            </div>
+          </div>
+          <div className="mt-6 rounded-[28px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(247,245,240,0.92))] p-4 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)]">
+            <div className="flex items-center justify-between py-2 text-sm text-slate-600">
+              <span>Base imponible</span>
+              <span className="font-semibold text-slate-950">{money(subtotal)}</span>
+            </div>
+            <div className="flex items-center justify-between py-2 text-sm text-slate-600">
+              <span>IVA ({tipoIVA}%)</span>
+              <span className="font-semibold text-slate-950">{money(iva)}</span>
+            </div>
+            <div className={totalCardClass}>
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-white/70">{modeCopy.totalLabel}</p>
+                <p className="text-[1.55rem] font-semibold tracking-[-0.04em]">
+                  {money(total)}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-6 grid gap-3">
+            <button
+              type="button"
+              onClick={descargar}
+              className={primaryActionClass}
+            >
+              <Download className="h-4 w-4" strokeWidth={2.2} />
+              {modeCopy.downloadLabel}
+            </button>
+            <button
+              type="button"
+              onClick={enviar}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              <Send className="h-4 w-4" strokeWidth={2.2} />
+              {modeCopy.sendLabel}
+            </button>
+          </div>
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-[22px] border border-white/70 bg-white/82 px-4 py-3 text-sm text-slate-500 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)]">
+            <p>
+              {cliente.email.trim()
+                ? modeCopy.sendHint(cliente.email)
+                : modeCopy.emptyEmailHint}
+            </p>
+            <Link
+              href="/empresa"
+              className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Perfil
+            </Link>
+          </div>
+        </section>
+      </main>
+    </div>
   );
 }

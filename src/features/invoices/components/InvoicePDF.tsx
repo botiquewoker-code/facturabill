@@ -129,30 +129,57 @@ const styles = StyleSheet.create({
   notesText: { fontSize: 11, lineHeight: 1.5 },
 });
 
+type PdfParty = {
+  nombre?: string;
+  nif?: string;
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  ciudad?: string;
+  cp?: string;
+};
+
+type PdfDatos = {
+  esPresupuesto?: boolean;
+  fecha?: string;
+  fechaVencimiento?: string;
+  logo?: string;
+  empresa: PdfParty;
+  cliente: PdfParty;
+  notas?: string;
+  tipoIVA?: number;
+  tipiIVA?: number;
+  ivaPct?: number;
+};
+
+type PdfConcepto = {
+  desc: string;
+  cant: number;
+  precio: number;
+};
+
+const formatDocumentDate = (value: unknown) => {
+  if (typeof value !== "string" || !value.trim()) {
+    return "";
+  }
+
+  const parsed = new Date(value);
+
+  return Number.isNaN(parsed.getTime())
+    ? value
+    : parsed.toLocaleDateString("es-ES");
+};
+
 const InvoicePDF = ({
   datos,
   numeroFactura,
   conceptos = [],
-  empresa,
-  cliente,
-  esPresupuesto,
 }: {
-  datos: any;
+  datos: PdfDatos;
   numeroFactura: string;
-  conceptos: { desc: string; cant: number; precio: number }[];
-  empresa?: any;
-  cliente?: any;
-  esPresupuesto?: boolean;
+  conceptos: PdfConcepto[];
 }) => {
-  console.log("Datos recibidos en PDF:", datos);
-
   const isPresupuesto = Boolean(datos?.esPresupuesto);
-
-  const baseImponible = conceptos.reduce(
-    (acc: number, item) =>
-      acc + (Number(item.precio) || 0) * (Number(item.cant) || 1),
-    0,
-  );
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -160,6 +187,7 @@ const InvoicePDF = ({
         <View style={styles.header}>
           {/* Empresa */}
           <View style={styles.leftColumn}>
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
             {datos.logo && <Image style={styles.logo} src={datos.logo} />}
             <Text style={styles.companyName}>{datos.empresa.nombre}</Text>
             <Text style={styles.companyDetail}>{datos.empresa.direccion}</Text>
@@ -181,10 +209,16 @@ const InvoicePDF = ({
                 {isPresupuesto ? "PRESUPUESTO" : "FACTURA"}
               </Text>
               <Text style={styles.invoiceNumber}>
-                {datos.esPresupuesto ? "PRES-" : "FACT-"}
-                {numeroFactura} -{" "}
-                {new Date(datos.fecha).toLocaleDateString("es-ES")}
+                {datos.esPresupuesto ? "PRES-" : "FACT-"}{numeroFactura}
               </Text>
+              <Text style={{ fontSize: 11, color: "#4b5563" }}>
+                Fecha: {formatDocumentDate(datos.fecha)}
+              </Text>
+              {!isPresupuesto && datos?.fechaVencimiento ? (
+                <Text style={{ marginTop: 4, fontSize: 11, color: "#4b5563" }}>
+                  Vencimiento: {formatDocumentDate(datos.fechaVencimiento)}
+                </Text>
+              ) : null}
             </View>
           </View>
         </View>

@@ -9,7 +9,7 @@ FacturaBill is a Next.js application for creating invoices and quotes, generatin
 - TypeScript
 - Tailwind CSS 4
 - `@react-pdf/renderer` for PDF generation
-- AWS SES / Nodemailer for email routes
+- AWS SES for email routes
 - AWS Amplify auth config for the login flow
 
 ## Project Structure
@@ -48,6 +48,22 @@ npm run start
 npm run lint
 ```
 
+## Environment Variables
+
+Create a `.env.local` file based on `.env.example`.
+
+- `SES_REGION`: AWS region where SES is configured
+- `EMAIL_FROM`: verified SES sender
+- `EMAIL_TO`: inbox for support / feedback notifications
+- `SES_ACCESS_KEY_ID` and `SES_SECRET_ACCESS_KEY`: optional when deploying with an IAM role
+- `NEXT_PUBLIC_GOOGLE_ADS_ID`, `NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL`, `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID`: optional analytics ids
+
+## AWS Deployment Notes
+
+- `next.config.ts` uses `output: "standalone"`, which is suitable for container or Node deployments on AWS.
+- For production on AWS, prefer attaching an IAM role with SES permissions instead of hardcoding access keys.
+- Run both `npm run lint` and `npm run build` before packaging the app.
+
 ## Cleanup Applied
 
 - Grouped App Router pages by concern using route groups
@@ -59,4 +75,4 @@ npm run lint
 ## Notes
 
 - The current app still relies heavily on `localStorage` for business data.
-- `npm run lint` still reports pre-existing code quality issues inside active pages; structural cleanup is complete, but the app would benefit from a separate lint and typing pass.
+- Business data stored in the browser is not shared across devices or users unless you add a backend persistence layer.

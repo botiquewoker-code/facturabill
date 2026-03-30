@@ -1,55 +1,51 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import Script from "next/script";
+import "./globals.css";
+import { AppLanguageProvider } from "@/features/i18n/provider";
+import { AppToaster } from "@/features/notifications/toast";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const GOOGLE_ADS_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || "AW-1791812185";
+const GOOGLE_ANALYTICS_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID || "G-XSGT6ME68Y";
 
 export const metadata: Metadata = {
-  title: "Crear facturas y Presupuestos facil",
-  description:
-    "Facturas y presupuestos rápidos para autónomos y pequeños negocios",
+  title: "Crear facturas y presupuestos facil",
+  description: "Facturas y presupuestos rapidos para autonomos y pequenos negocios",
   manifest: "/manifest.json",
   icons: {
     icon: "/favicon.ico",
   },
 };
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es" dir="ltr">
       <head>
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=AW-17918127185"
+          src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`}
           strategy="afterInteractive"
         />
-
         <Script id="google-ads" strategy="afterInteractive">
           {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', 'AW-17918127185');
-          gtag('config', 'G-XSGT6ME68Y');
+          gtag('config', '${GOOGLE_ADS_ID}');
+          gtag('config', '${GOOGLE_ANALYTICS_ID}');
         `}
         </Script>
       </head>
 
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className="antialiased">
+        <AppLanguageProvider>
+          {children}
+          <AppToaster />
+        </AppLanguageProvider>
 
         <Script id="sw-register" strategy="afterInteractive">
           {`

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -28,7 +29,13 @@ export default function Apoyar() {
       </p>
 
       <div className="flex items-center justify-center gap-2 mt-4">
-        <img src="/bizum.png" alt="Bizum" className="h-6" />
+        <Image
+          src="/bizum.png"
+          alt="Bizum"
+          width={60}
+          height={24}
+          className="h-6 w-auto"
+        />
 
         <span className="font-semibold">624662997</span>
 

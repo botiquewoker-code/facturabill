@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -114,10 +115,13 @@ export default function RegistroPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 transition"
                 />
                 {logo && (
-                  <img
+                  <Image
                     src={logo}
                     alt="Logo"
-                    className="mt-4 w-40 h-40 object-contain rounded-xl border border-gray-300 shadow"
+                    width={160}
+                    height={160}
+                    unoptimized
+                    className="mt-4 h-40 w-40 rounded-xl border border-gray-300 object-contain shadow"
                   />
                 )}
               </div>

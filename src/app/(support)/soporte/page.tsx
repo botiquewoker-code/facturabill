@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 export default function SoportePage() {
@@ -12,7 +12,7 @@ export default function SoportePage() {
 
   const router = useRouter();
 
-  const enviarConsulta = async (e: any) => {
+  const enviarConsulta = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     await fetch("/api/soporte", {
@@ -88,10 +88,14 @@ export default function SoportePage() {
             rows={4}
             value={mensaje}
             onChange={(e) => setMensaje(e.target.value)}
-            placeholder="Describe tu problema o consulta"
+            placeholder="Describe tu problema o consulta (recomendado)"
             className="w-full border border-gray-300 rounded-lg px-4 py-2"
-            required
           />
+
+          <p className="text-sm text-gray-500">
+            Recomendacion: cuentanos el contexto para ayudarte mejor, pero no
+            es obligatorio.
+          </p>
 
           <label className="flex items-center gap-2 text-sm text-gray-600">
             <input

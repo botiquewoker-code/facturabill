@@ -1,32 +1,52 @@
 import { NextResponse } from "next/server";
-import { SESClient, SendRawEmailCommand } from "@aws-sdk/client-ses";
+import { SendRawEmailCommand } from "@aws-sdk/client-ses";
+import {
+  EmailConfigError,
+  getEmailFrom,
+  getSesClient,
+} from "@/features/server/email";
 
-const ses = new SESClient({
-  region: process.env.SES_REGION,
-  credentials: {
-    accessKeyId: process.env.SES_ACCESS_KEY!,
-    secretAccessKey: process.env.SES_SECRET_KEY!,
-  },
-});
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  console.log("API enviar-email ejecutada");
   try {
     const formData = await req.formData();
 
     const to = formData.get("to") as string;
     const subject = formData.get("subject") as string;
     const text = formData.get("text") as string;
-    const file = formData.get("file") as File;
+    const file = formData.get("file");
+
+    if (
+      typeof to !== "string" ||
+      !to.trim() ||
+      typeof subject !== "string" ||
+      !subject.trim() ||
+      typeof text !== "string" ||
+      !(file instanceof File)
+    ) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid email payload" },
+        { status: 400 },
+      );
+    }
+
+    const ses = getSesClient();
+    const emailFrom = getEmailFrom();
 
     const fileBuffer = Buffer.from(await file.arrayBuffer());
     const fileBase64 = fileBuffer.toString("base64");
 
     const boundary = "NextPart_" + Date.now();
+    const safeSubject = subject.replace(/[\r\n]+/g, " ").trim();
+    const safeFilename = (file.name || "documento.pdf").replace(
+      /[\r\n"]/g,
+      "",
+    );
 
-    const rawEmail = `From: ${process.env.EMAIL_FROM}
-To: ${to}
-Subject: ${subject}
+    const rawEmail = `From: ${emailFrom}
+To: ${to.trim()}
+Subject: ${safeSubject}
 MIME-Version: 1.0
 Content-Type: multipart/mixed; boundary="${boundary}"
 
@@ -36,8 +56,8 @@ Content-Type: text/plain; charset="UTF-8"
 ${text}
 
 --${boundary}
-Content-Type: application/pdf; name="factura.pdf"
-Content-Disposition: attachment; filename="factura.pdf"
+Content-Type: application/pdf; name="${safeFilename}"
+Content-Disposition: attachment; filename="${safeFilename}"
 Content-Transfer-Encoding: base64
 
 ${fileBase64}
@@ -54,6 +74,15 @@ ${fileBase64}
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ ok: false }, { status: 500 });
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          error instanceof EmailConfigError
+            ? "Email service is not configured correctly"
+            : "Unable to send email",
+      },
+      { status: 500 },
+    );
   }
 }

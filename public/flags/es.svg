@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32" role="img" aria-label="Bandera de España">
+  <rect width="48" height="32" fill="#AA151B"/>
+  <rect y="8" width="48" height="16" fill="#F1BF00"/>
+  <g transform="translate(13 10)">
+    <rect width="6" height="12" rx="1" fill="#AA151B"/>
+    <rect x="2" y="1" width="2" height="10" fill="#F1BF00"/>
+    <circle cx="3" cy="4" r="1" fill="#AA151B"/>
+    <circle cx="3" cy="8" r="1" fill="#AA151B"/>
+  </g>
+</svg>

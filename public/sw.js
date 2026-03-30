@@ -1,9 +1,9 @@
-self.addEventListener("install", (event) => {
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
-self.addEventListener("activate", (event) => {
-  console.log("SW activo");
+self.addEventListener("activate", () => {
+  self.clients.claim();
 });
 
-self.addEventListener("fetch", (event) => {});
+self.addEventListener("fetch", () => {});

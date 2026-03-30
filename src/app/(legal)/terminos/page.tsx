@@ -1,123 +1,109 @@
 import Link from "next/link";
 
-export default function Terminos() {
+export default function TerminosPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-6 py-16">
-        <h1 className="text-5xl font-bold text-center mb-12 text-gray-800">
-          Términos de uso de Facturabill.net
+      <div className="mx-auto max-w-4xl px-6 py-16">
+        <h1 className="mb-12 text-center text-4xl font-bold text-gray-800 sm:text-5xl">
+          Terminos de uso de Facturabill.net
         </h1>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 space-y-10 text-gray-700 leading-relaxed text-lg">
+        <div className="space-y-10 rounded-2xl bg-white p-8 text-lg leading-relaxed text-gray-700 shadow-lg md:p-12">
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
-              1. Introducción
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
+              1. Introduccion
             </h2>
             <p>
               Bienvenido a Facturabill.net, una herramienta online gratuita
-              diseñada para facilitar la creación de facturas profesionales de
-              manera rápida y sencilla.
+              pensada para facilitar la creacion de facturas y presupuestos de
+              forma rapida y sencilla.
             </p>
             <p className="mt-4">
-              Estos Términos de uso regulan el acceso y utilización del sitio
-              web <strong>facturabill.net</strong> y sus servicios. Al acceder o
-              usar la plataforma, aceptas cumplir y estar vinculado por estos
-              términos en su versión vigente.
+              Estos terminos regulan el acceso y el uso del sitio web
+              <strong> facturabill.net</strong> y de sus servicios. Al utilizar
+              la plataforma aceptas estas condiciones en su version vigente.
             </p>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
               2. Uso del servicio
             </h2>
             <p>Facturabill.net permite:</p>
-            <ul className="list-disc pl-8 mt-4 space-y-3">
-              <li>
-                Crear facturas personalizadas con datos de empresa, cliente,
-                items y cálculos automáticos.
-              </li>
-              <li>Seleccionar entre diferentes plantillas de diseño.</li>
-              <li>Descargar las facturas en formato PDF.</li>
-              <li>
-                Enviar facturas por correo electrónico directamente desde la
-                plataforma.
-              </li>
+            <ul className="mt-4 list-disc space-y-3 pl-8">
+              <li>Crear facturas personalizadas con datos de empresa y cliente.</li>
+              <li>Seleccionar entre diferentes plantillas de diseno.</li>
+              <li>Descargar documentos en formato PDF.</li>
+              <li>Enviar documentos por correo electronico desde la plataforma.</li>
             </ul>
             <p className="mt-4">
-              El servicio es completamente gratuito y no requiere registro ni
-              suscripción.
+              El servicio es gratuito y actualmente no requiere registro para su
+              uso principal.
             </p>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
               3. Privacidad y datos
             </h2>
             <p>
-              Facturabill.net procesa toda la información exclusivamente en el
-              navegador del usuario. No se transmiten ni almacenan datos en
-              servidores externos.
+              Gran parte de la informacion se gestiona directamente en el
+              navegador del usuario mediante almacenamiento local. Facturabill
+              no garantiza sincronizacion entre dispositivos mientras no exista
+              una capa de almacenamiento remoto asociada a la cuenta.
             </p>
             <p className="mt-4">
-              No recopilamos información personal, cookies de seguimiento ni
-              datos de las facturas generadas. Tu privacidad está completamente
-              protegida.
+              Las funciones de envio por email y soporte pueden procesar los
+              datos necesarios para completar ese servicio concreto.
             </p>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
-              4. Responsabilidades del usuario
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
+              4. Responsabilidad del usuario
             </h2>
             <p>El usuario se compromete a:</p>
-            <ul className="list-disc pl-8 mt-4 space-y-3">
-              <li>
-                Utilizar el servicio de forma lícita y conforme a la normativa
-                vigente.
-              </li>
-              <li>
-                Ser el único responsable del contenido y exactitud de las
-                facturas generadas.
-              </li>
-              <li>
-                No utilizar la plataforma para fines fraudulentos o ilegales.
-              </li>
+            <ul className="mt-4 list-disc space-y-3 pl-8">
+              <li>Usar la plataforma de forma licita y conforme a la normativa aplicable.</li>
+              <li>Revisar los datos del documento antes de su envio o uso oficial.</li>
+              <li>Asumir la responsabilidad sobre la exactitud del contenido generado.</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
-              5. Limitación de responsabilidad
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
+              5. Limitacion de responsabilidad
             </h2>
             <p>
-              Facturabill.net se proporciona "tal cual" sin garantías de ningún
-              tipo. No nos hacemos responsables de errores, omisiones o daños
-              derivados del uso de las facturas generadas.
+              Facturabill.net se ofrece &quot;tal cual&quot; y puede cambiar con el
+              tiempo. No garantizamos ausencia total de errores ni asumimos
+              responsabilidad por danos derivados del uso del servicio o de los
+              documentos generados.
             </p>
             <p className="mt-4">
-              Recomendamos siempre revisar las facturas antes de su uso oficial.
+              Recomendamos revisar siempre las facturas y presupuestos antes de
+              compartirlos con terceros.
             </p>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
-              6. Modificaciones del servicio y términos
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
+              6. Modificaciones
             </h2>
             <p>
-              Nos reservamos el derecho a modificar, suspender o discontinuar el
-              servicio en cualquier momento, así como a actualizar estos
-              términos. El uso continuado tras cualquier cambio implica
-              aceptación de los nuevos términos.
+              Nos reservamos el derecho a modificar, suspender o mejorar el
+              servicio en cualquier momento, asi como a actualizar estos
+              terminos cuando sea necesario.
             </p>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
               7. Contacto
             </h2>
             <p>
-              Para cualquier consulta relacionada con estos términos, puedes
-              contactarnos en:
+              Para cualquier consulta relacionada con estos terminos puedes
+              escribir a:
               <br />
               <a
                 href="mailto:facturabill.net@gmail.com"
@@ -128,16 +114,16 @@ export default function Terminos() {
             </p>
           </section>
 
-          <p className="text-center text-gray-500 mt-16 text-base">
-            Última actualización: 24 de diciembre de 2025
+          <p className="mt-16 text-center text-base text-gray-500">
+            Ultima actualizacion: 30 de marzo de 2026
           </p>
 
-          <div className="text-center mt-12">
+          <div className="mt-12 text-center">
             <Link
               href="/"
-              className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition font-medium"
+              className="inline-block rounded-lg bg-blue-600 px-8 py-3 font-medium text-white transition hover:bg-blue-700"
             >
-              ← Volver a Facturabill.net
+              Volver a Facturabill.net
             </Link>
           </div>
         </div>

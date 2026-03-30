@@ -57,8 +57,12 @@ export default function FeedbackPage() {
                 onChange={(e) => setMensaje(e.target.value)}
                 placeholder="Cuéntanos qué está mal en la web"
                 className="w-full rounded-xl border border-gray-300 px-4 py-2"
-                required
               ></textarea>
+
+              <p className="text-sm text-gray-500">
+                Recomendacion: cuentanos el problema para que podamos revisarlo
+                mejor, pero no es obligatorio.
+              </p>
 
               <button
                 type="submit"
