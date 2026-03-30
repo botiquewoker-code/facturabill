@@ -1,222 +1,264 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { startTransition, useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  LockKeyhole,
+  Mail,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
+import {
+  readLocalAccountCredentials,
+  hashLocalAccountPassword,
+  writeLocalAccountCredentials,
+} from "@/features/account/credentials";
+import {
+  readUserProfile,
+  writeUserProfile,
+} from "@/features/account/profile";
+import { showWarningToast } from "@/features/notifications/toast";
+
+const DEFAULT_TEMPLATE = "InvoicePDF";
+const inputClass =
+  "h-14 w-full rounded-[22px] border border-white/70 bg-white/82 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.35)]";
 
 export default function RegistroPage() {
-  const [nombre, setNombre] = useState("");
-  const [nif, setNif] = useState("");
+  const router = useRouter();
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [direccion, setDireccion] = useState("");
-  const [ciudad, setCiudad] = useState("");
-  const [iban, setIban] = useState("");
-  const [logo, setLogo] = useState<string | null>(null);
-  const [notas, setNotas] = useState(
-    "Pago en 15 días desde la fecha de emisión.",
-  );
-  const [plantilla, setPlantilla] = useState(0);
+  const [password, setPassword] = useState("");
 
-  const plantillas = ["Moderna", "Clásica", "Minimalista"];
+  const passwordIsValid = password.trim().length >= 8;
+  const canRegister =
+    displayName.trim().length > 0 &&
+    email.trim().length > 0 &&
+    passwordIsValid;
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setLogo(reader.result as string);
-      reader.readAsDataURL(file);
+  useEffect(() => {
+    const storedProfile = readUserProfile();
+    const storedCredentials = readLocalAccountCredentials();
+
+    startTransition(() => {
+      setDisplayName(
+        storedProfile?.displayName || storedCredentials?.displayName || "",
+      );
+      setEmail(storedProfile?.email || storedCredentials?.email || "");
+    });
+  }, []);
+
+  async function handleSave() {
+    if (!displayName.trim() || !email.trim()) {
+      showWarningToast("Completa tu nombre y el correo para continuar");
+      return;
     }
-  };
 
-  const handleSave = () => {
-    const config = {
-      empresa: { nombre, nif, email, telefono, direccion, ciudad, iban, logo },
-      notas,
-      plantilla: plantillas[plantilla],
-      plan: "pro",
-    };
-    localStorage.setItem("configEmpresa", JSON.stringify(config));
-    window.location.href = "/";
-  };
+    if (!passwordIsValid) {
+      showWarningToast("La contrasena debe tener al menos 8 caracteres");
+      return;
+    }
+
+    try {
+      const normalizedEmail = email.trim().toLowerCase();
+      const passwordHash = await hashLocalAccountPassword(password.trim());
+      const existingCompany =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem("datosEmpresa")
+          : null;
+      let parsedCompany: Record<string, unknown> | null = null;
+
+      if (existingCompany) {
+        try {
+          parsedCompany = JSON.parse(existingCompany) as Record<string, unknown>;
+        } catch {
+          parsedCompany = null;
+        }
+      }
+
+      const companyName =
+        parsedCompany && typeof parsedCompany.nombre === "string"
+          ? parsedCompany.nombre.trim()
+          : "";
+      const existingNotes =
+        window.localStorage.getItem("notasUsuario")?.trim() || "";
+      const existingTemplate =
+        window.localStorage.getItem("plantillaSeleccionada") ||
+        window.localStorage.getItem("plantillaUsuario") ||
+        window.localStorage.getItem("plantillaElegida") ||
+        DEFAULT_TEMPLATE;
+      const currentCredentials = readLocalAccountCredentials();
+
+      writeUserProfile({
+        displayName: displayName.trim(),
+        email: normalizedEmail,
+        companyName,
+        registeredAt: new Date().toISOString(),
+      });
+      writeLocalAccountCredentials({
+        displayName: displayName.trim(),
+        email: normalizedEmail,
+        passwordHash,
+        registeredAt:
+          currentCredentials?.registeredAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      window.localStorage.setItem(
+        "configEmpresa",
+        JSON.stringify({
+          user: {
+            displayName: displayName.trim(),
+            email: normalizedEmail,
+          },
+          empresa: parsedCompany || {},
+          notas: existingNotes,
+          plantilla: existingTemplate,
+        }),
+      );
+      window.localStorage.setItem("plantillaSeleccionada", existingTemplate);
+      window.localStorage.setItem("plantillaUsuario", existingTemplate);
+      window.localStorage.setItem("plantillaElegida", existingTemplate);
+
+      router.push("/");
+    } catch {
+      showWarningToast("No se pudo crear el acceso en este dispositivo");
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
-      <div className="max-w-5xl w-full">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Regístrate en FacturaBill.net
-          </h1>
-          <p className="text-lg text-gray-600">
-            Configura tu empresa y empieza a facturar{" "}
-          </p>
-        </div>
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#f7f5f1_0%,#eef3fb_44%,#eef2f7_100%)] text-slate-950">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.92),_transparent_72%)]" />
+      <div className="pointer-events-none absolute -left-12 top-20 h-44 w-44 rounded-full bg-[#f4d7bc]/40 blur-3xl" />
+      <div className="pointer-events-none absolute -right-12 top-56 h-52 w-52 rounded-full bg-[#dce8ff]/78 blur-3xl" />
 
-        <div className="grid md:grid-cols-2 gap-8 items-start">
-          {/* Datos empresa y notas */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Datos de tu empresa
-            </h2>
+      <main className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]">
+        <header className="px-1">
+          <div className="flex items-center justify-between gap-4">
+            <Link
+              href="/"
+              aria-label="Volver al inicio"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/84 text-slate-700 shadow-[0_12px_26px_-22px_rgba(15,23,42,0.22)] backdrop-blur-xl transition hover:bg-white"
+            >
+              <ArrowLeft className="h-[18px] w-[18px]" strokeWidth={2.4} />
+            </Link>
 
-            <div className="space-y-5">
-              <input
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition"
-                placeholder="Nombre de la empresa"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-              />
-              <input
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 transition"
-                placeholder="NIF / CIF"
-                value={nif}
-                onChange={(e) => setNif(e.target.value)}
-              />
-              <input
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 transition"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <input
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 transition"
-                placeholder="Teléfono"
-                value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
-              />
-              <input
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 transition"
-                placeholder="Dirección completa"
-                value={direccion}
-                onChange={(e) => setDireccion(e.target.value)}
-              />
-              <input
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 transition"
-                placeholder="Ciudad"
-                value={ciudad}
-                onChange={(e) => setCiudad(e.target.value)}
-              />
-              <input
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 transition"
-                placeholder="IBAN"
-                value={iban}
-                onChange={(e) => setIban(e.target.value)}
-              />
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Logo de la empresa
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 transition"
-                />
-                {logo && (
-                  <Image
-                    src={logo}
-                    alt="Logo"
-                    width={160}
-                    height={160}
-                    unoptimized
-                    className="mt-4 h-40 w-40 rounded-xl border border-gray-300 object-contain shadow"
-                  />
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Notas predeterminadas en facturas
-                </label>
-                <textarea
-                  value={notas}
-                  onChange={(e) => setNotas(e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 transition resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Plantilla por defecto
-                </label>
-                <div className="flex gap-3 flex-wrap">
-                  {plantillas.map((p, idx) => (
-                    <button
-                      key={p}
-                      onClick={() => setPlantilla(idx)}
-                      className={`px-6 py-3 rounded-xl border-2 font-medium transition ${
-                        plantilla === idx
-                          ? "bg-orange-600 text-white border-orange-600 shadow"
-                          : "bg-white text-gray-700 border-gray-300 hover:border-orange-500"
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <div className="rounded-full border border-white/70 bg-white/82 px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] text-slate-500 shadow-[0_12px_26px_-22px_rgba(15,23,42,0.18)]">
+              REGISTRO
             </div>
           </div>
 
-          {/* Plan */}
-          <div className="bg-white rounded-2xl border-2 border-yellow-400 p-6 relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 px-4 py-1 rounded-full font-bold text-xs">
-              PLAN ÚNICO
-            </div>
-
-            <div className="text-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">
-                FacturaBill Pro
-              </h2>
-              <p className="text-sm text-gray-600">
-                Todo incluido, sin límites
-              </p>
-            </div>
-
-            <div className="text-center mb-4">
-              <span className="text-3xl font-bold text-gray-900">4,95€</span>
-              <span className="text-sm text-gray-500"> / mes</span>
-            </div>
-
-            <ul className="space-y-2 mb-6 text-gray-700 text-sm">
-              {[
-                "Facturas y presupuestos ilimitados",
-                "Descarga PDF y envío por email",
-                "Datos y logo de empresa",
-                "Plantillas profesionales",
-                "Sin anuncios ni distracciones",
-              ].map((item) => (
-                <li key={item} className="flex items-center gap-2">
-                  <span className="w-5 h-5 bg-yellow-400 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                    ✓
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-
-            <button
-              onClick={handleSave}
-              className="w-full bg-yellow-400 text-yellow-900 py-2 rounded-xl font-bold text-sm hover:bg-yellow-500 transition"
-            >
-              Crear cuenta y empezar
-            </button>
-
-            <p className="text-center text-xs text-gray-500 mt-4">
-              Sin permanencia · Cancela cuando quieras
+          <div className="mt-6">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              Acceso
+            </p>
+            <h1 className="mt-2 text-[2.05rem] font-semibold tracking-[-0.055em] text-slate-950">
+              Crea tu acceso
+            </h1>
+            <p className="mt-3 max-w-[18rem] text-[14px] leading-6 text-slate-500">
+              Registra solo el nombre, correo y contrasena personal o del
+              gerente del negocio. Lo demas se completa despues.
             </p>
           </div>
-        </div>
+        </header>
 
-        <div className="text-center mt-6">
-          <Link href="/" className="text-gray-500 text-sm hover:text-gray-800">
-            ← Volver a la página principal
+        <section className="mt-6 rounded-[32px] border border-white/70 bg-white/82 p-5 shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)] backdrop-blur-xl">
+          <div className="flex items-start gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
+              <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={2.1} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-slate-950">
+                Alta minima
+              </p>
+              <p className="mt-1 text-[13px] leading-5 text-slate-500">
+                Esto solo crea el acceso del usuario en este dispositivo.
+                Empresa, cobros y datos fiscales van despues.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3">
+            <label className="block">
+              <span className="mb-2 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                <UserRound className="h-4 w-4" strokeWidth={2.2} />
+                Nombre
+              </span>
+              <input
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+                placeholder="Nombre personal o del gerente"
+                className={inputClass}
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                <Mail className="h-4 w-4" strokeWidth={2.2} />
+                Correo
+              </span>
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="tu@negocio.com"
+                className={inputClass}
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                <LockKeyhole className="h-4 w-4" strokeWidth={2.2} />
+                Contrasena
+              </span>
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Minimo 8 caracteres"
+                className={inputClass}
+              />
+            </label>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!canRegister}
+            className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition enabled:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-55"
+          >
+            Crear cuenta y entrar
+            <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+          </button>
+        </section>
+
+        <section className="mt-4 rounded-[28px] border border-white/70 bg-white/76 p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.2)] backdrop-blur-xl">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Lo completaras despues
+          </p>
+          <div className="mt-3 grid gap-3">
+            {[
+              "Datos de empresa y facturacion",
+              "Metodos de cobro y configuracion fiscal",
+              "Plantillas, logo y resto del perfil",
+            ].map((item) => (
+              <div
+                key={item}
+                className="rounded-[22px] border border-slate-200 bg-white/88 px-4 py-3 text-[14px] font-medium text-slate-600"
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div className="mt-5 pb-2 text-center text-sm text-slate-500">
+          <Link href="/login" className="font-semibold text-slate-700 transition hover:text-slate-950">
+            Ya tienes cuenta. Entrar
           </Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

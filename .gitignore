@@ -27,6 +27,12 @@ ngrok.yml
 # misc
 .DS_Store
 *.pem
+local.properties
+*.apk
+*.aab
+*.idsig
+manifest-checksum.txt
+wget-log
 
 # debug
 npm-debug.log*

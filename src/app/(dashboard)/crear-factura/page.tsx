@@ -40,6 +40,8 @@ import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import { prepareVerifactuInvoiceRecord } from "@/features/verifactu/service";
+import type { VerifactuSourceAction } from "@/features/verifactu/types";
 
 type Cliente = {
   nombre: string;
@@ -578,7 +580,82 @@ export default function CrearFacturaPage() {
 
     return true;
   };
-  const updateHistory = (estado: string) => {
+  const updateHistory = async (
+    estado: string,
+    sourceAction: VerifactuSourceAction,
+  ) => {
+    let verifactuSummary:
+      | {
+          recordId: string;
+          status: string;
+          fingerprint: string;
+          generatedAt: string;
+          qrPreview: string;
+        }
+      | {
+          status: "error";
+          lastError: string;
+        }
+      | undefined;
+
+    if (!esPresupuesto) {
+      try {
+        const verifactuRecord = await prepareVerifactuInvoiceRecord({
+          sourceDocumentId: numeroFacturaActual,
+          sourceAction,
+          invoiceType: "F1",
+          invoiceNumber: numeroFacturaActual,
+          issueDate: fecha,
+          issuer: {
+            name: empresa.nombre,
+            taxId: empresa.nif,
+            email: empresa.email,
+            address: empresa.direccion,
+            postalCode: empresa.cp,
+            city: empresa.ciudad,
+          },
+          recipient: {
+            name: cliente.nombre,
+            taxId: cliente.nif,
+            email: cliente.email,
+            address: cliente.direccion,
+            postalCode: cliente.codigoPostal,
+            city: cliente.ciudad,
+          },
+          lines: conceptos.map((item) => ({
+            description: item.desc,
+            quantity: item.cant,
+            unitPrice: item.precio,
+            lineTotal: item.cant * item.precio,
+          })),
+          subtotalAmount: subtotal,
+          taxLabel: currentTaxLabel,
+          taxRate: tipoIVA,
+          taxAmount: iva,
+          totalAmount: total,
+        });
+
+        verifactuSummary = {
+          recordId: verifactuRecord.id,
+          status: verifactuRecord.status,
+          fingerprint: verifactuRecord.fingerprint,
+          generatedAt: verifactuRecord.generatedAt,
+          qrPreview: verifactuRecord.qr.previewText,
+        };
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "No se pudo preparar VeriFactu";
+
+        console.error("Error preparing local VeriFactu record", error);
+        verifactuSummary = {
+          status: "error",
+          lastError: message,
+        };
+      }
+    }
+
     const item = {
       id: numeroFacturaActual,
       numero: numeroFacturaActual,
@@ -592,6 +669,7 @@ export default function CrearFacturaPage() {
       conceptos,
       total,
       estado,
+      verifactu: verifactuSummary,
     };
     const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]") as Array<Record<string, unknown>>;
     const index = history.findIndex(
@@ -613,7 +691,10 @@ export default function CrearFacturaPage() {
       link.download = `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFacturaActual}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
-      updateHistory(esPresupuesto ? "Presupuesto descargado" : "Factura descargada");
+      await updateHistory(
+        esPresupuesto ? "Presupuesto descargado" : "Factura descargada",
+        "downloaded",
+      );
       showSuccessToast("PDF descargado");
     } catch {
       showWarningToast("No se pudo generar el PDF");
@@ -637,7 +718,10 @@ export default function CrearFacturaPage() {
         throw new Error(payload?.error || "send failed");
       }
       if (window.gtag) window.gtag("event", "conversion", { send_to: "AW-1791812185/PvpICL_mx_obENHy-BC", value: total, currency: "EUR" });
-      updateHistory(esPresupuesto ? "Presupuesto enviado" : "Factura enviada");
+      await updateHistory(
+        esPresupuesto ? "Presupuesto enviado" : "Factura enviada",
+        "emailed",
+      );
       showSuccessToast("Documento enviado");
     } catch (error) {
       const message =

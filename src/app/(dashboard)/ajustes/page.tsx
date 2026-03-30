@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft, ChevronRight } from "lucide-react";
+import { USER_PROFILE_STORAGE_KEY } from "@/features/account/profile";
 import { CLIENTS_STORAGE_KEY } from "@/features/clients/storage";
 import {
   ACTIVE_DRAFT_STORAGE_KEY,
@@ -18,14 +19,23 @@ import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import {
+  VERIFACTU_EVENTS_STORAGE_KEY,
+  VERIFACTU_INSTALLATION_ID_STORAGE_KEY,
+  VERIFACTU_RECORDS_STORAGE_KEY,
+} from "@/features/verifactu/storage";
 
 const PAYMENT_METHODS_STORAGE_KEY = "facturabill-payment-methods";
 const EXPORTABLE_STORAGE_KEYS = [
   LANGUAGE_STORAGE_KEY,
+  USER_PROFILE_STORAGE_KEY,
   CLIENTS_STORAGE_KEY,
   DRAFTS_STORAGE_KEY,
   ACTIVE_DRAFT_STORAGE_KEY,
   PAYMENT_METHODS_STORAGE_KEY,
+  VERIFACTU_RECORDS_STORAGE_KEY,
+  VERIFACTU_EVENTS_STORAGE_KEY,
+  VERIFACTU_INSTALLATION_ID_STORAGE_KEY,
   "historial",
   "datosEmpresa",
   "configEmpresa",
@@ -197,6 +207,83 @@ const accountActionsCopy: Record<AppLanguage, AccountActionsCopy> = {
   },
 };
 
+const verifactuSettingsCopy: Record<
+  AppLanguage,
+  { title: string; description: string }
+> = {
+  es: {
+    title: "Preparacion VeriFactu",
+    description:
+      "Revisa registros locales, huellas y cola antes de conectar la base de datos y AEAT.",
+  },
+  en: {
+    title: "VeriFactu setup",
+    description:
+      "Review local records, fingerprints, and queue before connecting the database and AEAT.",
+  },
+  ar: {
+    title: "VeriFactu",
+    description:
+      "Review local records, fingerprints, and queue before connecting the database and AEAT.",
+  },
+  fr: {
+    title: "Preparation VeriFactu",
+    description:
+      "Consultez les enregistrements locaux, empreintes et file avant la connexion a la base et a l'AEAT.",
+  },
+  it: {
+    title: "Preparazione VeriFactu",
+    description:
+      "Controlla record locali, impronte e coda prima di collegare database e AEAT.",
+  },
+  nl: {
+    title: "VeriFactu voorbereiding",
+    description:
+      "Controleer lokale records, fingerprints en wachtrij voordat je database en AEAT koppelt.",
+  },
+  pt: {
+    title: "Preparacao VeriFactu",
+    description:
+      "Reve registos locais, impressao digital e fila antes de ligar a base de dados e a AEAT.",
+  },
+};
+
+const accessProfileCopy: Record<
+  AppLanguage,
+  { title: string; description: string }
+> = {
+  es: {
+    title: "Datos de acceso",
+    description:
+      "Actualiza nombre, correo y contrasena del usuario o gerente.",
+  },
+  en: {
+    title: "Access details",
+    description: "Update the user or manager name, email, and password.",
+  },
+  ar: {
+    title: "Access details",
+    description: "Update the user or manager name, email, and password.",
+  },
+  fr: {
+    title: "Donnees d'acces",
+    description:
+      "Mettez a jour le nom, l'email et le mot de passe de l'utilisateur ou du gerant.",
+  },
+  it: {
+    title: "Dati di accesso",
+    description: "Aggiorna nome, email e password dell'utente o del gerente.",
+  },
+  nl: {
+    title: "Toegangsgegevens",
+    description: "Werk naam, e-mail en wachtwoord van gebruiker of manager bij.",
+  },
+  pt: {
+    title: "Dados de acesso",
+    description: "Atualiza nome, email e palavra-passe do utilizador ou gerente.",
+  },
+};
+
 type SettingsItem = {
   title: string;
   description: string;
@@ -328,6 +415,8 @@ export default function AjustesPage() {
   const { language } = useAppLanguage();
   const copy = dashboardCopy[language];
   const actionsCopy = accountActionsCopy[language];
+  const verifactuCopy = verifactuSettingsCopy[language];
+  const accessCopy = accessProfileCopy[language];
   const selectedLanguage =
     languageOptions.find((option) => option.value === language)?.nativeLabel || "";
 
@@ -406,6 +495,11 @@ export default function AjustesPage() {
           href: "/ajustes/configuracion-fiscal",
         },
         {
+          title: verifactuCopy.title,
+          description: verifactuCopy.description,
+          href: "/ajustes/verifactu",
+        },
+        {
           title: copy.settings.paymentMethods,
           description: copy.settings.paymentMethodsDescription,
           href: "/ajustes/metodos-cobro",
@@ -417,6 +511,11 @@ export default function AjustesPage() {
       title: copy.settings.accountTitle,
       description: copy.settings.accountDescription,
       items: [
+        {
+          title: accessCopy.title,
+          description: accessCopy.description,
+          href: "/ajustes/datos-acceso",
+        },
         {
           title: copy.settings.clientCommunication,
           description: copy.settings.clientCommunicationDescription,

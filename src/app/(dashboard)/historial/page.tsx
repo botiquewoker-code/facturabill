@@ -17,6 +17,14 @@ type HistoryDocument = {
     nif?: string;
     email?: string;
   };
+  verifactu?: {
+    recordId?: string;
+    status?: string;
+    fingerprint?: string;
+    generatedAt?: string;
+    qrPreview?: string;
+    lastError?: string;
+  };
 };
 
 const HISTORY_KEY = "historial";
@@ -162,6 +170,41 @@ export default function HistorialPage() {
                         {money(doc.total)}
                       </span>
                     </div>
+                    {doc.tipo === "factura" ? (
+                      <div className="rounded-[18px] border border-slate-200/80 bg-slate-50/85 px-3 py-3">
+                        <div className="flex items-center justify-between gap-3 text-sm">
+                          <span className="text-slate-500">VeriFactu</span>
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                              doc.verifactu?.status === "prepared"
+                                ? "border border-sky-200 bg-sky-50 text-sky-700"
+                                : doc.verifactu?.status === "error"
+                                  ? "border border-red-200 bg-red-50 text-red-700"
+                                  : "border border-slate-200 bg-white text-slate-500"
+                            }`}
+                          >
+                            {doc.verifactu?.status === "prepared"
+                              ? "Preparado"
+                              : doc.verifactu?.status === "error"
+                                ? "Pendiente"
+                                : "Sin preparar"}
+                          </span>
+                        </div>
+                        {doc.verifactu?.fingerprint ? (
+                          <p className="mt-2 text-[12px] leading-5 text-slate-500">
+                            Huella local {doc.verifactu.fingerprint.slice(0, 16)}
+                          </p>
+                        ) : doc.verifactu?.lastError ? (
+                          <p className="mt-2 text-[12px] leading-5 text-red-600">
+                            {doc.verifactu.lastError}
+                          </p>
+                        ) : (
+                          <p className="mt-2 text-[12px] leading-5 text-slate-500">
+                            La preparacion se activara cuando emitas la factura.
+                          </p>
+                        )}
+                      </div>
+                    ) : null}
                   </div>
 
                   {doc.tipo === "presupuesto" ? (

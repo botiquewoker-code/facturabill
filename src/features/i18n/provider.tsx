@@ -9,9 +9,8 @@ import {
 } from "react";
 import {
   DEFAULT_LANGUAGE,
-  detectPreferredLanguage,
   getLanguageDirection,
-  isSupportedLanguage,
+  LANGUAGE_COOKIE_KEY,
   LANGUAGE_STORAGE_KEY,
   type AppLanguage,
 } from "@/features/i18n/config";
@@ -25,28 +24,20 @@ type AppLanguageContextValue = {
 const AppLanguageContext = createContext<AppLanguageContextValue | null>(null);
 
 export function AppLanguageProvider({
+  initialLanguage = DEFAULT_LANGUAGE,
   children,
 }: {
+  initialLanguage?: AppLanguage;
   children: React.ReactNode;
 }) {
-  const [language, setLanguageState] = useState<AppLanguage>(() => {
-    if (typeof window === "undefined") {
-      return DEFAULT_LANGUAGE;
-    }
-
-    const storedLanguage = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-
-    if (storedLanguage && isSupportedLanguage(storedLanguage)) {
-      return storedLanguage;
-    }
-
-    return detectPreferredLanguage(window.navigator.language);
-  });
+  const [language, setLanguageState] = useState<AppLanguage>(initialLanguage);
 
   useEffect(() => {
     document.documentElement.lang = language;
     document.documentElement.dir = getLanguageDirection(language);
     window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    document.cookie = `${LANGUAGE_COOKIE_KEY}=${language}; path=/; max-age=31536000; samesite=lax`;
+    document.documentElement.dataset.language = language;
   }, [language]);
 
   const value = useMemo(

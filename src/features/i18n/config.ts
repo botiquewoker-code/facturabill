@@ -1,6 +1,7 @@
 export type AppLanguage = "es" | "en" | "ar" | "fr" | "it" | "nl" | "pt";
 
 export const LANGUAGE_STORAGE_KEY = "facturabill-language";
+export const LANGUAGE_COOKIE_KEY = "facturabill-language";
 export const DEFAULT_LANGUAGE: AppLanguage = "es";
 
 export const languageOptions: Array<{
@@ -85,4 +86,18 @@ export function detectPreferredLanguage(input?: string | null): AppLanguage {
   if (normalized.startsWith("pt")) return "pt";
 
   return DEFAULT_LANGUAGE;
+}
+
+export function resolveAppLanguage(input?: string | null): AppLanguage {
+  if (!input) {
+    return DEFAULT_LANGUAGE;
+  }
+
+  const normalized = input.toLowerCase().trim();
+
+  if (isSupportedLanguage(normalized)) {
+    return normalized;
+  }
+
+  return detectPreferredLanguage(normalized);
 }
