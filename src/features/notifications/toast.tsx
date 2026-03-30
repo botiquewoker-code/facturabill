@@ -5,6 +5,8 @@ import { Toaster, toast, type Toast } from "react-hot-toast";
 
 export type AppNoticeTone = "success" | "warning";
 
+const TOAST_DURATION_MS = 3000;
+
 const toneStyles: Record<
   AppNoticeTone,
   {
@@ -73,7 +75,7 @@ export function AppToaster() {
       position="top-center"
       gutter={12}
       containerStyle={{ top: 20, left: 16, right: 16 }}
-      toastOptions={{ duration: 3200 }}
+      toastOptions={{ duration: TOAST_DURATION_MS }}
     />
   );
 }
@@ -87,7 +89,7 @@ export function showAppToast(message: string, tone: AppNoticeTone = "success") {
         tone={tone}
       />
     ),
-    { duration: 3200 },
+    { duration: TOAST_DURATION_MS },
   );
 }
 

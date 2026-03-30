@@ -80,6 +80,8 @@ declare global {
 const DRAFTS_KEY = "borradores";
 const ACTIVE_DRAFT_KEY = "borradorActivo";
 const HISTORY_KEY = "historial";
+const LAST_INVOICE_NUMBER_KEY = "ultimoNumeroFactura";
+const LAST_BUDGET_NUMBER_KEY = "ultimoNumeroPresupuesto";
 const EMPTY_CLIENTE: Cliente = {
   nombre: "",
   nif: "",
@@ -126,8 +128,38 @@ const draftId = () =>
     : `draft-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 const isPlantilla = (v: string): v is "InvoicePDF" | "PlantillaNueva" =>
   v === "InvoicePDF" || v === "PlantillaNueva";
+const stripDocumentPrefix = (v: unknown) =>
+  s(v).trim().replace(/^PRES-?/i, "").replace(/^FACT?-?/i, "");
 const normalizeNumero = (v: unknown) =>
-  s(v).trim().replace(/^PRES-?/i, "").replace(/^FACT?-?/i, "") || "001";
+  stripDocumentPrefix(v) || "001";
+const lastNumberKey = (isBudget: boolean) =>
+  isBudget ? LAST_BUDGET_NUMBER_KEY : LAST_INVOICE_NUMBER_KEY;
+const readLastSavedNumber = (isBudget: boolean) => {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  const storedNumber = stripDocumentPrefix(
+    localStorage.getItem(lastNumberKey(isBudget)),
+  );
+
+  if (storedNumber) {
+    return storedNumber;
+  }
+
+  try {
+    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]") as Array<
+      Record<string, unknown>
+    >;
+    const latestDocument = history.find((item) =>
+      isBudget ? item.tipo === "presupuesto" : item.tipo === "factura",
+    );
+
+    return stripDocumentPrefix(latestDocument?.numero || latestDocument?.id);
+  } catch {
+    return "";
+  }
+};
 const money = (v: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
 const clientMatchesSearch = (client: ClientRecord, query: string) =>
@@ -192,6 +224,7 @@ export default function CrearFacturaPage() {
   const [fecha, setFecha] = useState(today());
   const [fechaVencimiento, setFechaVencimiento] = useState(addDays(today(), 30));
   const [numeroFactura, setNumeroFactura] = useState("001");
+  const [ultimoNumeroGuardado, setUltimoNumeroGuardado] = useState("");
   const [logo, setLogo] = useState("");
   const [notas, setNotas] = useState("");
   const [tipoIVA, setTipoIVA] = useState(21);
@@ -213,7 +246,7 @@ export default function CrearFacturaPage() {
   }, [clientSearch, clientesGuardados, linkedClientId]);
   const pdfData = {
     esPresupuesto,
-    numero: numeroFactura,
+    numero: normalizeNumero(numeroFactura),
     fecha,
     fechaVencimiento: esPresupuesto ? "" : fechaVencimiento,
     empresa,
@@ -230,11 +263,6 @@ export default function CrearFacturaPage() {
     notas,
   };
   const documentPrefix = esPresupuesto ? "PRES" : "FACT";
-  const formattedDate = new Date(fecha).toLocaleDateString("es-ES", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
   const formattedDueDate = fechaVencimiento
     ? new Date(fechaVencimiento).toLocaleDateString("es-ES", {
         day: "2-digit",
@@ -246,17 +274,8 @@ export default function CrearFacturaPage() {
     ? {
         workspace: "Propuestas",
         title: "Crear presupuesto",
-        subtitle:
-          "Prepara una propuesta clara, con importe estimado y lista para compartir con el cliente.",
-        heroEyebrow: "Modo presupuesto",
-        heroTitle: "Una propuesta lista para revisar",
-        heroDescription:
-          "Mantiene el mismo flujo del dashboard, pero con lenguaje y acciones pensadas para una propuesta comercial.",
-        heroBadge: "Sin compromiso",
-        heroHint:
-          "Cuando el cliente lo apruebe, podras convertir este presupuesto en factura desde el historial.",
-        clientSearchDescription:
-          "Carga un cliente guardado y arma el presupuesto sin repetir sus datos.",
+        subtitle: "Prepara un presupuesto claro y profesional.",
+        clientSearchDescription: "Selecciona un cliente guardado.",
         selectedClientLabel: "Cliente para el presupuesto",
         conceptsTitle: "Lineas del presupuesto",
         conceptLineLabel: "Linea de propuesta",
@@ -270,21 +289,13 @@ export default function CrearFacturaPage() {
         downloadLabel: "Descargar presupuesto",
         sendLabel: "Enviar presupuesto",
         sendHint: (email: string) => `Se enviara el presupuesto a ${email}`,
-        emptyEmailHint:
-          "Recomendacion: anade el email del cliente si quieres enviar el presupuesto desde aqui",
+        emptyEmailHint: "Anade un email para enviarlo desde aqui.",
       }
     : {
         workspace: "Facturacion",
         title: "Crear factura",
-        subtitle:
-          "Una vista mas clara para preparar el documento, revisar importes y enviarlo sin salir del flujo.",
-        heroEyebrow: "",
-        heroTitle: "",
-        heroDescription: "",
-        heroBadge: "",
-        heroHint: "",
-        clientSearchDescription:
-          "Carga un cliente guardado y usa sus datos directamente en esta factura.",
+        subtitle: "Prepara la factura y revisa los importes.",
+        clientSearchDescription: "Selecciona un cliente guardado.",
         selectedClientLabel: "Cliente seleccionado",
         conceptsTitle: "Lineas de factura",
         conceptLineLabel: "Linea de factura",
@@ -297,8 +308,7 @@ export default function CrearFacturaPage() {
         downloadLabel: "Descargar PDF",
         sendLabel: "Enviar al cliente",
         sendHint: (email: string) => `Se enviara a ${email}`,
-        emptyEmailHint:
-          "Recomendacion: anade el email del cliente si quieres enviar el documento desde aqui",
+        emptyEmailHint: "Anade un email para enviarlo desde aqui.",
       };
   const primaryActionClass = esPresupuesto
     ? "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#8a5a33] px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(138,90,51,0.9)] transition hover:bg-[#754a28]"
@@ -315,6 +325,22 @@ export default function CrearFacturaPage() {
   const detachButtonClass = esPresupuesto
     ? "shrink-0 rounded-full border border-[#e7c39a] bg-white px-4 py-2 text-sm font-semibold text-[#8a5a33] transition hover:bg-[#fff4e5]"
     : "shrink-0 rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50";
+  const numeroFacturaActual = normalizeNumero(numeroFactura);
+  const saveLastNumber = (value: string, isBudget = esPresupuesto) => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const normalizedValue = normalizeNumero(value);
+    localStorage.setItem(lastNumberKey(isBudget), normalizedValue);
+
+    if (isBudget === esPresupuesto) {
+      setUltimoNumeroGuardado(normalizedValue);
+    }
+  };
+  const handleNumeroFacturaChange = (value: string) => {
+    setNumeroFactura(stripDocumentPrefix(value).toUpperCase());
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -392,10 +418,14 @@ export default function CrearFacturaPage() {
   }, []);
 
   useEffect(() => {
+    setUltimoNumeroGuardado(readLastSavedNumber(esPresupuesto));
+  }, [esPresupuesto]);
+
+  useEffect(() => {
     const nextDraft: DraftInvoice = {
       id: draftIdRef.current || draftId(),
       tipo: esPresupuesto ? "presupuesto" : "factura",
-      numero: numeroFactura,
+      numero: numeroFacturaActual,
       fecha,
       fechaVencimiento: esPresupuesto ? "" : fechaVencimiento,
       linkedClientId,
@@ -411,7 +441,7 @@ export default function CrearFacturaPage() {
     };
     draftIdRef.current = nextDraft.id;
     latestDraftRef.current = nextDraft;
-  }, [cliente, conceptos, empresa, esPresupuesto, fecha, fechaVencimiento, linkedClientId, logo, notas, numeroFactura, plantilla, tipoIVA]);
+  }, [cliente, conceptos, empresa, esPresupuesto, fecha, fechaVencimiento, linkedClientId, logo, notas, numeroFacturaActual, plantilla, tipoIVA]);
 
   useEffect(() => {
     const persist = () => {
@@ -421,6 +451,10 @@ export default function CrearFacturaPage() {
         const saved = JSON.parse(localStorage.getItem(DRAFTS_KEY) || "[]") as DraftInvoice[];
         const rest = saved.filter((item) => item.id !== draft.id);
         localStorage.setItem(DRAFTS_KEY, JSON.stringify([draft, ...rest]));
+        localStorage.setItem(
+          lastNumberKey(draft.tipo === "presupuesto"),
+          normalizeNumero(draft.numero),
+        );
       } catch {}
     };
     window.addEventListener("beforeunload", persist);
@@ -459,15 +493,25 @@ export default function CrearFacturaPage() {
   };
   const saveDraftNow = () => {
     const draft = latestDraftRef.current;
-    if (!draft || !hasContent(draft)) {
-      return showWarningToast(
-        "Recomendacion: anade algun dato antes de guardar el borrador.",
-      );
+    if (!draft) {
+      return;
     }
+
+    if (!hasContent(draft)) {
+      saveLastNumber(draft.numero, draft.tipo === "presupuesto");
+      showSuccessToast(
+        esPresupuesto
+          ? "Numero de presupuesto guardado"
+          : "Numero de factura guardado",
+      );
+      return;
+    }
+
     try {
       const saved = JSON.parse(localStorage.getItem(DRAFTS_KEY) || "[]") as DraftInvoice[];
       const rest = saved.filter((item) => item.id !== draft.id);
       localStorage.setItem(DRAFTS_KEY, JSON.stringify([draft, ...rest]));
+      saveLastNumber(draft.numero, draft.tipo === "presupuesto");
       showSuccessToast("Borrador guardado");
     } catch {
       showWarningToast("No se pudo guardar el borrador");
@@ -507,8 +551,8 @@ export default function CrearFacturaPage() {
   };
   const updateHistory = (estado: string) => {
     const item = {
-      id: numeroFactura,
-      numero: numeroFactura,
+      id: numeroFacturaActual,
+      numero: numeroFacturaActual,
       tipo: esPresupuesto ? "presupuesto" : "factura",
       cliente,
       fecha: new Date(fecha).toLocaleDateString("es-ES"),
@@ -521,20 +565,23 @@ export default function CrearFacturaPage() {
       estado,
     };
     const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]") as Array<Record<string, unknown>>;
-    const index = history.findIndex((doc) => s(doc.numero || doc.id) === numeroFactura);
+    const index = history.findIndex(
+      (doc) => s(doc.numero || doc.id) === numeroFacturaActual,
+    );
     if (index >= 0) history[index] = { ...history[index], ...item };
     else history.unshift(item);
     localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    saveLastNumber(numeroFacturaActual);
   };
   const descargar = async () => {
     if (!validate()) return;
     try {
       const Component = plantilla === "InvoicePDF" ? InvoicePDF : PlantillaNueva;
-      const blob = await pdf(<Component datos={pdfData} numeroFactura={numeroFactura} conceptos={conceptos} />).toBlob();
+      const blob = await pdf(<Component datos={pdfData} numeroFactura={numeroFacturaActual} conceptos={conceptos} />).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`;
+      link.download = `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFacturaActual}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
       updateHistory(esPresupuesto ? "Presupuesto descargado" : "Factura descargada");
@@ -547,12 +594,12 @@ export default function CrearFacturaPage() {
     if (!validate(true)) return;
     try {
       const Component = plantilla === "InvoicePDF" ? InvoicePDF : PlantillaNueva;
-      const blob = await pdf(<Component datos={pdfData} numeroFactura={numeroFactura} conceptos={conceptos} />).toBlob();
+      const blob = await pdf(<Component datos={pdfData} numeroFactura={numeroFacturaActual} conceptos={conceptos} />).toBlob();
       const formData = new FormData();
-      formData.append("file", blob, `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFactura}.pdf`);
+      formData.append("file", blob, `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFacturaActual}.pdf`);
       formData.append("to", cliente.email);
-      formData.append("subject", `${esPresupuesto ? "Presupuesto" : "Factura"} ${numeroFactura}`);
-      formData.append("text", `Hola,\n\nAdjunto ${esPresupuesto ? "el presupuesto" : "la factura"} ${numeroFactura}.\n\nGracias.\n${empresa.nombre || "Tu empresa"}`);
+      formData.append("subject", `${esPresupuesto ? "Presupuesto" : "Factura"} ${numeroFacturaActual}`);
+      formData.append("text", `Hola,\n\nAdjunto ${esPresupuesto ? "el presupuesto" : "la factura"} ${numeroFacturaActual}.\n\nGracias.\n${empresa.nombre || "Tu empresa"}`);
       const res = await fetch("/api/enviar-email", { method: "POST", body: formData });
       if (!res.ok) throw new Error("send failed");
       if (window.gtag) window.gtag("event", "conversion", { send_to: "AW-1791812185/PvpICL_mx_obENHy-BC", value: total, currency: "EUR" });
@@ -595,56 +642,24 @@ export default function CrearFacturaPage() {
         </header>
 
         {esPresupuesto ? (
-          <section className="mt-6 rounded-[34px] border border-[#ecd3ba] bg-[linear-gradient(180deg,rgba(255,248,240,0.98),rgba(255,255,255,0.92))] p-6 shadow-[0_34px_80px_-44px_rgba(185,122,69,0.38)] backdrop-blur-xl">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#8a5a33] text-white shadow-[0_18px_28px_-18px_rgba(138,90,51,0.9)]">
-                  <Sparkles className="h-[18px] w-[18px]" strokeWidth={2.1} />
+          <section className="mt-6 rounded-[28px] border border-[#ecd3ba] bg-[linear-gradient(180deg,rgba(255,248,240,0.98),rgba(255,255,255,0.94))] p-4 shadow-[0_24px_54px_-36px_rgba(185,122,69,0.34)] backdrop-blur-xl">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#8a5a33] text-white shadow-[0_18px_28px_-18px_rgba(138,90,51,0.9)]">
+                  <Sparkles className="h-4 w-4" strokeWidth={2.1} />
                 </span>
                 <div>
-                  <p className="text-sm font-medium uppercase tracking-[0.18em] text-[#9a6338]">
-                    {modeCopy.heroEyebrow}
+                  <p className="text-sm font-semibold text-slate-950">
+                    Presupuesto
                   </p>
-                  <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
-                    {modeCopy.heroTitle}
-                  </h2>
-                  <p className="mt-2 max-w-xs text-[14px] leading-6 text-slate-600">
-                    {modeCopy.heroDescription}
+                  <p className="text-[13px] text-slate-600">
+                    Documento listo para revisar o enviar.
                   </p>
                 </div>
               </div>
-              <div className="rounded-full border border-[#e6c4a0] bg-white/85 px-3 py-1.5 text-xs font-semibold text-[#8a5a33]">
-                {modeCopy.heroBadge}
+              <div className="rounded-full border border-[#e6c4a0] bg-white px-3 py-1.5 text-xs font-semibold text-[#8a5a33]">
+                {documentPrefix}-{numeroFacturaActual}
               </div>
-            </div>
-            <div className="mt-6 grid grid-cols-3 gap-3">
-              <div className="rounded-[24px] border border-white/70 bg-white/88 p-3 shadow-[0_16px_30px_-24px_rgba(138,90,51,0.2)]">
-                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                  Referencia
-                </p>
-                <p className="mt-2 text-sm font-semibold text-slate-900">
-                  {documentPrefix}-{numeroFactura}
-                </p>
-              </div>
-              <div className="rounded-[24px] border border-white/70 bg-white/88 p-3 shadow-[0_16px_30px_-24px_rgba(138,90,51,0.2)]">
-                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                  Fecha
-                </p>
-                <p className="mt-2 text-sm font-semibold text-slate-900">
-                  {formattedDate}
-                </p>
-              </div>
-              <div className="rounded-[24px] border border-white/70 bg-white/88 p-3 shadow-[0_16px_30px_-24px_rgba(138,90,51,0.2)]">
-                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                  Estimado
-                </p>
-                <p className="mt-2 text-sm font-semibold text-slate-900">
-                  {money(total)}
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 rounded-[24px] border border-white/70 bg-white/84 px-4 py-4 text-[14px] leading-6 text-slate-600">
-              {modeCopy.heroHint}
             </div>
           </section>
         ) : null}
@@ -774,18 +789,38 @@ export default function CrearFacturaPage() {
                   Fecha y vencimiento
                 </h3>
                 <p className="mt-2 max-w-xs text-[14px] leading-6 text-slate-500">
-                  El vencimiento se aplicara a la factura y aparecera tambien en el PDF.
+                  Se mostrara tambien en el PDF.
                 </p>
               </div>
             </div>
 
             <div className="mt-5 rounded-[22px] border border-slate-200 bg-white/85 px-4 py-3">
               <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                Referencia
+                Numero de factura
               </p>
-              <p className="mt-2 text-sm font-semibold text-slate-950">
-                {documentPrefix}-{numeroFactura}
-              </p>
+              <div className="mt-3 flex items-center gap-3">
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold tracking-[0.16em] text-slate-600">
+                  {documentPrefix}-
+                </span>
+                <input
+                  type="text"
+                  value={numeroFactura}
+                  onChange={(event) => handleNumeroFacturaChange(event.target.value)}
+                  onBlur={() => setNumeroFactura(numeroFacturaActual)}
+                  placeholder="001"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  className={`${inputClass} h-12`}
+                />
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-3 rounded-[18px] bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                <span>Ultimo guardado</span>
+                <span className="font-semibold text-slate-900">
+                  {ultimoNumeroGuardado
+                    ? `${documentPrefix}-${ultimoNumeroGuardado}`
+                    : "Todavia no hay ninguno"}
+                </span>
+              </div>
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
