@@ -8,6 +8,14 @@ import {
 
 export const runtime = "nodejs";
 
+function sanitizeHeader(value: string) {
+  return value.replace(/[\r\n]+/g, " ").trim();
+}
+
+function wrapBase64(value: string) {
+  return value.match(/.{1,76}/g)?.join("\r\n") ?? "";
+}
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
@@ -35,33 +43,39 @@ export async function POST(req: Request) {
     const emailFrom = getEmailFrom();
 
     const fileBuffer = Buffer.from(await file.arrayBuffer());
-    const fileBase64 = fileBuffer.toString("base64");
+    const fileBase64 = wrapBase64(fileBuffer.toString("base64"));
 
     const boundary = "NextPart_" + Date.now();
-    const safeSubject = subject.replace(/[\r\n]+/g, " ").trim();
+    const safeFrom = sanitizeHeader(emailFrom);
+    const safeTo = sanitizeHeader(to);
+    const safeSubject = sanitizeHeader(subject);
     const safeFilename = (file.name || "documento.pdf").replace(
       /[\r\n"]/g,
       "",
     );
-
-    const rawEmail = `From: ${emailFrom}
-To: ${to.trim()}
-Subject: ${safeSubject}
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="${boundary}"
-
---${boundary}
-Content-Type: text/plain; charset="UTF-8"
-
-${text}
-
---${boundary}
-Content-Type: application/pdf; name="${safeFilename}"
-Content-Disposition: attachment; filename="${safeFilename}"
-Content-Transfer-Encoding: base64
-
-${fileBase64}
---${boundary}--`;
+    const rawEmail = [
+      `From: ${safeFrom}`,
+      `To: ${safeTo}`,
+      `Subject: ${safeSubject}`,
+      "MIME-Version: 1.0",
+      `Content-Type: multipart/mixed; boundary="${boundary}"`,
+      "",
+      `--${boundary}`,
+      'Content-Type: text/plain; charset="UTF-8"',
+      "Content-Transfer-Encoding: 7bit",
+      "",
+      text,
+      "",
+      `--${boundary}`,
+      `Content-Type: application/pdf; name="${safeFilename}"`,
+      `Content-Disposition: attachment; filename="${safeFilename}"`,
+      "Content-Transfer-Encoding: base64",
+      "",
+      fileBase64,
+      "",
+      `--${boundary}--`,
+      "",
+    ].join("\r\n");
 
     await ses.send(
       new SendRawEmailCommand({
@@ -80,7 +94,9 @@ ${fileBase64}
         error:
           error instanceof EmailConfigError
             ? "Email service is not configured correctly"
-            : "Unable to send email",
+            : error instanceof Error && error.message
+              ? error.message
+              : "Unable to send email",
       },
       { status: 500 },
     );

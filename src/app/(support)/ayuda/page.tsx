@@ -1,100 +1,136 @@
 import Link from "next/link";
+import {
+  ArrowRight,
+  CircleHelp,
+  Database,
+  FileText,
+  Mail,
+  ReceiptText,
+  Sparkles,
+  Smartphone,
+} from "lucide-react";
+import { AccountActionShell } from "@/features/support/AccountActionShell";
+
+const faqItems = [
+  {
+    title: "Como crear una factura",
+    icon: ReceiptText,
+    content: [
+      "Rellena los datos de tu empresa y del cliente.",
+      "Anade los conceptos con cantidad y precio unitario.",
+      "Selecciona el tipo de IVA aplicable.",
+      "Revisa totales, fecha y vencimiento si corresponde.",
+      'Pulsa "Descargar PDF" o "Enviar email" para finalizar.',
+    ],
+  },
+  {
+    title: "Que puedes personalizar",
+    icon: Sparkles,
+    content: [
+      "Elegir entre diferentes plantillas.",
+      "Anadir notas predeterminadas desde el perfil de empresa.",
+      "Configurar logo, datos de empresa y estilo base.",
+    ],
+  },
+  {
+    title: "Compatibilidad y dispositivos",
+    icon: Smartphone,
+    content: [
+      "Facturabill esta pensado para movil, tablet y escritorio.",
+      "Antes de enviar documentos importantes, revisa siempre el PDF final.",
+    ],
+  },
+  {
+    title: "Donde se guardan los datos",
+    icon: Database,
+    content: [
+      "Muchas funciones usan almacenamiento local del navegador.",
+      "Eso implica que tus datos pueden no aparecer en otro dispositivo.",
+      "Tambien pueden perderse si borras el almacenamiento del navegador.",
+    ],
+  },
+  {
+    title: "Edicion de documentos anteriores",
+    icon: FileText,
+    content: [
+      "Puedes recuperar borradores y reutilizar presupuestos desde el historial.",
+      "Para documentos ya enviados, recomendamos conservar el PDF y generar una nueva version si necesitas cambios.",
+    ],
+  },
+];
 
 export default function AyudaPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-4xl px-6 py-16">
-        <h1 className="mb-12 text-center text-4xl font-bold text-gray-800 sm:text-5xl">
-          Ayuda y preguntas frecuentes
-        </h1>
+    <AccountActionShell
+      badge="Ayuda"
+      eyebrow="Centro de ayuda"
+      title="Preguntas frecuentes"
+      description="Una guia rapida para resolver dudas comunes sobre facturas, PDFs, borradores y almacenamiento."
+      icon={CircleHelp}
+    >
+      <section className="mt-6 space-y-4">
+        {faqItems.map(({ title, icon: Icon, content }) => (
+          <article
+            key={title}
+            className="rounded-[30px] border border-white/70 bg-white/80 p-5 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl"
+          >
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_16px_26px_-18px_rgba(15,23,42,0.82)]">
+                <Icon className="h-[18px] w-[18px]" strokeWidth={2.1} />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-[1.1rem] font-semibold tracking-[-0.03em] text-slate-950">
+                  {title}
+                </h2>
+                <ul className="mt-3 space-y-2 text-[14px] leading-6 text-slate-600">
+                  {content.map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-slate-300" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </article>
+        ))}
+      </section>
 
-        <div className="space-y-12 rounded-2xl bg-white p-8 text-lg leading-relaxed text-gray-700 shadow-lg md:p-12">
-          <section>
-            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
-              Como crear una factura
-            </h2>
-            <ol className="list-decimal space-y-4 pl-8">
-              <li>Rellena los datos de tu empresa y del cliente.</li>
-              <li>Anade los conceptos con cantidad y precio unitario.</li>
-              <li>Selecciona el tipo de IVA aplicable.</li>
-              <li>Revisa totales, fecha y vencimiento si corresponde.</li>
-              <li>
-                Pulsa &quot;Descargar PDF&quot; o &quot;Enviar email&quot; para finalizar.
-              </li>
-            </ol>
-          </section>
-
-          <section>
-            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
-              Se puede personalizar la factura
-            </h2>
-            <p>Si. Puedes:</p>
-            <ul className="mt-4 list-disc space-y-3 pl-8">
-              <li>Elegir entre diferentes plantillas.</li>
-              <li>Anadir notas predeterminadas desde el perfil de empresa.</li>
-              <li>Configurar logo, datos de empresa y estilo base.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
-              Funciona en movil y tablet
-            </h2>
-            <p>
-              Si. La aplicacion esta pensada para usarse desde movil, tablet y
-              escritorio. Aun asi, antes de enviar documentos importantes,
-              recomendamos revisar el PDF final.
+      <section className="mt-6 rounded-[30px] border border-white/70 bg-white/80 p-5 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#8a5a33] text-white shadow-[0_16px_26px_-18px_rgba(138,90,51,0.78)]">
+            <Mail className="h-[18px] w-[18px]" strokeWidth={2.1} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
+              Contacto
             </p>
-          </section>
-
-          <section>
-            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
-              Donde se guardan los datos
-            </h2>
-            <p>
-              Muchas funciones actuales utilizan almacenamiento local del
-              navegador. Eso significa que los datos pueden no aparecer en otro
-              dispositivo o si se borra el almacenamiento del navegador.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
-              Puedo editar documentos anteriores
-            </h2>
-            <p>
-              Puedes recuperar borradores y reutilizar presupuestos desde el
-              historial. Para documentos ya enviados, recomendamos conservar el
-              PDF y generar una nueva version si necesitas cambios.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
+            <h2 className="mt-2 text-[1.2rem] font-semibold tracking-[-0.03em] text-slate-950">
               Necesitas ayuda adicional
             </h2>
-            <p>
-              Escribe a{" "}
-              <a
-                href="mailto:facturabill.net@gmail.com"
-                className="text-blue-600 hover:underline"
-              >
-                facturabill.net@gmail.com
-              </a>{" "}
-              y te responderemos lo antes posible.
+            <p className="mt-3 text-[14px] leading-6 text-slate-500">
+              Si tu caso no aparece aqui, abre una consulta desde soporte o
+              comparte el problema con detalle para que podamos revisarlo.
             </p>
-          </section>
-
-          <div className="mt-16 text-center">
-            <Link
-              href="/"
-              className="inline-block rounded-lg bg-blue-600 px-8 py-3 font-medium text-white transition hover:bg-blue-700"
-            >
-              Volver a Facturabill.net
-            </Link>
           </div>
         </div>
-      </div>
-    </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <Link
+            href="/soporte"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition hover:bg-slate-800"
+          >
+            Ir a soporte
+            <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+          </Link>
+          <Link
+            href="/feedback"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Enviar feedback
+          </Link>
+        </div>
+      </section>
+    </AccountActionShell>
   );
 }

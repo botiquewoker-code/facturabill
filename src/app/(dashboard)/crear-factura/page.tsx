@@ -18,11 +18,24 @@ import {
 } from "lucide-react";
 import InvoicePDF from "@/features/invoices/components/InvoicePDF";
 import PlantillaNueva from "@/features/invoices/components/PlantillaNueva";
+import PlantillaStudio from "@/features/invoices/components/PlantillaStudio";
 import {
   findClientById,
   readClients,
   type ClientRecord,
 } from "@/features/clients/storage";
+import {
+  clearActiveDraft,
+  readActiveDraft,
+  readDrafts,
+  upsertDraft,
+  writeDrafts,
+} from "@/features/drafts/storage";
+import {
+  DEFAULT_FISCAL_SETTINGS,
+  readFiscalSettings,
+  type FiscalSettings,
+} from "@/features/invoices/fiscal-settings";
 import {
   showSuccessToast,
   showWarningToast,
@@ -49,6 +62,7 @@ type Empresa = {
 };
 
 type Concepto = { desc: string; cant: number; precio: number };
+type Plantilla = "InvoicePDF" | "PlantillaNueva" | "PlantillaStudio";
 type DraftInvoice = {
   id: string;
   tipo: "factura" | "presupuesto";
@@ -63,7 +77,7 @@ type DraftInvoice = {
   notas: string;
   tipoIVA: number;
   ivaPorc: number;
-  plantilla: "InvoicePDF" | "PlantillaNueva";
+  plantilla: Plantilla;
   updatedAt: string;
 };
 
@@ -77,8 +91,6 @@ declare global {
   }
 }
 
-const DRAFTS_KEY = "borradores";
-const ACTIVE_DRAFT_KEY = "borradorActivo";
 const HISTORY_KEY = "historial";
 const LAST_INVOICE_NUMBER_KEY = "ultimoNumeroFactura";
 const LAST_BUDGET_NUMBER_KEY = "ultimoNumeroPresupuesto";
@@ -126,8 +138,16 @@ const draftId = () =>
   typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
     : `draft-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-const isPlantilla = (v: string): v is "InvoicePDF" | "PlantillaNueva" =>
-  v === "InvoicePDF" || v === "PlantillaNueva";
+const isPlantilla = (v: string): v is Plantilla =>
+  v === "InvoicePDF" || v === "PlantillaNueva" || v === "PlantillaStudio";
+const pdfTemplates: Record<
+  Plantilla,
+  typeof InvoicePDF | typeof PlantillaNueva | typeof PlantillaStudio
+> = {
+  InvoicePDF,
+  PlantillaNueva,
+  PlantillaStudio,
+};
 const stripDocumentPrefix = (v: unknown) =>
   s(v).trim().replace(/^PRES-?/i, "").replace(/^FACT?-?/i, "");
 const normalizeNumero = (v: unknown) =>
@@ -228,9 +248,10 @@ export default function CrearFacturaPage() {
   const [logo, setLogo] = useState("");
   const [notas, setNotas] = useState("");
   const [tipoIVA, setTipoIVA] = useState(21);
-  const [plantilla, setPlantilla] = useState<"InvoicePDF" | "PlantillaNueva">(
-    "InvoicePDF",
+  const [fiscalSettings, setFiscalSettings] = useState<FiscalSettings>(
+    DEFAULT_FISCAL_SETTINGS,
   );
+  const [plantilla, setPlantilla] = useState<Plantilla>("InvoicePDF");
   const [linkedClientId, setLinkedClientId] = useState("");
   const [clientSearch, setClientSearch] = useState("");
   const subtotal = conceptos.reduce((acc, item) => acc + item.cant * item.precio, 0);
@@ -259,6 +280,8 @@ export default function CrearFacturaPage() {
     ivaPct: tipoIVA,
     tipiIVA: tipoIVA,
     tipoIVA,
+    taxLabel: fiscalSettings.taxLabel,
+    taxNote: fiscalSettings.fiscalNote,
     total,
     notas,
   };
@@ -326,6 +349,8 @@ export default function CrearFacturaPage() {
     ? "shrink-0 rounded-full border border-[#e7c39a] bg-white px-4 py-2 text-sm font-semibold text-[#8a5a33] transition hover:bg-[#fff4e5]"
     : "shrink-0 rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50";
   const numeroFacturaActual = normalizeNumero(numeroFactura);
+  const currentTaxLabel = fiscalSettings.taxLabel.trim() || "IVA";
+  const currentTaxNote = fiscalSettings.fiscalNote.trim();
   const saveLastNumber = (value: string, isBudget = esPresupuesto) => {
     if (typeof window === "undefined") {
       return;
@@ -348,8 +373,11 @@ export default function CrearFacturaPage() {
       const params = new URLSearchParams(window.location.search);
       const storedClients = readClients();
       const routeClientId = params.get("clienteId") || "";
+      const storedFiscalSettings = readFiscalSettings();
 
       setClientesGuardados(storedClients);
+      setFiscalSettings(storedFiscalSettings);
+      setTipoIVA(storedFiscalSettings.defaultTaxRate);
 
       const rawCompany = localStorage.getItem("datosEmpresa");
       if (rawCompany) try { setEmpresa(normalizeEmpresa(JSON.parse(rawCompany))); } catch {}
@@ -363,10 +391,10 @@ export default function CrearFacturaPage() {
         localStorage.getItem("plantillaElegida");
       if (rawTemplate && isPlantilla(rawTemplate)) setPlantilla(rawTemplate);
 
-      const activeDraft = localStorage.getItem(ACTIVE_DRAFT_KEY);
+      const activeDraft = readActiveDraft<Partial<DraftInvoice>>();
       if (activeDraft) {
         try {
-          const draft = JSON.parse(activeDraft) as Partial<DraftInvoice>;
+          const draft = activeDraft;
           draftIdRef.current = s(draft.id) || draftId();
           setEsPresupuesto(draft.tipo === "presupuesto");
           setFecha(s(draft.fecha) || today());
@@ -380,11 +408,11 @@ export default function CrearFacturaPage() {
           setConceptos(normalizeConceptos(draft.conceptos));
           setLogo(s(draft.logo));
           setNotas(s(draft.notas) || rawNotes || "");
-          setTipoIVA(num(draft.tipoIVA, 21));
+          setTipoIVA(num(draft.tipoIVA, storedFiscalSettings.defaultTaxRate));
           const nextTemplate = s(draft.plantilla);
           if (isPlantilla(nextTemplate)) setPlantilla(nextTemplate);
         } catch {}
-        localStorage.removeItem(ACTIVE_DRAFT_KEY);
+        clearActiveDraft();
         return;
       }
 
@@ -398,6 +426,9 @@ export default function CrearFacturaPage() {
           }
           if (parsed.fechaVencimiento) {
             setFechaVencimiento(s(parsed.fechaVencimiento));
+          }
+          if (parsed.tipoIVA) {
+            setTipoIVA(num(parsed.tipoIVA, storedFiscalSettings.defaultTaxRate));
           }
           setNumeroFactura(normalizeNumero(parsed.numero || parsed.id));
         } catch {}
@@ -448,9 +479,8 @@ export default function CrearFacturaPage() {
       const draft = latestDraftRef.current;
       if (!draft || !hasContent(draft) || typeof window === "undefined") return;
       try {
-        const saved = JSON.parse(localStorage.getItem(DRAFTS_KEY) || "[]") as DraftInvoice[];
-        const rest = saved.filter((item) => item.id !== draft.id);
-        localStorage.setItem(DRAFTS_KEY, JSON.stringify([draft, ...rest]));
+        const saved = readDrafts<DraftInvoice>();
+        writeDrafts(upsertDraft(draft, saved));
         localStorage.setItem(
           lastNumberKey(draft.tipo === "presupuesto"),
           normalizeNumero(draft.numero),
@@ -508,9 +538,8 @@ export default function CrearFacturaPage() {
     }
 
     try {
-      const saved = JSON.parse(localStorage.getItem(DRAFTS_KEY) || "[]") as DraftInvoice[];
-      const rest = saved.filter((item) => item.id !== draft.id);
-      localStorage.setItem(DRAFTS_KEY, JSON.stringify([draft, ...rest]));
+      const saved = readDrafts<DraftInvoice>();
+      writeDrafts(upsertDraft(draft, saved));
       saveLastNumber(draft.numero, draft.tipo === "presupuesto");
       showSuccessToast("Borrador guardado");
     } catch {
@@ -576,7 +605,7 @@ export default function CrearFacturaPage() {
   const descargar = async () => {
     if (!validate()) return;
     try {
-      const Component = plantilla === "InvoicePDF" ? InvoicePDF : PlantillaNueva;
+      const Component = pdfTemplates[plantilla];
       const blob = await pdf(<Component datos={pdfData} numeroFactura={numeroFacturaActual} conceptos={conceptos} />).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -593,7 +622,7 @@ export default function CrearFacturaPage() {
   const enviar = async () => {
     if (!validate(true)) return;
     try {
-      const Component = plantilla === "InvoicePDF" ? InvoicePDF : PlantillaNueva;
+      const Component = pdfTemplates[plantilla];
       const blob = await pdf(<Component datos={pdfData} numeroFactura={numeroFacturaActual} conceptos={conceptos} />).toBlob();
       const formData = new FormData();
       formData.append("file", blob, `${esPresupuesto ? "Presupuesto" : "Factura"}_${numeroFacturaActual}.pdf`);
@@ -601,12 +630,35 @@ export default function CrearFacturaPage() {
       formData.append("subject", `${esPresupuesto ? "Presupuesto" : "Factura"} ${numeroFacturaActual}`);
       formData.append("text", `Hola,\n\nAdjunto ${esPresupuesto ? "el presupuesto" : "la factura"} ${numeroFacturaActual}.\n\nGracias.\n${empresa.nombre || "Tu empresa"}`);
       const res = await fetch("/api/enviar-email", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("send failed");
+      const payload = (await res.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+      if (!res.ok) {
+        throw new Error(payload?.error || "send failed");
+      }
       if (window.gtag) window.gtag("event", "conversion", { send_to: "AW-1791812185/PvpICL_mx_obENHy-BC", value: total, currency: "EUR" });
       updateHistory(esPresupuesto ? "Presupuesto enviado" : "Factura enviada");
       showSuccessToast("Documento enviado");
-    } catch {
-      showWarningToast("No se pudo enviar el documento");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "No se pudo enviar el documento";
+
+      if (message === "Email service is not configured correctly") {
+        showWarningToast("El correo no esta configurado en el servidor");
+        return;
+      }
+
+      if (message === "Invalid email payload") {
+        showWarningToast("Revisa el email del cliente antes de enviar");
+        return;
+      }
+
+      if (message.toLowerCase().includes("not verified")) {
+        showWarningToast("AWS SES esta bloqueando el envio: verifica remitente o destinatario");
+        return;
+      }
+
+      showWarningToast(message || "No se pudo enviar el documento");
     }
   };
 
@@ -990,7 +1042,7 @@ export default function CrearFacturaPage() {
               <span className="font-semibold text-slate-950">{money(subtotal)}</span>
             </div>
             <div className="flex items-center justify-between py-2 text-sm text-slate-600">
-              <span>IVA ({tipoIVA}%)</span>
+              <span>{currentTaxLabel} ({tipoIVA}%)</span>
               <span className="font-semibold text-slate-950">{money(iva)}</span>
             </div>
             <div className={totalCardClass}>
@@ -1000,6 +1052,28 @@ export default function CrearFacturaPage() {
                   {money(total)}
                 </p>
               </div>
+            </div>
+          </div>
+          <div className="mt-4 rounded-[24px] border border-white/70 bg-white/84 px-4 py-4 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)]">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                  Fiscal
+                </p>
+                <p className="mt-2 text-sm font-semibold text-slate-950">
+                  {currentTaxLabel} por defecto aplicado al documento
+                </p>
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  {currentTaxNote ||
+                    "Sin nota fiscal adicional. Puedes cambiarlo desde Configuracion fiscal."}
+                </p>
+              </div>
+              <Link
+                href="/ajustes/configuracion-fiscal"
+                className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Fiscal
+              </Link>
             </div>
           </div>
           <div className="mt-6 grid gap-3">

@@ -33,7 +33,7 @@ type Empresa = {
   email: string;
 };
 
-type Plantilla = "InvoicePDF" | "PlantillaNueva";
+type Plantilla = "InvoicePDF" | "PlantillaNueva" | "PlantillaStudio";
 
 const EMPTY_EMPRESA: Empresa = {
   nombre: "",
@@ -46,7 +46,11 @@ const EMPTY_EMPRESA: Empresa = {
 };
 
 function isPlantilla(value: string): value is Plantilla {
-  return value === "InvoicePDF" || value === "PlantillaNueva";
+  return (
+    value === "InvoicePDF" ||
+    value === "PlantillaNueva" ||
+    value === "PlantillaStudio"
+  );
 }
 
 function getInitials(nombre: string): string {
@@ -64,6 +68,11 @@ export default function ConfiguracionEmpresaPage() {
   const router = useRouter();
   const { language } = useAppLanguage();
   const copy = dashboardCopy[language].company;
+  const studioLabel = language === "es" ? "Studio" : "Studio";
+  const studioDescription =
+    language === "es"
+      ? "Premium, sobria y con presencia visual"
+      : "Premium, refined, and visually rich";
   const [empresa, setEmpresa] = useState<Empresa>(EMPTY_EMPRESA);
   const [plantilla, setPlantilla] = useState<Plantilla>("InvoicePDF");
   const [logo, setLogo] = useState("");
@@ -84,8 +93,21 @@ export default function ConfiguracionEmpresaPage() {
         description: copy.elegantDescription,
         preview: "/previews/elegant.jpg",
       },
+      {
+        id: "PlantillaStudio" as Plantilla,
+        label: studioLabel,
+        description: studioDescription,
+        preview: "/previews/studio-template.svg",
+      },
     ],
-    [copy.classic, copy.classicDescription, copy.elegant, copy.elegantDescription],
+    [
+      copy.classic,
+      copy.classicDescription,
+      copy.elegant,
+      copy.elegantDescription,
+      studioDescription,
+      studioLabel,
+    ],
   );
 
   useEffect(() => {

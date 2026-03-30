@@ -4,7 +4,7 @@ import {
   Page,
   Text,
   View,
-  Image,
+  Image as PdfImage,
   StyleSheet,
 } from "@react-pdf/renderer";
 
@@ -150,6 +150,8 @@ type PdfDatos = {
   tipoIVA?: number;
   tipiIVA?: number;
   ivaPct?: number;
+  taxLabel?: string;
+  taxNote?: string;
 };
 
 type PdfConcepto = {
@@ -180,6 +182,7 @@ const InvoicePDF = ({
   conceptos: PdfConcepto[];
 }) => {
   const isPresupuesto = Boolean(datos?.esPresupuesto);
+  const taxLabel = datos.taxLabel?.trim() || "IVA";
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -187,8 +190,7 @@ const InvoicePDF = ({
         <View style={styles.header}>
           {/* Empresa */}
           <View style={styles.leftColumn}>
-            {/* eslint-disable-next-line jsx-a11y/alt-text */}
-            {datos.logo && <Image style={styles.logo} src={datos.logo} />}
+            {datos.logo && <PdfImage style={styles.logo} src={datos.logo} />}
             <Text style={styles.companyName}>{datos.empresa.nombre}</Text>
             <Text style={styles.companyDetail}>{datos.empresa.direccion}</Text>
             <Text style={styles.companyDetail}>{datos.empresa.ciudad}</Text>
@@ -343,7 +345,7 @@ const InvoicePDF = ({
             }}
           >
             <Text style={{ fontSize: 11, fontWeight: "bold" }}>
-              IVA ({datos.tipiIVA || 21}%):
+              {taxLabel} ({datos.tipiIVA || 21}%):
             </Text>
             <Text style={{ fontSize: 11 }}>
               {(
@@ -388,6 +390,12 @@ const InvoicePDF = ({
             <Text style={styles.notesText}>{datos.notas}</Text>
           </View>
         )}
+        {datos.taxNote?.trim() ? (
+          <View style={styles.notesBox}>
+            <Text style={styles.notesLabel}>Nota fiscal</Text>
+            <Text style={styles.notesText}>{datos.taxNote}</Text>
+          </View>
+        ) : null}
       </Page>
     </Document>
   );

@@ -1,207 +1,279 @@
 import React from "react";
 import {
   Document,
+  Image as PdfImage,
   Page,
+  StyleSheet,
   Text,
   View,
-  Image,
-  StyleSheet,
 } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    paddingHorizontal: 34,
+    paddingTop: 32,
+    paddingBottom: 28,
+    backgroundColor: "#fffaf5",
+    color: "#1f2937",
     fontSize: 10,
     fontFamily: "Helvetica",
-    backgroundColor: "#F7F5FA",
   },
-
+  eyebrow: {
+    fontSize: 9,
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
+    color: "#9f6b42",
+  },
   header: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "flex-start",
-    justifyContent: "flex-start",
-    marginBottom: 20,
+    marginBottom: 24,
   },
-
-  leftColumn: {
-    width: 150,
-    alignItems: "flex-start",
+  brandColumn: {
+    width: "46%",
   },
-
-  rightColumn: {
-    flex: 1,
-    alignItems: "flex-end",
-  },
-  footerDivider: {
-    borderTopWidth: 1,
-    borderTopColor: "#CCCCCC",
-    marginTop: 6,
-    marginBottom: 4,
-  },
-
-  title: {
-    fontSize: 30,
-    fontWeight: "bold",
-    marginTop: 0,
-  },
-
-  invoiceNumber: {
-    fontSize: 12,
-    marginTop: 4,
-  },
-  date: {
-    marginTop: 0,
-    fontSize: 11,
-  },
-  logoBox: {
-    width: 70,
-    height: 70,
+  logoWrap: {
+    width: 84,
+    height: 84,
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "flex-start",
+    marginBottom: 16,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 84,
+    height: 84,
     objectFit: "contain",
-    marginLeft: "auto",
   },
-  /* CLIENTE */
-  clientBox: {
-    marginTop: 20,
-    marginBottom: 30, // separa del cuadro de conceptos
-  },
-
-  clientTitle: {
-    fontSize: 12,
+  companyName: {
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#000",
+    marginBottom: 6,
+    color: "#111827",
+  },
+  companyLine: {
+    fontSize: 10,
+    lineHeight: 1.45,
+    color: "#475569",
+    marginBottom: 2,
+  },
+  documentColumn: {
+    width: "42%",
+    padding: 18,
+    borderRadius: 18,
+    backgroundColor: "#f4ede5",
+    borderWidth: 1,
+    borderColor: "#eadbca",
+  },
+  documentTitle: {
+    marginTop: 10,
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#111827",
+  },
+  documentCode: {
+    marginTop: 10,
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#9f6b42",
+  },
+  metaGrid: {
+    marginTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#d8c4ad",
+    paddingTop: 12,
+  },
+  metaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 6,
   },
-
-  clientRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  metaLabel: {
+    fontSize: 9,
+    textTransform: "uppercase",
+    color: "#8b735c",
   },
-
-  clientText: {
+  metaValue: {
+    width: "56%",
     fontSize: 10,
-    color: "#000",
-    marginRight: 6,
-    marginBottom: 3,
+    textAlign: "right",
+    color: "#111827",
   },
-  /* TABLA */
-  table: {
-    width: "100%",
-    marginBottom: 20,
+  clientCard: {
+    marginBottom: 22,
+    padding: 18,
+    borderRadius: 18,
+    backgroundColor: "#ffffff",
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 4,
+    borderColor: "#ece6de",
   },
-
+  sectionHeader: {
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    marginTop: 6,
+    fontSize: 13,
+    fontWeight: "bold",
+    color: "#111827",
+  },
+  clientGrid: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  clientColumn: {
+    width: "47%",
+  },
+  clientLabel: {
+    fontSize: 9,
+    textTransform: "uppercase",
+    color: "#94a3b8",
+    marginBottom: 6,
+  },
+  clientName: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#111827",
+    marginBottom: 5,
+  },
+  clientLine: {
+    fontSize: 10,
+    lineHeight: 1.45,
+    color: "#475569",
+    marginBottom: 2,
+  },
+  table: {
+    marginBottom: 22,
+    borderRadius: 18,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#ece6de",
+    backgroundColor: "#ffffff",
+  },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "#f0f0f0",
-    paddingVertical: 6,
-    paddingHorizontal: 6,
-    fontWeight: "bold",
-    fontSize: 11,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    backgroundColor: "#f6f0ea",
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    borderBottomColor: "#ece6de",
   },
-
+  tableHeaderText: {
+    fontSize: 9,
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    color: "#8b735c",
+  },
   tableRow: {
     flexDirection: "row",
-    paddingVertical: 4,
-    paddingHorizontal: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-    fontSize: 10,
+    borderBottomColor: "#f1ede7",
   },
-
+  tableRowLast: {
+    borderBottomWidth: 0,
+  },
   colConcept: {
-    width: "50%",
+    width: "49%",
+    paddingRight: 8,
   },
-
   colQty: {
-    width: "15%",
-    textAlign: "right",
+    width: "13%",
+    textAlign: "center",
   },
-
   colPrice: {
-    width: "15%",
+    width: "18%",
     textAlign: "right",
   },
-
   colTotal: {
     width: "20%",
     textAlign: "right",
   },
-  colProduct: { width: "40%" },
-
-  /* RESUMEN */
-  totalsCard: {
-    width: 260,
-    alignSelf: "flex-end",
-    backgroundColor: "#f2eef7",
-    borderRadius: 8,
-    padding: 12,
+  lineConcept: {
+    fontSize: 10.5,
+    fontWeight: "bold",
+    color: "#111827",
   },
-
+  lineCaption: {
+    marginTop: 4,
+    fontSize: 9,
+    color: "#94a3b8",
+  },
+  lineValue: {
+    fontSize: 10,
+    color: "#334155",
+  },
+  bottomRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  notesCard: {
+    width: "55%",
+    minHeight: 138,
+    padding: 18,
+    borderRadius: 18,
+    backgroundColor: "#f7f2eb",
+    borderWidth: 1,
+    borderColor: "#ebe1d5",
+  },
+  notesText: {
+    marginTop: 10,
+    fontSize: 10,
+    lineHeight: 1.55,
+    color: "#475569",
+  },
+  totalsCard: {
+    width: "38%",
+    padding: 18,
+    borderRadius: 18,
+    backgroundColor: "#172033",
+  },
+  totalsLabel: {
+    fontSize: 9,
+    textTransform: "uppercase",
+    letterSpacing: 1.4,
+    color: "#d8c4ad",
+  },
   totalsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 6,
-    fontSize: 11,
+    marginTop: 12,
   },
-
+  totalsText: {
+    fontSize: 10,
+    color: "#f8fafc",
+  },
   totalsDivider: {
-    height: 1,
-    backgroundColor: "#d1c4e9",
-    marginVertical: 8,
+    marginTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(216,196,173,0.35)",
   },
-
-  totalFinalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: "#5e2d91",
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-  },
-
-  totalFinalText: {
-    color: "#fff",
+  totalAmount: {
+    marginTop: 16,
+    fontSize: 24,
     fontWeight: "bold",
-    fontSize: 12,
+    color: "#ffffff",
   },
-  notes: {
-    marginTop: 15,
-    paddingTop: 8,
-    borderTop: "1px solid #ccc",
-    fontSize: 10,
+  totalCaption: {
+    marginTop: 4,
+    fontSize: 9,
+    color: "#cbd5e1",
   },
-
-  notesTitle: {
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-
-  notesText: {
-    fontSize: 10,
-  },
-
-  /* FOOTER */
   footer: {
     position: "absolute",
+    left: 34,
+    right: 34,
     bottom: 18,
-    left: 40,
-    right: 40,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#ece6de",
   },
-
-  footerLine: {
+  footerText: {
+    fontSize: 8.5,
     textAlign: "center",
-    fontSize: 9,
-    color: "#444",
+    color: "#94a3b8",
   },
 });
 
@@ -229,6 +301,8 @@ type PdfDatos = {
   iva?: number;
   tipoIVA?: number;
   tipiIVA?: number;
+  taxLabel?: string;
+  taxNote?: string;
 };
 
 type PdfConcepto = {
@@ -237,7 +311,7 @@ type PdfConcepto = {
   precio: number;
 };
 
-const formatDocumentDate = (value: unknown) => {
+function formatDocumentDate(value: unknown) {
   if (typeof value !== "string" || !value.trim()) {
     return "";
   }
@@ -247,7 +321,18 @@ const formatDocumentDate = (value: unknown) => {
   return Number.isNaN(parsed.getTime())
     ? value
     : parsed.toLocaleDateString("es-ES");
-};
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("es-ES", {
+    style: "currency",
+    currency: "EUR",
+  }).format(Number(value) || 0);
+}
+
+function joinParts(parts: Array<string | undefined>) {
+  return parts.map((part) => (part || "").trim()).filter(Boolean).join(" · ");
+}
 
 const PlantillaNueva = ({
   datos,
@@ -259,157 +344,198 @@ const PlantillaNueva = ({
   conceptos?: PdfConcepto[];
 }) => {
   const isPresupuesto = Boolean(datos?.esPresupuesto);
+  const taxRate = Number(datos?.tipoIVA || datos?.tipiIVA || 21);
+  const taxLabel = datos?.taxLabel?.trim() || "IVA";
+  const subtotal = conceptos.reduce(
+    (sum, item) => sum + Number(item.cant || 0) * Number(item.precio || 0),
+    0,
+  );
+  const taxAmount = subtotal * (taxRate / 100);
+  const total = subtotal + taxAmount;
+  const companyLocation = joinParts([
+    datos?.empresa?.direccion,
+    datos?.empresa?.cp,
+    datos?.empresa?.ciudad,
+  ]);
+  const clientLocation = joinParts([
+    datos?.cliente?.direccion,
+    datos?.cliente?.cp || datos?.cliente?.codigoPostal,
+    datos?.cliente?.ciudad,
+  ]);
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          {/* eslint-disable-next-line jsx-a11y/alt-text */}
-          {datos.logo && <Image style={styles.logo} src={datos.logo} />}
-
-          <View style={styles.rightColumn}>
-            <Text style={styles.title}>
-              {datos?.esPresupuesto ? "PRESUPUESTO" : "FACTURA"}
-            </Text>
-
-            <Text style={styles.invoiceNumber}>
-              {datos.esPresupuesto ? "PRES-" : "FACT-"}{numeroFactura}
-            </Text>
-            <Text style={styles.date}>
-              Fecha: {formatDocumentDate(datos?.fecha)}
-            </Text>
-            {!isPresupuesto && datos?.fechaVencimiento ? (
-              <Text style={styles.date}>
-                Vencimiento: {formatDocumentDate(datos?.fechaVencimiento)}
-              </Text>
+          <View style={styles.brandColumn}>
+            {datos?.logo ? (
+              <View style={styles.logoWrap}>
+                <PdfImage style={styles.logo} src={datos.logo} />
+              </View>
             ) : null}
+            <Text style={styles.companyName}>{datos?.empresa?.nombre || ""}</Text>
+            <Text style={styles.companyLine}>{companyLocation}</Text>
+            <Text style={styles.companyLine}>
+              {joinParts([
+                datos?.empresa?.nif ? `NIF ${datos.empresa.nif}` : "",
+                datos?.empresa?.telefono,
+              ])}
+            </Text>
+            <Text style={styles.companyLine}>{datos?.empresa?.email || ""}</Text>
+          </View>
+
+          <View style={styles.documentColumn}>
+            <Text style={styles.eyebrow}>Editorial Layout</Text>
+            <Text style={styles.documentTitle}>
+              {isPresupuesto ? "Presupuesto" : "Factura"}
+            </Text>
+            <Text style={styles.documentCode}>
+              {isPresupuesto ? "PRES-" : "FACT-"}
+              {numeroFactura}
+            </Text>
+
+            <View style={styles.metaGrid}>
+              <View style={styles.metaRow}>
+                <Text style={styles.metaLabel}>Fecha</Text>
+                <Text style={styles.metaValue}>
+                  {formatDocumentDate(datos?.fecha)}
+                </Text>
+              </View>
+              {!isPresupuesto && datos?.fechaVencimiento ? (
+                <View style={styles.metaRow}>
+                  <Text style={styles.metaLabel}>Vencimiento</Text>
+                  <Text style={styles.metaValue}>
+                    {formatDocumentDate(datos.fechaVencimiento)}
+                  </Text>
+                </View>
+              ) : null}
+              <View style={styles.metaRow}>
+                <Text style={styles.metaLabel}>IVA</Text>
+                <Text style={styles.metaValue}>
+                  {taxLabel} {taxRate}%
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
-        {/* CLIENTE */}
-        <View style={styles.clientBox}>
-          <Text style={styles.clientTitle}>DATOS DE CLIENTE :</Text>
 
-          <View style={styles.clientRow}>
-            <Text style={styles.clientText}>
-              {datos?.cliente?.nombre ?? ""}
-            </Text>
+        <View style={styles.clientCard}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.eyebrow}>Datos clave</Text>
+            <Text style={styles.sectionTitle}>Cliente y emision</Text>
           </View>
 
-          <View style={styles.clientRow}>
-            <Text style={styles.clientText}>
-              • {(datos?.cliente?.dni || datos?.cliente?.nif) ?? ""}
-            </Text>
-            <Text style={styles.clientText}>
-              • {datos?.cliente?.direccion ?? ""}
-            </Text>
-          </View>
+          <View style={styles.clientGrid}>
+            <View style={styles.clientColumn}>
+              <Text style={styles.clientLabel}>Cliente</Text>
+              <Text style={styles.clientName}>{datos?.cliente?.nombre || ""}</Text>
+              <Text style={styles.clientLine}>
+                {datos?.cliente?.nif || datos?.cliente?.dni || ""}
+              </Text>
+              <Text style={styles.clientLine}>{clientLocation}</Text>
+              <Text style={styles.clientLine}>
+                {joinParts([datos?.cliente?.telefono, datos?.cliente?.email])}
+              </Text>
+            </View>
 
-          <View style={styles.clientRow}>
-            <Text style={styles.clientText}>
-              {(datos?.cliente?.cp || datos?.cliente?.codigoPostal) ?? ""}
-            </Text>
-            <Text style={styles.clientText}>
-              • {datos?.cliente?.ciudad ?? ""}
-            </Text>
-            <Text style={styles.clientText}>
-              • {datos?.cliente?.telefono ?? ""}
-            </Text>
-            <Text style={styles.clientText}>
-              • {datos?.cliente?.email ?? ""}
-            </Text>
+            <View style={styles.clientColumn}>
+              <Text style={styles.clientLabel}>Emisor</Text>
+              <Text style={styles.clientName}>{datos?.empresa?.nombre || ""}</Text>
+              <Text style={styles.clientLine}>{companyLocation}</Text>
+              <Text style={styles.clientLine}>
+                {joinParts([
+                  datos?.empresa?.telefono,
+                  datos?.empresa?.email,
+                ])}
+              </Text>
+            </View>
           </View>
         </View>
-        {/* TABLA DE CONCEPTOS */}
+
         <View style={styles.table}>
-          {/* Cabecera */}
           <View style={styles.tableHeader}>
-            <Text style={styles.colConcept}>Concepto</Text>
-            <Text style={styles.colQty}>Cant.</Text>
-            <Text style={styles.colPrice}>Precio</Text>
-            <Text style={styles.colTotal}>Total</Text>
+            <Text style={[styles.tableHeaderText, styles.colConcept]}>Concepto</Text>
+            <Text style={[styles.tableHeaderText, styles.colQty]}>Cant.</Text>
+            <Text style={[styles.tableHeaderText, styles.colPrice]}>Precio</Text>
+            <Text style={[styles.tableHeaderText, styles.colTotal]}>Importe</Text>
           </View>
 
-          {/* Filas */}
-          {conceptos.map((item, i) => {
-            const cant = Number(item.cant ?? 1);
-            const precio = Number(item.precio ?? 0);
-            const totalLinea = cant * precio;
+          {conceptos.map((item, index) => {
+            const quantity = Number(item.cant || 0);
+            const price = Number(item.precio || 0);
+            const rowTotal = quantity * price;
 
             return (
-              <View key={i} style={styles.tableRow}>
-                <Text style={styles.colConcept}>
-                  {item.desc && String(item.desc).trim() !== ""
-                    ? item.desc
-                    : "-"}
+              <View
+                key={`${item.desc}-${index}`}
+                style={
+                  index === conceptos.length - 1
+                    ? [styles.tableRow, styles.tableRowLast]
+                    : styles.tableRow
+                }
+              >
+                <View style={styles.colConcept}>
+                  <Text style={styles.lineConcept}>{item.desc || "Concepto"}</Text>
+                  <Text style={styles.lineCaption}>
+                    Linea {String(index + 1).padStart(2, "0")}
+                  </Text>
+                </View>
+                <Text style={[styles.lineValue, styles.colQty]}>{quantity}</Text>
+                <Text style={[styles.lineValue, styles.colPrice]}>
+                  {formatCurrency(price)}
                 </Text>
-                <Text style={styles.colQty}>{cant}</Text>
-                <Text style={styles.colPrice}>{precio.toFixed(2)} €</Text>
-                <Text style={styles.colTotal}>{totalLinea.toFixed(2)} €</Text>
+                <Text style={[styles.lineValue, styles.colTotal]}>
+                  {formatCurrency(rowTotal)}
+                </Text>
               </View>
             );
           })}
         </View>
-        ); ) ) : ( ){/* CUADRO DE TOTALES */}
-        <View style={styles.totalsCard}>
-          <View style={styles.totalsRow}>
-            <Text>Base imponible</Text>
-            <Text>
-              {conceptos
-                .reduce(
-                  (acc, item) => acc + (item.precio ?? 0) * (item.cant ?? 1),
-                  0,
-                )
-                .toFixed(2)}{" "}
-              €
+
+        <View style={styles.bottomRow}>
+          <View style={styles.notesCard}>
+            <Text style={styles.eyebrow}>Notas</Text>
+            <Text style={styles.sectionTitle}>Mensaje final</Text>
+            <Text style={styles.notesText}>
+              {datos?.notas?.trim() ||
+                "Gracias por la confianza. Este documento resume el alcance, los importes y las condiciones indicadas para esta operacion."}
             </Text>
+            {datos?.taxNote?.trim() ? (
+              <Text style={styles.notesText}>
+                Nota fiscal: {datos.taxNote}
+              </Text>
+            ) : null}
           </View>
 
-          <View style={styles.totalsRow}>
-            <Text>IVA ({datos.tipiIVA || 21}%)</Text>
-            <Text>
-              {(
-                (conceptos.reduce(
-                  (acc, item) => acc + (item.precio ?? 0) * (item.cant ?? 1),
-                  0,
-                ) *
-                  (datos.tipiIVA || 21)) /
-                100
-              ).toFixed(2)}{" "}
-              €
-            </Text>
-          </View>
+          <View style={styles.totalsCard}>
+            <Text style={styles.totalsLabel}>Resumen economico</Text>
 
-          <View style={styles.totalsDivider} />
+            <View style={styles.totalsRow}>
+              <Text style={styles.totalsText}>Base imponible</Text>
+              <Text style={styles.totalsText}>{formatCurrency(subtotal)}</Text>
+            </View>
 
-          <View style={styles.totalFinalRow}>
-            <Text style={styles.totalFinalText}>TOTAL</Text>
-            <Text style={styles.totalFinalText}>
-              {(
-                conceptos.reduce(
-                  (acc, item) => acc + (item.precio ?? 0) * (item.cant ?? 1),
-                  0,
-                ) *
-                (1 + (datos.tipiIVA || 21) / 100)
-              ).toFixed(2)}{" "}
-              €
+            <View style={styles.totalsRow}>
+              <Text style={styles.totalsText}>{taxLabel} ({taxRate}%)</Text>
+              <Text style={styles.totalsText}>{formatCurrency(taxAmount)}</Text>
+            </View>
+
+            <View style={styles.totalsDivider} />
+            <Text style={styles.totalAmount}>{formatCurrency(total)}</Text>
+            <Text style={styles.totalCaption}>
+              Total {isPresupuesto ? "estimado" : "a pagar"}
             </Text>
           </View>
         </View>
-        {datos?.notas && (
-          <View style={styles.notes}>
-            <Text style={styles.notesTitle}>Notas</Text>
-            <Text style={styles.notesText}>{datos.notas}</Text>
-          </View>
-        )}
-        {/* FOOTER */}
-        <View style={styles.footer} fixed>
-          <View style={styles.footerDivider} />
 
-          <Text style={styles.footerLine}>
-            {datos?.empresa?.nombre ?? ""} • NIF {datos?.empresa?.nif ?? ""} •{" "}
-            {datos?.empresa?.direccion ?? ""} • {datos?.empresa?.cp ?? ""}{" "}
-            {datos?.empresa?.ciudad ?? ""} • Tel{" "}
-            {datos?.empresa?.telefono ?? ""} • {datos?.empresa?.email ?? ""}
+        <View style={styles.footer} fixed>
+          <Text style={styles.footerText}>
+            {joinParts([
+              datos?.empresa?.nombre,
+              datos?.empresa?.nif ? `NIF ${datos.empresa.nif}` : "",
+              companyLocation,
+              datos?.empresa?.email,
+            ])}
           </Text>
         </View>
       </Page>
