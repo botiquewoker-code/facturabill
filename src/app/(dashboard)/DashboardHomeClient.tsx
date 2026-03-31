@@ -45,6 +45,7 @@ import {
 } from "@/features/account/profile";
 import { readVerifactuRecords } from "@/features/verifactu/storage";
 import type { VerifactuRecord } from "@/features/verifactu/types";
+import AppScreenLoader from "@/features/ui/AppScreenLoader";
 
 type DraftItem = {
   id: string;
@@ -1298,6 +1299,20 @@ export default function DashboardHomeClient({
     writeStoredHomeVisibility(draftHomeVisibility);
 
     setIsFilterSheetOpen(false);
+  }
+
+  if (!hasLoadedDashboardData) {
+    return (
+      <AppScreenLoader
+        eyebrow={copy.home.workspace}
+        title={copy.home.title}
+        description={
+          language === "es"
+            ? "Estamos preparando tu panel con la informacion mas reciente."
+            : "We are preparing your dashboard with the latest information."
+        }
+      />
+    );
   }
 
   return (

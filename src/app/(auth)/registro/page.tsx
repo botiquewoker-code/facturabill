@@ -24,6 +24,7 @@ import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import AppScreenLoader from "@/features/ui/AppScreenLoader";
 
 const DEFAULT_TEMPLATE = "InvoicePDF";
 const inputClass =
@@ -35,6 +36,7 @@ export default function RegistroPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   const passwordIsValid = password.trim().length >= 8;
   const canRegister =
@@ -51,6 +53,7 @@ export default function RegistroPage() {
         storedProfile?.displayName || storedCredentials?.displayName || "",
       );
       setEmail(storedProfile?.email || storedCredentials?.email || "");
+      setIsReady(true);
     });
   }, []);
 
@@ -139,6 +142,16 @@ export default function RegistroPage() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (!isReady) {
+    return (
+      <AppScreenLoader
+        eyebrow="Acceso"
+        title="Crea tu acceso"
+        description="Estamos preparando tus datos para que continues sin interrupciones."
+      />
+    );
   }
 
   return (

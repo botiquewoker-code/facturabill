@@ -24,6 +24,10 @@ import {
   type ClientRecord,
 } from "@/features/clients/storage";
 import {
+  readCatalogItems,
+  type CatalogItem,
+} from "@/features/catalog/storage";
+import {
   clearActiveDraft,
   readActiveDraft,
   readDrafts,
@@ -45,6 +49,7 @@ import {
 } from "@/features/account/profile";
 import { prepareVerifactuInvoiceRecord } from "@/features/verifactu/service";
 import type { VerifactuSourceAction } from "@/features/verifactu/types";
+import AppScreenLoader from "@/features/ui/AppScreenLoader";
 
 type Cliente = {
   nombre: string;
@@ -258,9 +263,12 @@ export default function CrearFacturaPage() {
   );
   const [hasRegisteredUser, setHasRegisteredUser] = useState(false);
   const [hasLoadedAccount, setHasLoadedAccount] = useState(false);
+  const [isPageReady, setIsPageReady] = useState(false);
   const [plantilla, setPlantilla] = useState<Plantilla>("InvoicePDF");
   const [linkedClientId, setLinkedClientId] = useState("");
   const [clientSearch, setClientSearch] = useState("");
+  const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
+  const [catalogSearch, setCatalogSearch] = useState("");
   const subtotal = conceptos.reduce((acc, item) => acc + item.cant * item.precio, 0);
   const iva = subtotal * (tipoIVA / 100);
   const total = subtotal + iva;
@@ -272,6 +280,30 @@ export default function CrearFacturaPage() {
 
     return base.filter((item) => item.id !== linkedClientId).slice(0, 6);
   }, [clientSearch, clientesGuardados, linkedClientId]);
+  const catalogoFiltrado = useMemo(() => {
+    if (!(hasLoadedAccount && hasRegisteredUser)) {
+      return [] as CatalogItem[];
+    }
+
+    const query = catalogSearch.trim().toLowerCase();
+
+    if (!query) {
+      return [] as CatalogItem[];
+    }
+
+    const currentDocumentType = esPresupuesto ? "presupuesto" : "factura";
+
+    return catalogItems
+      .filter((item) => item.status === "active")
+      .filter((item) => item.supportedDocuments.includes(currentDocumentType))
+      .filter((item) =>
+        [item.name, item.description, item.sku, item.category]
+          .join(" ")
+          .toLowerCase()
+          .includes(query),
+      )
+      .slice(0, 6);
+  }, [catalogItems, catalogSearch, esPresupuesto, hasLoadedAccount, hasRegisteredUser]);
   const pdfData = {
     esPresupuesto,
     numero: normalizeNumero(numeroFactura),
@@ -394,6 +426,10 @@ export default function CrearFacturaPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const frame = window.requestAnimationFrame(() => {
+      const finishHydration = () => {
+        setHasLoadedAccount(true);
+        setIsPageReady(true);
+      };
       const params = new URLSearchParams(window.location.search);
       const storedClients = readClients();
       const routeClientId = params.get("clienteId") || "";
@@ -401,10 +437,10 @@ export default function CrearFacturaPage() {
       const storedProfile = readUserProfile();
 
       setClientesGuardados(storedClients);
+      setCatalogItems(readCatalogItems());
       setFiscalSettings(storedFiscalSettings);
       setTipoIVA(storedFiscalSettings.defaultTaxRate);
       setHasRegisteredUser(getUserFirstName(storedProfile).length > 0);
-      setHasLoadedAccount(true);
 
       const rawCompany = localStorage.getItem("datosEmpresa");
       if (rawCompany) try { setEmpresa(normalizeEmpresa(JSON.parse(rawCompany))); } catch {}
@@ -440,6 +476,7 @@ export default function CrearFacturaPage() {
           if (isPlantilla(nextTemplate)) setPlantilla(nextTemplate);
         } catch {}
         clearActiveDraft();
+        finishHydration();
         return;
       }
 
@@ -471,6 +508,7 @@ export default function CrearFacturaPage() {
       }
 
       if (params.get("tipo") === "presupuesto") setEsPresupuesto(true);
+      finishHydration();
     });
     return () => window.cancelAnimationFrame(frame);
   }, []);
@@ -478,6 +516,22 @@ export default function CrearFacturaPage() {
   useEffect(() => {
     setUltimoNumeroGuardado(readLastSavedNumber(esPresupuesto));
   }, [esPresupuesto]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !hasLoadedAccount) {
+      return;
+    }
+
+    const syncCatalog = () => {
+      const storedProfile = readUserProfile();
+
+      setHasRegisteredUser(getUserFirstName(storedProfile).length > 0);
+      setCatalogItems(readCatalogItems());
+    };
+
+    window.addEventListener("focus", syncCatalog);
+    return () => window.removeEventListener("focus", syncCatalog);
+  }, [hasLoadedAccount]);
 
   useEffect(() => {
     const nextDraft: DraftInvoice = {
@@ -533,6 +587,37 @@ export default function CrearFacturaPage() {
     );
   const removeConcept = (index: number) =>
     setConceptos((current) => (current.length === 1 ? [EMPTY_CONCEPTO] : current.filter((_, itemIndex) => itemIndex !== index)));
+  const insertCatalogItem = (item: CatalogItem) => {
+    const nextDescription = item.description.trim()
+      ? `${item.name} - ${item.description}`.trim()
+      : item.name.trim();
+    const nextConcept = {
+      desc: nextDescription || item.name || "Concepto",
+      cant: 1,
+      precio: item.basePrice,
+    };
+
+    if (!conceptos.some((current) => current.desc.trim() || current.precio > 0)) {
+      setTipoIVA(item.taxRate);
+    }
+
+    setConceptos((current) => {
+      const emptyIndex = current.findIndex(
+        (currentItem) =>
+          !currentItem.desc.trim() && currentItem.cant === 1 && currentItem.precio === 0,
+      );
+
+      if (emptyIndex === -1) {
+        return [...current, nextConcept];
+      }
+
+      return current.map((currentItem, itemIndex) =>
+        itemIndex === emptyIndex ? nextConcept : currentItem,
+      );
+    });
+    setCatalogSearch("");
+    showSuccessToast("Referencia anadida al documento");
+  };
   const selectClient = (selectedClient: ClientRecord) => {
     setLinkedClientId(selectedClient.id);
     setCliente(normalizeCliente(selectedClient));
@@ -765,6 +850,16 @@ export default function CrearFacturaPage() {
       showWarningToast("No se pudo enviar el documento. Intentalo de nuevo.");
     }
   };
+
+  if (!isPageReady) {
+    return (
+      <AppScreenLoader
+        eyebrow="Documento"
+        title="Preparando editor"
+        description="Estamos recuperando tus datos y el estado real de esta vista."
+      />
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#f7f4ee_0%,#edf3fb_42%,#eef2f7_100%)] text-slate-950">
@@ -1054,6 +1149,75 @@ export default function CrearFacturaPage() {
               </h3>
             </div>
           </div>
+          {showAdvancedTools ? (
+            <div className="mt-6 rounded-[28px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(247,245,240,0.92))] p-4 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)]">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                    Catalogo
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    Busca productos o servicios y anadelos directamente al documento.
+                  </p>
+                </div>
+                <Link
+                  href="/catalogo"
+                  className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Gestionar
+                </Link>
+              </div>
+
+              <label className="mt-4 flex items-center gap-3 rounded-[24px] border border-white/70 bg-white/85 px-4 py-3 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.25)]">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white">
+                  <Search className="h-4 w-4" strokeWidth={2.2} />
+                </span>
+                <input
+                  type="search"
+                  value={catalogSearch}
+                  onChange={(event) => setCatalogSearch(event.target.value)}
+                  placeholder={
+                    esPresupuesto
+                      ? "Buscar referencia para este presupuesto"
+                      : "Buscar referencia para esta factura"
+                  }
+                  className="h-10 w-full border-0 bg-transparent text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400"
+                />
+              </label>
+
+              {catalogSearch.trim() ? (
+                <div className="mt-4 space-y-2">
+                  {catalogoFiltrado.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => insertCatalogItem(item)}
+                      className="flex w-full items-start justify-between gap-3 rounded-[24px] border border-white/70 bg-white/85 px-4 py-4 text-left shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)] transition hover:border-slate-200 hover:bg-white"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-950">
+                          {item.name}
+                        </p>
+                        <p className="mt-1 text-[13px] leading-5 text-slate-500">
+                          {[item.category, item.sku, `${money(item.basePrice)} / ${item.unit}`]
+                            .filter((value) => value.trim())
+                            .join(" / ")}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600">
+                        Anadir
+                      </span>
+                    </button>
+                  ))}
+                  {!catalogoFiltrado.length ? (
+                    <div className="rounded-[24px] border border-dashed border-slate-200 bg-white/70 px-4 py-4 text-sm text-slate-500">
+                      No hay referencias para esa busqueda.
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           <div className="mt-6 space-y-4">
             {conceptos.map((item, index) => (
               <div key={index} className="rounded-[28px] border border-white/70 bg-white/85 p-4 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)]">

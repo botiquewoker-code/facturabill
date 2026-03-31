@@ -23,6 +23,7 @@ import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import AppScreenLoader from "@/features/ui/AppScreenLoader";
 
 const inputClass =
   "h-14 w-full rounded-[22px] border border-white/70 bg-white/82 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.35)]";
@@ -31,6 +32,7 @@ export default function DatosAccesoPage() {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const storedProfile = readUserProfile();
@@ -41,6 +43,7 @@ export default function DatosAccesoPage() {
         storedProfile?.displayName || storedCredentials?.displayName || "",
       );
       setEmail(storedProfile?.email || storedCredentials?.email || "");
+      setIsReady(true);
     });
   }, []);
 
@@ -101,6 +104,16 @@ export default function DatosAccesoPage() {
     } catch {
       showWarningToast("No se pudieron guardar los datos de acceso");
     }
+  }
+
+  if (!isReady) {
+    return (
+      <AppScreenLoader
+        eyebrow="Cuenta"
+        title="Datos de acceso"
+        description="Estamos preparando tu perfil para que lo edites con la informacion actual."
+      />
+    );
   }
 
   return (
