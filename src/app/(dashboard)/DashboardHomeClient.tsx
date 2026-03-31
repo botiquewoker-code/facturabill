@@ -9,6 +9,7 @@ import {
   ChartColumn,
   FileText,
   House,
+  Package,
   Plus,
   ReceiptText,
   Search,
@@ -400,10 +401,11 @@ export default function DashboardHomeClient({
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const firstName = getUserFirstName(userProfile);
   const hasRegisteredUser = firstName.length > 0;
+  const catalogLabel = language === "es" ? "Catalogo" : "Catalog";
 
   const navItems = [
     { label: copy.nav.home, icon: House, active: true },
-    { label: labels.budget, icon: ReceiptText, active: false, href: "/crear-factura?tipo=presupuesto" },
+    { label: catalogLabel, icon: Package, active: false, href: "/catalogo" },
     { label: copy.nav.clients, icon: UsersRound, active: false, href: "/clientes" },
     { label: copy.nav.reports, icon: ChartColumn, active: false, href: "/informes" },
     { label: copy.nav.profile, icon: UserRound, active: false, href: "/ajustes" },
