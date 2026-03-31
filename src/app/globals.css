@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --mobile-page-bottom-space: 5rem;
 }
 
 @theme inline {
@@ -21,9 +22,29 @@
   }
 }
 
+html {
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
 body {
+  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--background);
   color: var(--foreground);
   font-family: "Segoe UI", "Aptos", system-ui, -apple-system, BlinkMacSystemFont,
     "Helvetica Neue", sans-serif;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.min-h-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.h-screen {
+  height: 100vh;
+  height: 100dvh;
 }
