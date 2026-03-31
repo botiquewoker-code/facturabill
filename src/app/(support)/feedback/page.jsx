@@ -4,14 +4,60 @@ import Link from "next/link";
 import { useState } from "react";
 import { ArrowRight, Lightbulb, Send, Sparkles } from "lucide-react";
 import { AccountActionShell } from "@/features/support/AccountActionShell";
+import { useAppI18n } from "@/features/i18n/runtime";
 
 export default function FeedbackPage() {
+  const { t } = useAppI18n();
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [enviado, setEnviado] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
+
+  const copy = {
+    error: t({
+      es: "No se pudo enviar el feedback. Intentalo de nuevo dentro de unos minutos.",
+      en: "Unable to send the feedback. Try again in a few minutes.",
+    }),
+    backLabel: t({ es: "Volver a ajustes", en: "Back to settings" }),
+    badge: t({ es: "Feedback", en: "Feedback" }),
+    eyebrow: t({ es: "Producto", en: "Product" }),
+    title: t({ es: "Sugerencias y mejoras", en: "Suggestions and improvements" }),
+    description: t({
+      es: "Este espacio sirve para reportar fricciones del producto, contar que te falta o proponer cambios concretos.",
+      en: "Use this space to report product friction, say what is missing, or propose specific changes.",
+    }),
+    usefulApproach: t({ es: "Enfoque util", en: "Useful approach" }),
+    usefulApproachDescription: t({
+      es: "Cuanto mas concreto sea el comentario, mas facil sera priorizarlo: que esperabas hacer, que paso y que cambio te ayudaria.",
+      en: "The more specific the comment, the easier it is to prioritise: what you expected to do, what happened, and what change would help.",
+    }),
+    form: t({ es: "Formulario", en: "Form" }),
+    sendFeedback: t({ es: "Enviar feedback", en: "Send feedback" }),
+    namePlaceholder: t({ es: "Tu nombre (opcional)", en: "Your name (optional)" }),
+    emailPlaceholder: t({ es: "Tu email (opcional)", en: "Your email (optional)" }),
+    messagePlaceholder: t({
+      es: "Que mejorarias o que no ha funcionado como esperabas",
+      en: "What would you improve or what did not work as expected",
+    }),
+    sending: t({ es: "Enviando...", en: "Sending..." }),
+    sentEyebrow: t({ es: "Feedback enviado", en: "Feedback sent" }),
+    sentTitle: t({ es: "Gracias por compartirlo", en: "Thanks for sharing it" }),
+    sentDescriptionWithName: `${nombre}, ${t({ es: "hemos recibido tu mensaje y lo revisaremos.", en: "we have received your message and will review it." })}`,
+    sentDescription: t({
+      es: "Hemos recibido tu mensaje y lo revisaremos para mejorar Facturabill.",
+      en: "We have received your message and will review it to improve Facturabill.",
+    }),
+    backToSettings: t({ es: "Volver a ajustes", en: "Back to settings" }),
+    sendAnother: t({ es: "Enviar otro", en: "Send another" }),
+    ifBlocking: t({ es: "Si es un bloqueo", en: "If it is a blocker" }),
+    ifBlockingDescription: t({
+      es: "Si el problema te impide facturar o enviar documentos, usa soporte en lugar de feedback para priorizar la incidencia.",
+      en: "If the problem prevents invoicing or sending documents, use support instead of feedback so the issue can be prioritised.",
+    }),
+    goToSupport: t({ es: "Ir a soporte", en: "Go to support" }),
+  };
 
   const enviarSugerencia = async (event) => {
     event.preventDefault();
@@ -34,9 +80,7 @@ export default function FeedbackPage() {
       setEmail("");
       setMensaje("");
     } catch {
-      setError(
-        "No se pudo enviar el feedback. Intentalo de nuevo dentro de unos minutos.",
-      );
+      setError(copy.error);
     } finally {
       setIsSending(false);
     }
@@ -44,11 +88,12 @@ export default function FeedbackPage() {
 
   return (
     <AccountActionShell
-      badge="Feedback"
-      eyebrow="Producto"
-      title="Sugerencias y mejoras"
-      description="Este espacio sirve para reportar fricciones del producto, contar que te falta o proponer cambios concretos."
+      badge={copy.badge}
+      eyebrow={copy.eyebrow}
+      title={copy.title}
+      description={copy.description}
       icon={Sparkles}
+      backLabel={copy.backLabel}
     >
       <section className="mt-6 rounded-[30px] border border-white/70 bg-white/80 p-5 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl">
         <div className="flex items-start gap-3">
@@ -57,11 +102,10 @@ export default function FeedbackPage() {
           </span>
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
-              Enfoque util
+              {copy.usefulApproach}
             </p>
             <p className="mt-2 text-[14px] leading-6 text-slate-600">
-              Cuanto mas concreto sea el comentario, mas facil sera priorizarlo:
-              que esperabas hacer, que paso y que cambio te ayudaria.
+              {copy.usefulApproachDescription}
             </p>
           </div>
         </div>
@@ -72,10 +116,10 @@ export default function FeedbackPage() {
           <form onSubmit={enviarSugerencia} className="space-y-4">
             <div>
               <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
-                Formulario
+                {copy.form}
               </p>
               <h2 className="mt-2 text-[1.25rem] font-semibold tracking-[-0.03em] text-slate-950">
-                Enviar feedback
+                {copy.sendFeedback}
               </h2>
             </div>
 
@@ -83,7 +127,7 @@ export default function FeedbackPage() {
               type="text"
               value={nombre}
               onChange={(event) => setNombre(event.target.value)}
-              placeholder="Tu nombre (opcional)"
+              placeholder={copy.namePlaceholder}
               className="h-12 w-full rounded-[18px] border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-slate-300"
             />
 
@@ -91,7 +135,7 @@ export default function FeedbackPage() {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="Tu email (opcional)"
+              placeholder={copy.emailPlaceholder}
               className="h-12 w-full rounded-[18px] border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-slate-300"
             />
 
@@ -99,7 +143,7 @@ export default function FeedbackPage() {
               rows={5}
               value={mensaje}
               onChange={(event) => setMensaje(event.target.value)}
-              placeholder="Que mejorarias o que no ha funcionado como esperabas"
+              placeholder={copy.messagePlaceholder}
               className="w-full rounded-[18px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-300"
               required
             />
@@ -116,21 +160,21 @@ export default function FeedbackPage() {
               className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
               <Send className="h-4 w-4" strokeWidth={2.2} />
-              {isSending ? "Enviando..." : "Enviar sugerencia"}
+              {isSending ? copy.sending : copy.sendFeedback}
             </button>
           </form>
         ) : (
           <div className="rounded-[24px] border border-emerald-200 bg-emerald-50/90 p-5">
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-emerald-700">
-              Feedback enviado
+              {copy.sentEyebrow}
             </p>
             <h2 className="mt-2 text-[1.2rem] font-semibold tracking-[-0.03em] text-emerald-900">
-              Gracias por compartirlo
+              {copy.sentTitle}
             </h2>
             <p className="mt-3 text-[14px] leading-6 text-emerald-800">
               {nombre
-                ? `${nombre}, hemos recibido tu mensaje y lo revisaremos.`
-                : "Hemos recibido tu mensaje y lo revisaremos para mejorar Facturabill."}
+                ? copy.sentDescriptionWithName
+                : copy.sentDescription}
             </p>
 
             <div className="mt-5 grid grid-cols-2 gap-3">
@@ -138,14 +182,14 @@ export default function FeedbackPage() {
                 href="/ajustes"
                 className="inline-flex min-h-12 items-center justify-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
               >
-                Volver a ajustes
+                {copy.backToSettings}
               </Link>
               <button
                 type="button"
                 onClick={() => setEnviado(false)}
                 className="inline-flex min-h-12 items-center justify-center rounded-full border border-emerald-200 bg-white px-5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
               >
-                Enviar otro
+                {copy.sendAnother}
               </button>
             </div>
           </div>
@@ -154,17 +198,16 @@ export default function FeedbackPage() {
 
       <section className="mt-6 rounded-[30px] border border-[#edcfab] bg-[#fff5e9] p-5 shadow-[0_20px_40px_-30px_rgba(138,90,51,0.32)]">
         <p className="text-sm font-medium uppercase tracking-[0.18em] text-[#9a6338]">
-          Si es un bloqueo
+          {copy.ifBlocking}
         </p>
         <p className="mt-2 text-[14px] leading-6 text-slate-600">
-          Si el problema te impide facturar o enviar documentos, usa soporte en
-          lugar de feedback para priorizar la incidencia.
+          {copy.ifBlockingDescription}
         </p>
         <Link
           href="/soporte"
           className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#8a5a33]"
         >
-          Ir a soporte
+          {copy.goToSupport}
           <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
         </Link>
       </section>

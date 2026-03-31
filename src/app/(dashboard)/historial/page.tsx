@@ -3,11 +3,18 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Clock3, FileText, ReceiptText } from "lucide-react";
+import {
+  getInvoiceDocumentMeta,
+  normalizeInvoiceDocumentType,
+  type InvoiceDocumentType,
+} from "@/features/invoices/document-types";
+import { formatCurrencyByLanguage } from "@/features/i18n/core";
+import { useAppI18n } from "@/features/i18n/runtime";
 
 type HistoryDocument = {
   id?: string;
   numero?: string;
-  tipo?: "factura" | "presupuesto";
+  tipo?: InvoiceDocumentType;
   fecha?: string;
   fechaVencimiento?: string;
   total?: number;
@@ -49,15 +56,9 @@ function readHistory(): HistoryDocument[] {
   }
 }
 
-function money(value: number | undefined) {
-  return new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency: "EUR",
-  }).format(Number(value) || 0);
-}
-
 export default function HistorialPage() {
   const router = useRouter();
+  const { language, t } = useAppI18n();
   const [documentos, setDocumentos] = useState<HistoryDocument[]>(() =>
     readHistory(),
   );
@@ -71,6 +72,45 @@ export default function HistorialPage() {
       window.removeEventListener("focus", refreshHistory);
     };
   }, []);
+
+  const copy = {
+    eyebrow: t({ es: "Historial", en: "History" }),
+    title: t({ es: "Documentos guardados", en: "Saved documents" }),
+    description: t({
+      es: "Revisa facturas, presupuestos, proformas y albaranes recientes.",
+      en: "Review recent invoices, quotes, proformas, and delivery notes.",
+    }),
+    emptyTitle: t({ es: "Aun no hay documentos", en: "No documents yet" }),
+    emptyDescription: t({
+      es: "Cuando descargues o envies un documento, aparecera aqui para que puedas consultarlo mas tarde.",
+      en: "When you download or send a document, it will appear here so you can review it later.",
+    }),
+    saved: t({ es: "Guardado", en: "Saved" }),
+    client: t({ es: "Cliente", en: "Client" }),
+    noClient: t({ es: "Sin cliente", en: "No client" }),
+    date: t({ es: "Fecha", en: "Date" }),
+    noDate: t({ es: "Sin fecha", en: "No date" }),
+    total: t({ es: "Total", en: "Total" }),
+    verifactu: t({ es: "VeriFactu", en: "VeriFactu" }),
+    prepared: t({ es: "Preparado", en: "Prepared" }),
+    pending: t({ es: "Pendiente", en: "Pending" }),
+    notPrepared: t({ es: "Sin preparar", en: "Not prepared" }),
+    verifactuUpdated: t({
+      es: "Esta factura ya tiene su seguimiento actualizado.",
+      en: "This invoice tracking is already updated.",
+    }),
+    verifactuIssue: t({
+      es: "Hay una incidencia pendiente de revisar en esta factura.",
+      en: "There is a pending issue to review on this invoice.",
+    }),
+    verifactuPendingActivation: t({
+      es: "El seguimiento se activara cuando emitas la factura.",
+      en: "Tracking will activate when you issue the invoice.",
+    }),
+    convertToInvoice: t({ es: "Convertir en factura", en: "Convert to invoice" }),
+    createAnother: t({ es: "Crear otra", en: "Create another" }),
+    createOther: t({ es: "Crear otro", en: "Create another" }),
+  };
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f7f4ee_0%,#edf3fb_42%,#eef2f7_100%)] text-slate-950">
@@ -88,14 +128,13 @@ export default function HistorialPage() {
           </span>
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
-              Historial
+              {copy.eyebrow}
             </p>
             <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
-              Documentos guardados
+              {copy.title}
             </h1>
             <p className="mt-3 max-w-xs text-[15px] leading-6 text-slate-500">
-              Revisa facturas y presupuestos recientes y retoma cualquier
-              presupuesto para convertirlo en factura.
+              {copy.description}
             </p>
           </div>
         </header>
@@ -103,18 +142,17 @@ export default function HistorialPage() {
         {documentos.length === 0 ? (
           <section className="mt-6 rounded-[34px] border border-white/70 bg-white/76 p-6 text-center shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
             <h2 className="text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
-              Aun no hay documentos
+              {copy.emptyTitle}
             </h2>
             <p className="mt-3 text-[15px] leading-6 text-slate-500">
-              Cuando descargues o envies una factura o un presupuesto, aparecera
-              aqui para que puedas consultarlo mas tarde.
+              {copy.emptyDescription}
             </p>
           </section>
         ) : (
           <section className="mt-6 space-y-4">
             {documentos.map((doc, index) => {
-              const typeLabel =
-                doc.tipo === "presupuesto" ? "Presupuesto" : "Factura";
+              const documentType = normalizeInvoiceDocumentType(doc.tipo);
+              const documentMeta = getInvoiceDocumentMeta(documentType, language);
               const displayNumber =
                 doc.numero || doc.id || `DOC-${String(index + 1).padStart(3, "0")}`;
 
@@ -126,7 +164,7 @@ export default function HistorialPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
-                        {typeLabel}
+                        {documentMeta.label}
                       </p>
                       <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
                         {displayNumber}
@@ -134,46 +172,52 @@ export default function HistorialPage() {
                     </div>
                     <span
                       className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                        doc.tipo === "presupuesto"
+                        documentType === "presupuesto"
                           ? "border border-[#e7c39a] bg-[#fff4e5] text-[#8a5a33]"
+                          : documentType === "proforma"
+                            ? "border border-sky-200 bg-sky-50 text-sky-700"
+                            : documentType === "albaran"
+                              ? "border border-teal-200 bg-teal-50 text-teal-700"
                           : "border border-emerald-200 bg-emerald-50 text-emerald-700"
                       }`}
                     >
-                      {doc.estado || "Guardado"}
+                      {doc.estado || copy.saved}
                     </span>
                   </div>
 
                   <div className="mt-5 grid gap-3 rounded-[24px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(247,245,240,0.92))] p-4 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)]">
                     <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="text-slate-500">Cliente</span>
+                      <span className="text-slate-500">{copy.client}</span>
                       <span className="max-w-[60%] truncate text-right font-semibold text-slate-950">
-                        {doc.cliente?.nombre || "Sin cliente"}
+                        {doc.cliente?.nombre || copy.noClient}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="text-slate-500">Fecha</span>
+                      <span className="text-slate-500">{copy.date}</span>
                       <span className="font-semibold text-slate-950">
-                        {doc.fecha || "Sin fecha"}
+                        {doc.fecha || copy.noDate}
                       </span>
                     </div>
-                    {doc.tipo === "factura" && doc.fechaVencimiento ? (
+                    {documentMeta.supportsSecondaryDate && doc.fechaVencimiento ? (
                       <div className="flex items-center justify-between gap-3 text-sm">
-                        <span className="text-slate-500">Vencimiento</span>
+                        <span className="text-slate-500">
+                          {documentMeta.secondaryDateLabel}
+                        </span>
                         <span className="font-semibold text-slate-950">
                           {doc.fechaVencimiento}
                         </span>
                       </div>
                     ) : null}
                     <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="text-slate-500">Total</span>
+                      <span className="text-slate-500">{copy.total}</span>
                       <span className="font-semibold text-slate-950">
-                        {money(doc.total)}
+                        {formatCurrencyByLanguage(language, Number(doc.total) || 0)}
                       </span>
                     </div>
-                    {doc.tipo === "factura" ? (
+                    {documentType === "factura" ? (
                       <div className="rounded-[18px] border border-slate-200/80 bg-slate-50/85 px-3 py-3">
                         <div className="flex items-center justify-between gap-3 text-sm">
-                          <span className="text-slate-500">VeriFactu</span>
+                          <span className="text-slate-500">{copy.verifactu}</span>
                           <span
                             className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                               doc.verifactu?.status === "prepared"
@@ -184,30 +228,30 @@ export default function HistorialPage() {
                             }`}
                           >
                             {doc.verifactu?.status === "prepared"
-                              ? "Preparado"
+                              ? copy.prepared
                               : doc.verifactu?.status === "error"
-                                ? "Pendiente"
-                                : "Sin preparar"}
+                                ? copy.pending
+                                : copy.notPrepared}
                           </span>
                         </div>
                         {doc.verifactu?.fingerprint ? (
                           <p className="mt-2 text-[12px] leading-5 text-slate-500">
-                            Esta factura ya tiene su seguimiento actualizado.
+                            {copy.verifactuUpdated}
                           </p>
                         ) : doc.verifactu?.lastError ? (
                           <p className="mt-2 text-[12px] leading-5 text-red-600">
-                            Hay una incidencia pendiente de revisar en esta factura.
+                            {copy.verifactuIssue}
                           </p>
                         ) : (
                           <p className="mt-2 text-[12px] leading-5 text-slate-500">
-                            El seguimiento se activara cuando emitas la factura.
+                            {copy.verifactuPendingActivation}
                           </p>
                         )}
                       </div>
                     ) : null}
                   </div>
 
-                  {doc.tipo === "presupuesto" ? (
+                  {documentMeta.canConvertToInvoice ? (
                     <button
                       type="button"
                       onClick={() => {
@@ -220,16 +264,19 @@ export default function HistorialPage() {
                       className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition hover:bg-slate-800"
                     >
                       <ReceiptText className="h-4 w-4" strokeWidth={2.2} />
-                      Convertir en factura
+                      {copy.convertToInvoice}
                     </button>
                   ) : (
                     <button
                       type="button"
-                      onClick={() => router.push("/crear-factura")}
+                      onClick={() =>
+                        router.push(`/crear-factura?tipo=${documentType}`)
+                      }
                       className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                     >
                       <FileText className="h-4 w-4" strokeWidth={2.2} />
-                      Crear otra factura
+                      {documentMeta.article === "la" ? copy.createAnother : copy.createOther}{" "}
+                      {documentMeta.label.toLowerCase()}
                       <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
                     </button>
                   )}

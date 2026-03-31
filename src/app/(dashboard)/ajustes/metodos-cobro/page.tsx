@@ -19,6 +19,7 @@ import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
 const PAYMENT_METHODS_STORAGE_KEY = "facturabill-payment-methods";
 
@@ -213,27 +214,61 @@ export default function MetodosCobroPage() {
   const { language } = useAppLanguage();
   const copy = dashboardCopy[language];
   const companyCopy = dashboardCopy[language].company;
+  const pageUi =
+    language === "es"
+      ? {
+          saved: "Metodos de cobro guardados",
+          saveError: "No se pudieron guardar los metodos de cobro",
+          backToSettings: "Volver a ajustes",
+          paymentBadge: "Cobro",
+          intro:
+            "Configura solo los medios de cobro que vas a usar y los datos que deben aparecer en tus facturas.",
+          savePaymentMethods: "Guardar metodos de cobro",
+          accountHolder: "Titular de la cuenta",
+          bankName: "Entidad bancaria",
+          paymentReference: "Referencia de pago",
+          sepaCreditorId: "Identificador acreedor SEPA",
+          cardGateway: "Pasarela de tarjeta",
+          bizumPhone: "Telefono Bizum",
+          paypalEmail: "Email PayPal",
+          paymentInstructions:
+            "Instrucciones de pago para mostrar al cliente en la factura.",
+        }
+      : {
+          saved: "Payment methods saved",
+          saveError: "Unable to save payment methods",
+          backToSettings: "Back to settings",
+          paymentBadge: "Payments",
+          intro:
+            "Configure only the payment methods you will use and the data that should appear on your invoices.",
+          savePaymentMethods: "Save payment methods",
+          accountHolder: "Account holder",
+          bankName: "Bank name",
+          paymentReference: "Payment reference",
+          sepaCreditorId: "SEPA creditor ID",
+          cardGateway: "Card gateway",
+          bizumPhone: "Bizum phone",
+          paypalEmail: "PayPal email",
+          paymentInstructions:
+            "Payment instructions to show the client on the invoice.",
+        };
   const [settings, setSettings] = useState<PaymentMethodSettings>(
     DEFAULT_PAYMENT_SETTINGS,
   );
   const [isReady, setIsReady] = useState(false);
 
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const stored = window.localStorage.getItem(PAYMENT_METHODS_STORAGE_KEY);
+  useClientLayoutEffect(() => {
+    const stored = window.localStorage.getItem(PAYMENT_METHODS_STORAGE_KEY);
 
-      if (stored) {
-        try {
-          setSettings(normalizePaymentSettings(JSON.parse(stored)));
-        } catch (error) {
-          console.error("Error loading payment methods", error);
-        }
+    if (stored) {
+      try {
+        setSettings(normalizePaymentSettings(JSON.parse(stored)));
+      } catch (error) {
+        console.error("Error loading payment methods", error);
       }
+    }
 
-      setIsReady(true);
-    });
-
-    return () => window.cancelAnimationFrame(frame);
+    setIsReady(true);
   }, []);
 
   function persistSettings(nextSettings: PaymentMethodSettings) {
@@ -263,10 +298,10 @@ export default function MetodosCobroPage() {
   function handleSave() {
     try {
       persistSettings(settings);
-      showNotice("Metodos de cobro guardados", "success");
+      showNotice(pageUi.saved, "success");
     } catch (error) {
       console.error("Error saving payment methods", error);
-      showNotice("No se pudieron guardar los metodos de cobro", "warning");
+      showNotice(pageUi.saveError, "warning");
     }
   }
 
@@ -325,14 +360,14 @@ export default function MetodosCobroPage() {
             <div className="flex items-center gap-3">
               <Link
                 href="/ajustes"
-                aria-label="Volver a ajustes"
+                aria-label={pageUi.backToSettings}
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/84 text-slate-700 shadow-[0_12px_26px_-22px_rgba(15,23,42,0.22)] backdrop-blur-xl transition hover:bg-white"
               >
                 <ArrowLeft className="h-[18px] w-[18px]" strokeWidth={2.4} />
               </Link>
 
               <div className="rounded-full border border-white/70 bg-white/82 px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] text-slate-500 shadow-[0_12px_26px_-22px_rgba(15,23,42,0.18)]">
-                Cobro
+                {pageUi.paymentBadge}
               </div>
             </div>
 
@@ -343,14 +378,13 @@ export default function MetodosCobroPage() {
               {copy.settings.paymentMethods}
             </h1>
             <p className="mt-3 max-w-xs text-[15px] leading-6 text-slate-500">
-              Configura solo los medios de cobro que vas a usar y los datos que
-              deben aparecer en tus facturas.
+              {pageUi.intro}
             </p>
           </div>
 
           <button
             type="button"
-            aria-label="Guardar metodos de cobro"
+            aria-label={pageUi.savePaymentMethods}
             onClick={handleSave}
             className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)] transition hover:bg-slate-800"
           >
@@ -457,7 +491,7 @@ export default function MetodosCobroPage() {
               {bankMethodsEnabled ? (
                 <div className="mt-6 space-y-3">
                   <input
-                    placeholder="Titular de la cuenta"
+                    placeholder={pageUi.accountHolder}
                     value={settings.accountHolder}
                     onChange={(event) =>
                       updateField("accountHolder", event.target.value)
@@ -465,7 +499,7 @@ export default function MetodosCobroPage() {
                     className="h-14 w-full rounded-[22px] border border-white/70 bg-white/80 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.4)]"
                   />
                   <input
-                    placeholder="Entidad bancaria"
+                    placeholder={pageUi.bankName}
                     value={settings.bankName}
                     onChange={(event) => updateField("bankName", event.target.value)}
                     className="h-14 w-full rounded-[22px] border border-white/70 bg-white/80 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.4)]"
@@ -485,7 +519,7 @@ export default function MetodosCobroPage() {
                     />
                   </div>
                   <input
-                    placeholder="Referencia de pago"
+                    placeholder={pageUi.paymentReference}
                     value={settings.paymentReference}
                     onChange={(event) =>
                       updateField("paymentReference", event.target.value)
@@ -494,7 +528,7 @@ export default function MetodosCobroPage() {
                   />
                   {settings.methods.sepaDebit ? (
                     <input
-                      placeholder="Identificador acreedor SEPA"
+                      placeholder={pageUi.sepaCreditorId}
                       value={settings.sepaCreditorId}
                       onChange={(event) =>
                         updateField("sepaCreditorId", event.target.value)
@@ -517,7 +551,7 @@ export default function MetodosCobroPage() {
                 <div className="mt-6 space-y-3">
                   {settings.methods.card ? (
                     <input
-                      placeholder="Pasarela de tarjeta"
+                      placeholder={pageUi.cardGateway}
                       value={settings.cardGateway}
                       onChange={(event) =>
                         updateField("cardGateway", event.target.value)
@@ -527,7 +561,7 @@ export default function MetodosCobroPage() {
                   ) : null}
                   {settings.methods.bizum ? (
                     <input
-                      placeholder="Telefono Bizum"
+                      placeholder={pageUi.bizumPhone}
                       value={settings.bizumPhone}
                       onChange={(event) =>
                         updateField("bizumPhone", event.target.value)
@@ -537,7 +571,7 @@ export default function MetodosCobroPage() {
                   ) : null}
                   {settings.methods.paypal ? (
                     <input
-                      placeholder="Email PayPal"
+                      placeholder={pageUi.paypalEmail}
                       value={settings.paypalEmail}
                       onChange={(event) =>
                         updateField("paypalEmail", event.target.value)
@@ -575,7 +609,7 @@ export default function MetodosCobroPage() {
                 </select>
 
                 <textarea
-                  placeholder="Instrucciones de pago para mostrar al cliente en la factura."
+                  placeholder={pageUi.paymentInstructions}
                   value={settings.paymentInstructions}
                   onChange={(event) =>
                     updateField("paymentInstructions", event.target.value)
@@ -608,13 +642,13 @@ export default function MetodosCobroPage() {
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition hover:bg-slate-800"
                 >
                   <CircleCheckBig className="h-4 w-4" strokeWidth={2.2} />
-                  Guardar metodos de cobro
+                  {pageUi.savePaymentMethods}
                 </button>
                 <Link
                   href="/ajustes"
                   className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
-                  Volver a ajustes
+                  {pageUi.backToSettings}
                 </Link>
               </div>
             </section>

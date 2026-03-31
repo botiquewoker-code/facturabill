@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Archive,
   BriefcaseBusiness,
@@ -33,15 +33,13 @@ import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import { getLanguageLocale } from "@/features/i18n/core";
+import { useAppI18n } from "@/features/i18n/runtime";
 import AppScreenLoader from "@/features/ui/AppScreenLoader";
+import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
 const inputClass =
   "h-14 w-full rounded-[22px] border border-white/70 bg-white/80 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.4)]";
-const documentOptions: Array<{ id: CatalogDocumentType; label: string }> = [
-  { id: "factura", label: "Facturas" },
-  { id: "presupuesto", label: "Presupuestos" },
-  { id: "albaran", label: "Albaranes" },
-];
 const unitOptions = ["ud", "hora", "dia", "mes", "kg", "m", "proyecto"];
 
 function getInitials(value: string) {
@@ -55,10 +53,11 @@ function getInitials(value: string) {
   return initials || "CT";
 }
 
-function getTypeCopy(type: CatalogItem["type"]) {
+function getTypeCopy(type: CatalogItem["type"], language: string) {
+  const isSpanish = language === "es";
   if (type === "producto") {
     return {
-      label: "Producto",
+      label: isSpanish ? "Producto" : "Product",
       Icon: Package,
       badgeClass: "border-[#edcfab] bg-[#fff5e9] text-[#8a5a33]",
       accentClass:
@@ -67,7 +66,7 @@ function getTypeCopy(type: CatalogItem["type"]) {
   }
 
   return {
-    label: "Servicio",
+    label: isSpanish ? "Servicio" : "Service",
     Icon: BriefcaseBusiness,
     badgeClass: "border-slate-200 bg-slate-100 text-slate-700",
     accentClass:
@@ -76,6 +75,15 @@ function getTypeCopy(type: CatalogItem["type"]) {
 }
 
 export default function CatalogoPage() {
+  const { language } = useAppI18n();
+  const isSpanish = language === "es";
+  const locale = getLanguageLocale(language);
+  const documentOptions: Array<{ id: CatalogDocumentType; label: string }> = [
+    { id: "factura", label: isSpanish ? "Facturas" : "Invoices" },
+    { id: "presupuesto", label: isSpanish ? "Presupuestos" : "Quotes" },
+    { id: "proforma", label: "Proformas" },
+    { id: "albaran", label: isSpanish ? "Albaranes" : "Delivery notes" },
+  ];
   const [isReady, setIsReady] = useState(false);
   const [hasRegisteredUser, setHasRegisteredUser] = useState(false);
   const [firstName, setFirstName] = useState("");
@@ -91,12 +99,126 @@ export default function CatalogoPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingItemId, setEditingItemId] = useState("");
   const [draft, setDraft] = useState<CatalogItemDraft>(createEmptyCatalogItemDraft);
+  const moneyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency: "EUR",
+      }),
+    [locale],
+  );
+  const copy = {
+    minOneDocument: isSpanish
+      ? "Selecciona al menos un tipo de documento para esta referencia."
+      : "Select at least one document type for this reference.",
+    missingName: isSpanish
+      ? "Anade un nombre para guardar esta referencia."
+      : "Add a name to save this reference.",
+    updated: isSpanish ? "Referencia actualizada" : "Reference updated",
+    created: isSpanish ? "Referencia creada" : "Reference created",
+    duplicated: isSpanish ? "Referencia duplicada" : "Reference duplicated",
+    archived: isSpanish ? "Referencia archivada" : "Reference archived",
+    reactivated: isSpanish ? "Referencia reactivada" : "Reference reactivated",
+    loaderEyebrow: isSpanish ? "Catalogo" : "Catalog",
+    loaderTitle: isSpanish ? "Productos y servicios" : "Products and services",
+    loaderDescription: isSpanish
+      ? "Estamos preparando tus referencias y preferencias guardadas."
+      : "We are preparing your saved references and preferences.",
+    catalog: isSpanish ? "Catalogo" : "Catalog",
+    reusableReferences: isSpanish ? "Referencias reutilizables" : "Reusable references",
+    reusableDescription: isSpanish
+      ? "Organiza productos y servicios para reutilizarlos en facturas, presupuestos, proformas y albaranes."
+      : "Organise products and services to reuse them in invoices, quotes, proformas, and delivery notes.",
+    activateProfessionalCatalog: isSpanish
+      ? "Activa tu catalogo profesional"
+      : "Activate your professional catalog",
+    advancedFeatureDescription: isSpanish
+      ? "El catalogo es una funcion avanzada. Crea tu cuenta o inicia sesion para guardar precios, categorias y referencias listas para usar en tus documentos."
+      : "The catalog is an advanced feature. Create an account or sign in to save prices, categories, and references ready to use in your documents.",
+    products: isSpanish ? "Productos" : "Products",
+    productsDescription: isSpanish
+      ? "Precio, unidad, impuesto y categoria."
+      : "Price, unit, tax, and category.",
+    services: isSpanish ? "Servicios" : "Services",
+    servicesDescription: isSpanish
+      ? "Conceptos reutilizables para cada documento comercial."
+      : "Reusable items for every commercial document.",
+    createAccount: isSpanish ? "Crear cuenta" : "Create account",
+    signIn: isSpanish ? "Iniciar sesion" : "Sign in",
+    yourCatalog: firstName
+      ? `${firstName}, ${isSpanish ? "tu catalogo" : "your catalog"}`
+      : isSpanish
+        ? "Catalogo"
+        : "Catalog",
+    title: isSpanish ? "Productos y servicios" : "Products and services",
+    titleDescription: isSpanish
+      ? "Centraliza referencias reutilizables para facturas, presupuestos, proformas y albaranes."
+      : "Centralise reusable references for invoices, quotes, proformas, and delivery notes.",
+    newReferenceAria: isSpanish ? "Nueva referencia" : "New reference",
+    refreshCatalogAria: isSpanish ? "Actualizar catalogo" : "Refresh catalog",
+    active: isSpanish ? "Activas" : "Active",
+    archivedLabel: isSpanish ? "Archivadas" : "Archived",
+    searchPlaceholder: isSpanish
+      ? "Buscar por nombre, codigo o categoria"
+      : "Search by name, code, or category",
+    all: isSpanish ? "Todo" : "All",
+    activePlural: isSpanish ? "Activos" : "Active",
+    archivedPlural: isSpanish ? "Archivados" : "Archived",
+    allStatuses: isSpanish ? "Todos" : "All",
+    category: isSpanish ? "Categoria" : "Category",
+    allCategories: isSpanish ? "Todas las categorias" : "All categories",
+    createFirstReference: isSpanish ? "Crea tu primera referencia" : "Create your first reference",
+    createFirstReferenceDescription: isSpanish
+      ? "Guarda productos o servicios para insertarlos despues en tus documentos."
+      : "Save products or services to insert them later into your documents.",
+    newReference: isSpanish ? "Nueva referencia" : "New reference",
+    noResults: isSpanish ? "No hay resultados con esos filtros" : "No results for those filters",
+    noResultsDescription: isSpanish
+      ? "Ajusta la busqueda o limpia los filtros para ver tus referencias."
+      : "Adjust the search or clear the filters to see your references.",
+    clearFilters: isSpanish ? "Limpiar filtros" : "Clear filters",
+    unnamedReference: isSpanish ? "Referencia sin nombre" : "Unnamed reference",
+    archivedStatus: isSpanish ? "Archivado" : "Archived",
+    activeStatus: isSpanish ? "Activo" : "Active",
+    noCategory: isSpanish ? "Sin categoria" : "No category",
+    code: isSpanish ? "Codigo" : "Code",
+    noCode: isSpanish ? "Sin codigo" : "No code",
+    internalNote: isSpanish ? "Nota interna" : "Internal note",
+    edit: isSpanish ? "Editar" : "Edit",
+    duplicate: isSpanish ? "Duplicar" : "Duplicate",
+    archive: isSpanish ? "Archivar" : "Archive",
+    activate: isSpanish ? "Activar" : "Activate",
+    close: isSpanish ? "Cerrar" : "Close",
+    editReference: isSpanish ? "Editar referencia" : "Edit reference",
+    defineBaseData: isSpanish
+      ? "Define los datos base para reutilizar esta referencia en tus documentos."
+      : "Define the base data to reuse this reference in your documents.",
+    product: isSpanish ? "Producto" : "Product",
+    service: isSpanish ? "Servicio" : "Service",
+    namePlaceholder: isSpanish ? "Nombre" : "Name",
+    descriptionPlaceholder: isSpanish
+      ? "Descripcion visible en el documento"
+      : "Description shown on the document",
+    skuPlaceholder: isSpanish ? "Codigo o SKU" : "Code or SKU",
+    categoryPlaceholder: isSpanish ? "Categoria" : "Category",
+    basePricePlaceholder: isSpanish ? "Precio base" : "Base price",
+    defaultVatPlaceholder: isSpanish ? "IVA por defecto" : "Default VAT",
+    availableFor: isSpanish ? "Disponible para" : "Available for",
+    internalNotesPlaceholder: isSpanish
+      ? "Notas internas para tu equipo"
+      : "Internal notes for your team",
+    vatShort: isSpanish ? "IVA" : "VAT",
+    copySuffix: isSpanish ? "copia" : "copy",
+    saveChanges: isSpanish ? "Guardar cambios" : "Save changes",
+    saveReference: isSpanish ? "Guardar referencia" : "Save reference",
+    cancel: isSpanish ? "Cancelar" : "Cancel",
+  };
 
   const refreshCatalog = () => {
     setItems(readCatalogItems());
   };
 
-  useEffect(() => {
+  useClientLayoutEffect(() => {
     const syncViewState = () => {
       const profile = readUserProfile();
       const name = getUserFirstName(profile);
@@ -106,14 +228,12 @@ export default function CatalogoPage() {
       refreshCatalog();
       setIsReady(true);
     };
-    const frame = window.requestAnimationFrame(() => {
-      syncViewState();
-    });
+
+    syncViewState();
 
     window.addEventListener("focus", syncViewState);
 
     return () => {
-      window.cancelAnimationFrame(frame);
       window.removeEventListener("focus", syncViewState);
     };
   }, []);
@@ -135,8 +255,8 @@ export default function CatalogoPage() {
             .map((item) => item.category.trim())
             .filter((item) => item.length > 0),
         ),
-      ).sort((left, right) => left.localeCompare(right, "es")),
-    [items],
+      ).sort((left, right) => left.localeCompare(right, locale)),
+    [items, locale],
   );
 
   const filteredItems = useMemo(() => {
@@ -217,9 +337,7 @@ export default function CatalogoPage() {
       const exists = current.supportedDocuments.includes(documentId);
 
       if (exists && current.supportedDocuments.length === 1) {
-        showWarningToast(
-          "Selecciona al menos un tipo de documento para esta referencia.",
-        );
+        showWarningToast(copy.minOneDocument);
         return current;
       }
 
@@ -234,7 +352,7 @@ export default function CatalogoPage() {
 
   const saveItem = () => {
     if (!draft.name.trim()) {
-      showWarningToast("Anade un nombre para guardar esta referencia.");
+      showWarningToast(copy.missingName);
       return;
     }
 
@@ -251,13 +369,15 @@ export default function CatalogoPage() {
     writeCatalogItems(nextItems);
     refreshCatalog();
     closeModal();
-    showSuccessToast(existingItem ? "Referencia actualizada" : "Referencia creada");
+    showSuccessToast(existingItem ? copy.updated : copy.created);
   };
 
   const duplicateItem = (item: CatalogItem) => {
     const duplicated = createCatalogItem({
       type: item.type,
-      name: item.name.trim() ? `${item.name} copia` : "Nueva referencia",
+      name: item.name.trim()
+        ? `${item.name} ${copy.copySuffix}`
+        : copy.newReference,
       description: item.description,
       sku: "",
       category: item.category,
@@ -270,7 +390,7 @@ export default function CatalogoPage() {
 
     writeCatalogItems([duplicated, ...items]);
     refreshCatalog();
-    showSuccessToast("Referencia duplicada");
+    showSuccessToast(copy.duplicated);
   };
 
   const toggleArchive = (item: CatalogItem) => {
@@ -285,9 +405,7 @@ export default function CatalogoPage() {
     );
     refreshCatalog();
     showSuccessToast(
-      nextStatus === "archived"
-        ? "Referencia archivada"
-        : "Referencia reactivada",
+      nextStatus === "archived" ? copy.archived : copy.reactivated,
     );
   };
 
@@ -301,9 +419,9 @@ export default function CatalogoPage() {
   if (!isReady) {
     return (
       <AppScreenLoader
-        eyebrow="Catalogo"
-        title="Productos y servicios"
-        description="Estamos preparando tus referencias y preferencias guardadas."
+        eyebrow={copy.loaderEyebrow}
+        title={copy.loaderTitle}
+        description={copy.loaderDescription}
       />
     );
   }
@@ -322,14 +440,13 @@ export default function CatalogoPage() {
             <header className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
-                  Catalogo
+                  {copy.catalog}
                 </p>
                 <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
-                  Referencias reutilizables
+                  {copy.reusableReferences}
                 </h1>
                 <p className="mt-3 max-w-xs text-[15px] leading-6 text-slate-500">
-                  Organiza productos y servicios para reutilizarlos en
-                  facturas, presupuestos y albaranes.
+                  {copy.reusableDescription}
                 </p>
               </div>
 
@@ -343,12 +460,10 @@ export default function CatalogoPage() {
                 <ShieldCheck className="h-6 w-6" strokeWidth={2.1} />
               </div>
               <h2 className="mt-5 text-[1.55rem] font-semibold tracking-[-0.04em] text-slate-950">
-                Activa tu catalogo profesional
+                {copy.activateProfessionalCatalog}
               </h2>
               <p className="mt-3 text-[15px] leading-6 text-slate-500">
-                El catalogo es una funcion avanzada. Crea tu cuenta o inicia
-                sesion para guardar precios, categorias y referencias listas
-                para usar en tus documentos.
+                {copy.advancedFeatureDescription}
               </p>
 
               <div className="mt-6 grid gap-3">
@@ -359,10 +474,10 @@ export default function CatalogoPage() {
                     </span>
                     <div>
                       <p className="text-sm font-semibold text-slate-950">
-                        Productos
+                        {copy.products}
                       </p>
                       <p className="text-sm leading-6 text-slate-500">
-                        Precio, unidad, impuesto y categoria.
+                        {copy.productsDescription}
                       </p>
                     </div>
                   </div>
@@ -375,10 +490,10 @@ export default function CatalogoPage() {
                     </span>
                     <div>
                       <p className="text-sm font-semibold text-slate-950">
-                        Servicios
+                        {copy.services}
                       </p>
                       <p className="text-sm leading-6 text-slate-500">
-                        Conceptos reutilizables para cada presupuesto.
+                        {copy.servicesDescription}
                       </p>
                     </div>
                   </div>
@@ -390,13 +505,13 @@ export default function CatalogoPage() {
                   href="/registro"
                   className="inline-flex min-h-12 items-center justify-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
                 >
-                  Crear cuenta
+                  {copy.createAccount}
                 </Link>
                 <Link
                   href="/login"
                   className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
-                  Iniciar sesion
+                  {copy.signIn}
                 </Link>
               </div>
             </section>
@@ -406,21 +521,20 @@ export default function CatalogoPage() {
             <header className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
-                  {firstName ? `${firstName}, tu catalogo` : "Catalogo"}
+                  {copy.yourCatalog}
                 </p>
                 <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
-                  Productos y servicios
+                  {copy.title}
                 </h1>
                 <p className="mt-3 max-w-xs text-[15px] leading-6 text-slate-500">
-                  Centraliza referencias reutilizables para facturas,
-                  presupuestos y albaranes.
+                  {copy.titleDescription}
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  aria-label="Nueva referencia"
+                  aria-label={copy.newReferenceAria}
                   onClick={openCreateModal}
                   className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white transition hover:bg-slate-800"
                 >
@@ -428,7 +542,7 @@ export default function CatalogoPage() {
                 </button>
                 <button
                   type="button"
-                  aria-label="Actualizar catalogo"
+                  aria-label={copy.refreshCatalogAria}
                   onClick={refreshCatalog}
                   className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/70 text-slate-700 transition hover:bg-white"
                 >
@@ -439,14 +553,18 @@ export default function CatalogoPage() {
 
             <section className="mt-6 grid grid-cols-2 gap-3">
               {[
-                { label: "Activas", value: summary.active, Icon: ShieldCheck },
-                { label: "Productos", value: summary.products, Icon: Package },
+                { label: copy.active, value: summary.active, Icon: ShieldCheck },
+                { label: copy.products, value: summary.products, Icon: Package },
                 {
-                  label: "Servicios",
+                  label: copy.services,
                   value: summary.services,
                   Icon: BriefcaseBusiness,
                 },
-                { label: "Archivadas", value: summary.archived, Icon: Archive },
+                {
+                  label: copy.archivedLabel,
+                  value: summary.archived,
+                  Icon: Archive,
+                },
               ].map(({ label, value, Icon }) => (
                 <div
                   key={label}
@@ -472,16 +590,16 @@ export default function CatalogoPage() {
                   type="search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Buscar por nombre, codigo o categoria"
+                  placeholder={copy.searchPlaceholder}
                   className="h-11 w-full border-0 bg-transparent text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400"
                 />
               </label>
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {[
-                  { id: "all", label: "Todo" },
-                  { id: "producto", label: "Productos" },
-                  { id: "servicio", label: "Servicios" },
+                  { id: "all", label: copy.all },
+                  { id: "producto", label: copy.products },
+                  { id: "servicio", label: copy.services },
                 ].map((option) => (
                   <button
                     key={option.id}
@@ -502,9 +620,9 @@ export default function CatalogoPage() {
 
               <div className="mt-3 flex flex-wrap gap-2">
                 {[
-                  { id: "active", label: "Activos" },
-                  { id: "archived", label: "Archivados" },
-                  { id: "all", label: "Todos" },
+                  { id: "active", label: copy.activePlural },
+                  { id: "archived", label: copy.archivedPlural },
+                  { id: "all", label: copy.allStatuses },
                 ].map((option) => (
                   <button
                     key={option.id}
@@ -526,14 +644,14 @@ export default function CatalogoPage() {
               <label className="mt-4 block">
                 <span className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-500">
                   <Tags className="h-4 w-4" strokeWidth={2.1} />
-                  Categoria
+                  {copy.category}
                 </span>
                 <select
                   value={categoryFilter}
                   onChange={(event) => setCategoryFilter(event.target.value)}
                   className={inputClass}
                 >
-                  <option value="all">Todas las categorias</option>
+                  <option value="all">{copy.allCategories}</option>
                   {categories.map((category) => (
                     <option key={category} value={category}>
                       {category}
@@ -550,11 +668,10 @@ export default function CatalogoPage() {
                     <ReceiptText className="h-9 w-9" strokeWidth={1.9} />
                   </div>
                   <h2 className="text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
-                    Crea tu primera referencia
+                    {copy.createFirstReference}
                   </h2>
                   <p className="mt-3 text-[15px] leading-6 text-slate-500">
-                    Guarda productos o servicios para insertarlos despues en tus
-                    documentos.
+                    {copy.createFirstReferenceDescription}
                   </p>
                   <button
                     type="button"
@@ -562,7 +679,7 @@ export default function CatalogoPage() {
                     className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
                   >
                     <CirclePlus className="h-4 w-4" strokeWidth={2.2} />
-                    Nueva referencia
+                    {copy.newReference}
                   </button>
                 </div>
               ) : filteredItems.length === 0 ? (
@@ -571,23 +688,22 @@ export default function CatalogoPage() {
                     <Search className="h-7 w-7" strokeWidth={2} />
                   </div>
                   <h2 className="mt-5 text-[1.3rem] font-semibold tracking-[-0.04em] text-slate-950">
-                    No hay resultados con esos filtros
+                    {copy.noResults}
                   </h2>
                   <p className="mt-3 text-[15px] leading-6 text-slate-500">
-                    Ajusta la busqueda o limpia los filtros para ver tus
-                    referencias.
+                    {copy.noResultsDescription}
                   </p>
                   <button
                     type="button"
                     onClick={resetFilters}
                     className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                   >
-                    Limpiar filtros
+                    {copy.clearFilters}
                   </button>
                 </div>
               ) : (
                 filteredItems.map((item) => {
-                  const typeCopy = getTypeCopy(item.type);
+                  const typeCopy = getTypeCopy(item.type, language);
                   const TypeIcon = typeCopy.Icon;
 
                   return (
@@ -605,7 +721,7 @@ export default function CatalogoPage() {
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <h2 className="truncate text-[1.15rem] font-semibold tracking-[-0.03em] text-slate-950">
-                              {item.name || "Referencia sin nombre"}
+                              {item.name || copy.unnamedReference}
                             </h2>
                             <span
                               className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${typeCopy.badgeClass}`}
@@ -614,19 +730,18 @@ export default function CatalogoPage() {
                               {typeCopy.label}
                             </span>
                             <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
-                              {item.status === "archived" ? "Archivado" : "Activo"}
+                              {item.status === "archived"
+                                ? copy.archivedStatus
+                                : copy.activeStatus}
                             </span>
                           </div>
 
                           <div className="mt-3 flex flex-wrap items-center gap-2">
                             <span className="rounded-full bg-slate-950 px-3 py-1.5 text-sm font-semibold text-white">
-                              {new Intl.NumberFormat("es-ES", {
-                                style: "currency",
-                                currency: "EUR",
-                              }).format(item.basePrice)}
+                              {moneyFormatter.format(item.basePrice)}
                             </span>
                             <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600">
-                              IVA {item.taxRate}%
+                              {copy.vatShort} {item.taxRate}%
                             </span>
                             <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600">
                               {item.unit}
@@ -644,18 +759,18 @@ export default function CatalogoPage() {
                       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                         <div className="rounded-[22px] bg-[#f7f6f3] px-4 py-3">
                           <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                            Categoria
+                            {copy.category}
                           </p>
                           <p className="mt-1 font-semibold text-slate-700">
-                            {item.category || "Sin categoria"}
+                            {item.category || copy.noCategory}
                           </p>
                         </div>
                         <div className="rounded-[22px] bg-[#f7f6f3] px-4 py-3">
                           <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                            Codigo
+                            {copy.code}
                           </p>
                           <p className="mt-1 font-semibold text-slate-700">
-                            {item.sku || "Sin codigo"}
+                            {item.sku || copy.noCode}
                           </p>
                         </div>
                       </div>
@@ -678,7 +793,7 @@ export default function CatalogoPage() {
                       {item.internalNotes ? (
                         <div className="mt-4 rounded-[22px] border border-dashed border-slate-200 bg-slate-50/85 px-4 py-3">
                           <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                            Nota interna
+                            {copy.internalNote}
                           </p>
                           <p className="mt-1 text-sm leading-6 text-slate-500">
                             {item.internalNotes}
@@ -693,7 +808,7 @@ export default function CatalogoPage() {
                           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                         >
                           <PenSquare className="h-4 w-4" strokeWidth={2.1} />
-                          Editar
+                          {copy.edit}
                         </button>
                         <button
                           type="button"
@@ -701,7 +816,7 @@ export default function CatalogoPage() {
                           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                         >
                           <Copy className="h-4 w-4" strokeWidth={2.1} />
-                          Duplicar
+                          {copy.duplicate}
                         </button>
                         <button
                           type="button"
@@ -709,7 +824,9 @@ export default function CatalogoPage() {
                           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                         >
                           <Archive className="h-4 w-4" strokeWidth={2.1} />
-                          {item.status === "archived" ? "Activar" : "Archivar"}
+                          {item.status === "archived"
+                            ? copy.activate
+                            : copy.archive}
                         </button>
                       </div>
                     </article>
@@ -727,7 +844,7 @@ export default function CatalogoPage() {
           <div className="relative w-full max-w-[430px] max-h-[calc(100dvh-1.5rem)] overflow-y-auto rounded-[34px] border border-white/70 bg-[#f8f6f1] p-6 shadow-[0_36px_80px_-42px_rgba(15,23,42,0.6)]">
             <button
               type="button"
-              aria-label="Cerrar"
+              aria-label={copy.close}
               onClick={closeModal}
               className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:text-slate-700"
             >
@@ -736,21 +853,20 @@ export default function CatalogoPage() {
 
             <div className="pr-12">
               <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
-                Catalogo
+                {copy.catalog}
               </p>
               <h2 className="mt-2 text-[1.55rem] font-semibold tracking-[-0.04em] text-slate-950">
-                {editingItemId ? "Editar referencia" : "Nueva referencia"}
+                {editingItemId ? copy.editReference : copy.newReference}
               </h2>
               <p className="mt-3 text-[15px] leading-6 text-slate-500">
-                Define los datos base para reutilizar esta referencia en tus
-                documentos.
+                {copy.defineBaseData}
               </p>
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-3">
               {[
-                { id: "producto", label: "Producto", Icon: Package },
-                { id: "servicio", label: "Servicio", Icon: BriefcaseBusiness },
+                { id: "producto", label: copy.product, Icon: Package },
+                { id: "servicio", label: copy.service, Icon: BriefcaseBusiness },
               ].map(({ id, label, Icon }) => (
                 <button
                   key={id}
@@ -772,14 +888,14 @@ export default function CatalogoPage() {
 
             <div className="mt-6 space-y-3">
               <input
-                placeholder="Nombre"
+                placeholder={copy.namePlaceholder}
                 value={draft.name}
                 onChange={(event) => updateDraftField("name", event.target.value)}
                 className={inputClass}
               />
               <textarea
                 rows={3}
-                placeholder="Descripcion visible en el documento"
+                placeholder={copy.descriptionPlaceholder}
                 value={draft.description}
                 onChange={(event) =>
                   updateDraftField("description", event.target.value)
@@ -788,7 +904,7 @@ export default function CatalogoPage() {
               />
               <div className="grid grid-cols-2 gap-3">
                 <input
-                  placeholder="Codigo o SKU"
+                  placeholder={copy.skuPlaceholder}
                   value={draft.sku}
                   onChange={(event) =>
                     updateDraftField("sku", event.target.value)
@@ -796,7 +912,7 @@ export default function CatalogoPage() {
                   className={inputClass}
                 />
                 <input
-                  placeholder="Categoria"
+                  placeholder={copy.categoryPlaceholder}
                   value={draft.category}
                   onChange={(event) =>
                     updateDraftField("category", event.target.value)
@@ -827,7 +943,7 @@ export default function CatalogoPage() {
                       Math.max(0, Number(event.target.value) || 0),
                     )
                   }
-                  placeholder="Precio base"
+                  placeholder={copy.basePricePlaceholder}
                   className={inputClass}
                 />
               </div>
@@ -842,14 +958,14 @@ export default function CatalogoPage() {
                     Math.max(0, Number(event.target.value) || 0),
                   )
                 }
-                placeholder="IVA por defecto"
+                placeholder={copy.defaultVatPlaceholder}
                 className={inputClass}
               />
             </div>
 
             <div className="mt-6">
               <p className="text-sm font-medium text-slate-600">
-                Disponible para
+                {copy.availableFor}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {documentOptions.map((option) => {
@@ -875,7 +991,7 @@ export default function CatalogoPage() {
 
             <textarea
               rows={3}
-              placeholder="Notas internas para tu equipo"
+              placeholder={copy.internalNotesPlaceholder}
               value={draft.internalNotes}
               onChange={(event) =>
                 updateDraftField("internalNotes", event.target.value)
@@ -889,14 +1005,14 @@ export default function CatalogoPage() {
                 onClick={saveItem}
                 className="inline-flex min-h-12 items-center justify-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
               >
-                {editingItemId ? "Guardar cambios" : "Guardar referencia"}
+                {editingItemId ? copy.saveChanges : copy.saveReference}
               </button>
               <button
                 type="button"
                 onClick={closeModal}
                 className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
-                Cancelar
+                {copy.cancel}
               </button>
             </div>
           </div>

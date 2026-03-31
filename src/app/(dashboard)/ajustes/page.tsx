@@ -46,6 +46,8 @@ const EXPORTABLE_STORAGE_KEYS = [
   "plantillaElegida",
   "ultimoNumeroFactura",
   "ultimoNumeroPresupuesto",
+  "ultimoNumeroProforma",
+  "ultimoNumeroAlbaran",
 ] as const;
 
 type AccountActionsCopy = {

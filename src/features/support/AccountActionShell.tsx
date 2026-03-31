@@ -9,6 +9,7 @@ type AccountActionShellProps = {
   icon: LucideIcon;
   children: React.ReactNode;
   backHref?: string;
+  backLabel?: string;
 };
 
 export function AccountActionShell({
@@ -19,6 +20,7 @@ export function AccountActionShell({
   icon: Icon,
   children,
   backHref = "/ajustes",
+  backLabel = "Back",
 }: AccountActionShellProps) {
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f7f4ee_0%,#edf3fb_42%,#eef2f7_100%)] text-slate-950">
@@ -33,7 +35,7 @@ export function AccountActionShell({
         <header className="flex items-center justify-between gap-4">
           <Link
             href={backHref}
-            aria-label="Back"
+            aria-label={backLabel}
             className="flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/84 text-slate-700 shadow-[0_12px_26px_-22px_rgba(15,23,42,0.22)] backdrop-blur-xl transition hover:bg-white"
           >
             <ArrowLeft className="h-[18px] w-[18px]" strokeWidth={2.4} />

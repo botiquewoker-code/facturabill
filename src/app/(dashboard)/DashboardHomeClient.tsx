@@ -8,15 +8,12 @@ import {
   Bell,
   ChartColumn,
   FileText,
-  House,
-  Package,
   Plus,
   ReceiptText,
   Search,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
-  UserRound,
   UsersRound,
   X,
   type LucideIcon,
@@ -26,6 +23,7 @@ import {
   type ClientRecord,
 } from "@/features/clients/storage";
 import {
+  DRAFTS_UPDATED_EVENT,
   readDrafts,
   writeActiveDraft,
 } from "@/features/drafts/storage";
@@ -43,13 +41,19 @@ import {
   readUserProfile,
   type UserProfile,
 } from "@/features/account/profile";
+import {
+  getInvoiceDocumentMeta,
+  normalizeInvoiceDocumentType,
+  type InvoiceDocumentType,
+} from "@/features/invoices/document-types";
 import { readVerifactuRecords } from "@/features/verifactu/storage";
 import type { VerifactuRecord } from "@/features/verifactu/types";
 import AppScreenLoader from "@/features/ui/AppScreenLoader";
+import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
 type DraftItem = {
   id: string;
-  tipo?: "factura" | "presupuesto";
+  tipo?: InvoiceDocumentType;
   numero?: string;
   updatedAt?: string;
   cliente?: {
@@ -62,7 +66,7 @@ type DraftItem = {
 type HistoryItem = {
   id?: string;
   numero?: string;
-  tipo?: "factura" | "presupuesto";
+  tipo?: InvoiceDocumentType;
   fecha?: string;
   fechaVencimiento?: string;
   total?: number;
@@ -107,6 +111,7 @@ type InsightMetric = {
 };
 
 type InsightHighlight = {
+  key: string;
   title: string;
   subtitle: string;
 };
@@ -269,6 +274,53 @@ function safeReadArray<T>(key: string): T[] {
   }
 }
 
+function getLocalizedDocumentLabel(
+  type: InvoiceDocumentType | undefined,
+  language: AppLanguage,
+) {
+  const documentType = normalizeInvoiceDocumentType(type);
+
+  switch (language) {
+    case "en":
+      return {
+        factura: "Invoice",
+        presupuesto: "Quote",
+        proforma: "Proforma",
+        albaran: "Delivery note",
+      }[documentType];
+    case "fr":
+      return {
+        factura: "Facture",
+        presupuesto: "Devis",
+        proforma: "Pro forma",
+        albaran: "Bon de livraison",
+      }[documentType];
+    case "it":
+      return {
+        factura: "Fattura",
+        presupuesto: "Preventivo",
+        proforma: "Proforma",
+        albaran: "DDT",
+      }[documentType];
+    case "nl":
+      return {
+        factura: "Factuur",
+        presupuesto: "Offerte",
+        proforma: "Proforma",
+        albaran: "Pakbon",
+      }[documentType];
+    case "pt":
+      return {
+        factura: "Fatura",
+        presupuesto: "Orcamento",
+        proforma: "Proforma",
+        albaran: "Guia de remessa",
+      }[documentType];
+    default:
+      return getInvoiceDocumentMeta(documentType).label;
+  }
+}
+
 function normalizeSearchValue(value: string): string {
   return value
     .normalize("NFD")
@@ -402,15 +454,6 @@ export default function DashboardHomeClient({
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const firstName = getUserFirstName(userProfile);
   const hasRegisteredUser = firstName.length > 0;
-  const catalogLabel = language === "es" ? "Catalogo" : "Catalog";
-
-  const navItems = [
-    { label: copy.nav.home, icon: House, active: true },
-    { label: catalogLabel, icon: Package, active: false, href: "/catalogo" },
-    { label: copy.nav.clients, icon: UsersRound, active: false, href: "/clientes" },
-    { label: copy.nav.reports, icon: ChartColumn, active: false, href: "/informes" },
-    { label: copy.nav.profile, icon: UserRound, active: false, href: "/ajustes" },
-  ];
   const normalizedQuery = normalizeSearchValue(search);
   const filterUi =
     language === "es"
@@ -526,7 +569,7 @@ export default function DashboardHomeClient({
           loginAction: "Sign in",
         };
 
-  useEffect(() => {
+  useClientLayoutEffect(() => {
     const hydrateDashboardData = () => {
       const savedHomeVisibility = readStoredHomeVisibility();
 
@@ -541,10 +584,16 @@ export default function DashboardHomeClient({
     };
 
     hydrateDashboardData();
+    window.addEventListener("pageshow", hydrateDashboardData);
+    document.addEventListener("visibilitychange", hydrateDashboardData);
     window.addEventListener("focus", hydrateDashboardData);
+    window.addEventListener(DRAFTS_UPDATED_EVENT, hydrateDashboardData);
 
     return () => {
+      window.removeEventListener("pageshow", hydrateDashboardData);
+      document.removeEventListener("visibilitychange", hydrateDashboardData);
       window.removeEventListener("focus", hydrateDashboardData);
+      window.removeEventListener(DRAFTS_UPDATED_EVENT, hydrateDashboardData);
     };
   }, []);
 
@@ -640,6 +689,16 @@ export default function DashboardHomeClient({
   const noDocumentsLabel =
     language === "es" ? "Sin documentos" : "No documents";
   const noDraftsLabel = language === "es" ? "Sin borradores" : "No drafts";
+  const recentPrimaryDrafts = useMemo(
+    () =>
+      borradores
+        .filter((item) => {
+          const documentType = normalizeInvoiceDocumentType(item.tipo);
+          return documentType === "factura" || documentType === "presupuesto";
+        })
+        .slice(0, 3),
+    [borradores],
+  );
 
   const insightCards = useMemo<InsightCard[]>(() => {
     const now = new Date();
@@ -650,10 +709,12 @@ export default function DashboardHomeClient({
     );
     const monthLabel = now.toLocaleDateString(language, { month: "long" });
     const padCount = (value: number) => String(value).padStart(2, "0");
-    const invoices = historial.filter((item) => item.tipo !== "presupuesto");
-    const budgets = historial.filter((item) => item.tipo === "presupuesto");
-    const budgetDrafts = borradores.filter(
-      (item) => item.tipo === "presupuesto",
+    const invoices = historial.filter((item) => item.tipo === "factura");
+    const proposals = historial.filter(
+      (item) => item.tipo === "presupuesto" || item.tipo === "proforma",
+    );
+    const proposalDrafts = borradores.filter(
+      (item) => item.tipo === "presupuesto" || item.tipo === "proforma",
     ).length;
     const invoicesThisMonth = invoices.filter((item) => {
       const parsed = parseStoredDate(item.fecha);
@@ -707,7 +768,7 @@ export default function DashboardHomeClient({
       (sum, item) => sum + Number(item.total || 0),
       0,
     );
-    const oldestBudget = [...budgets].sort((a, b) => {
+    const oldestBudget = [...proposals].sort((a, b) => {
       const aTime = parseStoredDate(a.fecha)?.getTime() ?? Number.POSITIVE_INFINITY;
       const bTime = parseStoredDate(b.fecha)?.getTime() ?? Number.POSITIVE_INFINITY;
 
@@ -739,10 +800,14 @@ export default function DashboardHomeClient({
       clientes,
       nextDueInvoice?.cliente || pendingInvoices[0]?.cliente,
     );
-    const buildHistoryHighlight = (item: HistoryItem): InsightHighlight => ({
+    const buildHistoryHighlight = (
+      item: HistoryItem,
+      index: number,
+    ): InsightHighlight => ({
+      key: `history-${item.id || item.numero || "item"}-${item.fecha || "no-date"}-${index}`,
       title: item.numero || item.id || labels.untitledDocument,
       subtitle: [
-        item.tipo === "presupuesto" ? labels.budget : labels.invoice,
+        getLocalizedDocumentLabel(item.tipo, language),
         item.cliente?.nombre || noClientLabel,
         item.total ? formatCurrency(Number(item.total), language) : "",
         formatShortDate(item.fecha, language, noDateLabel),
@@ -750,17 +815,25 @@ export default function DashboardHomeClient({
         .filter(Boolean)
         .join(" / "),
     });
-    const buildDraftHighlight = (item: DraftItem): InsightHighlight => ({
+    const buildDraftHighlight = (
+      item: DraftItem,
+      index: number,
+    ): InsightHighlight => ({
+      key: `draft-${item.id || item.numero || "item"}-${item.updatedAt || "no-date"}-${index}`,
       title: item.numero || item.id || labels.untitledDraft,
       subtitle: [
-        item.tipo === "presupuesto" ? labels.budget : labels.invoice,
+        getLocalizedDocumentLabel(item.tipo, language),
         item.cliente?.nombre || noClientLabel,
         formatShortDate(item.updatedAt, language, noDateLabel),
       ]
         .filter(Boolean)
         .join(" / "),
     });
-    const buildClientHighlight = (item: ClientRecord): InsightHighlight => ({
+    const buildClientHighlight = (
+      item: ClientRecord,
+      index: number,
+    ): InsightHighlight => ({
+      key: `client-${item.id || item.nombre || "item"}-${item.updatedAt || "no-date"}-${index}`,
       title: item.nombre || labels.untitledClient,
       subtitle: [
         item.nif || "",
@@ -770,7 +843,11 @@ export default function DashboardHomeClient({
         .filter(Boolean)
         .join(" / "),
     });
-    const buildVerifactuHighlight = (item: VerifactuRecord): InsightHighlight => ({
+    const buildVerifactuHighlight = (
+      item: VerifactuRecord,
+      index: number,
+    ): InsightHighlight => ({
+      key: `verifactu-${item.id || item.invoiceNumber || "item"}-${item.generatedAt || "no-date"}-${index}`,
       title: item.invoiceNumber || noDocumentsLabel,
       subtitle: [
         item.status === "prepared"
@@ -786,7 +863,7 @@ export default function DashboardHomeClient({
                 ? "Aceptado"
                 : "Accepted"
               : item.status === "queued"
-              ? language === "es"
+                ? language === "es"
                   ? "En proceso"
                   : "In progress"
                 : item.status === "sent"
@@ -850,7 +927,9 @@ export default function DashboardHomeClient({
               noDocumentsLabel,
           },
         ],
-        highlights: invoicesThisMonth.slice(0, 4).map(buildHistoryHighlight),
+        highlights: invoicesThisMonth
+          .slice(0, 4)
+          .map((item, index) => buildHistoryHighlight(item, index)),
       },
       {
         id: "pending",
@@ -913,18 +992,20 @@ export default function DashboardHomeClient({
               noDocumentsLabel,
           },
         ],
-        highlights: pendingSorted.slice(0, 4).map(buildHistoryHighlight),
+        highlights: pendingSorted
+          .slice(0, 4)
+          .map((item, index) => buildHistoryHighlight(item, index)),
       },
       {
         id: "alerts",
         eyebrow: language === "es" ? "Seguimiento" : "Follow-up",
-        title: language === "es" ? "Presupuestos" : "Quotes",
-        value: padCount(budgets.length),
+        title: language === "es" ? "Propuestas" : "Proposals",
+        value: padCount(proposals.length),
         caption:
-          budgets.length > 0
+          proposals.length > 0
             ? language === "es"
-              ? `${padCount(budgets.length)} presupuestos por convertir`
-              : `${padCount(budgets.length)} quotes ready to convert`
+              ? `${padCount(proposals.length)} documentos por convertir`
+              : `${padCount(proposals.length)} documents ready to convert`
             : overdueInvoices.length > 0
               ? language === "es"
                 ? `${formatCurrency(overdueTotal, language)} fuera de plazo`
@@ -934,39 +1015,39 @@ export default function DashboardHomeClient({
                 : "All clear",
         description:
           language === "es"
-            ? "Seguimiento de presupuestos abiertos y documentos que conviene mover al siguiente paso."
-            : "Track open quotes and documents that should move to the next step.",
+            ? "Seguimiento de presupuestos, proformas y documentos que conviene mover al siguiente paso."
+            : "Track quotes, proformas, and documents that should move to the next step.",
         actionLabel:
           oldestBudget
             ? language === "es"
-              ? "Convertir presupuesto"
-              : "Convert quote"
+              ? "Convertir documento"
+              : "Convert document"
             : overdueInvoices.length > 0
               ? language === "es"
                 ? "Revisar vencidas"
                 : "Review overdue"
               : language === "es"
-                ? "Crear presupuesto"
-                : "Create quote",
+                ? "Crear propuesta"
+                : "Create proposal",
         href: oldestBudget
           ? "/crear-factura"
           : overdueInvoices.length > 0
             ? "/historial"
-            : "/crear-factura?tipo=presupuesto",
+            : "/crear-factura?tipo=proforma",
         icon: Bell,
         accentClassName: "bg-rose-100 text-rose-700",
         action: oldestBudget
           ? {
               type: "convert-budget",
               budget: oldestBudget,
-              fallbackHref: "/crear-factura?tipo=presupuesto",
+              fallbackHref: "/crear-factura?tipo=proforma",
             }
           : {
               type: "route",
               href:
                 overdueInvoices.length > 0
                   ? "/historial"
-                  : "/crear-factura?tipo=presupuesto",
+                  : "/crear-factura?tipo=proforma",
             },
         metrics: [
           {
@@ -978,18 +1059,22 @@ export default function DashboardHomeClient({
             value: formatCurrency(overdueTotal, language),
           },
           {
-            label: language === "es" ? "Presupuestos abiertos" : "Open quotes",
-            value: padCount(budgets.length),
+            label: language === "es" ? "Propuestas abiertas" : "Open proposals",
+            value: padCount(proposals.length),
           },
           {
-            label: language === "es" ? "Mas antiguo" : "Oldest open quote",
+            label: language === "es" ? "Mas antigua" : "Oldest open proposal",
             value: oldestBudget?.numero || oldestBudget?.id || noDocumentsLabel,
           },
         ],
         highlights:
           overdueInvoices.length > 0
-            ? overdueInvoices.slice(0, 4).map(buildHistoryHighlight)
-            : budgets.slice(0, 4).map(buildHistoryHighlight),
+            ? overdueInvoices
+                .slice(0, 4)
+                .map((item, index) => buildHistoryHighlight(item, index))
+            : proposals
+                .slice(0, 4)
+                .map((item, index) => buildHistoryHighlight(item, index)),
       },
       {
         id: "clients",
@@ -1042,7 +1127,9 @@ export default function DashboardHomeClient({
             value: latestClient?.nombre || labels.untitledClient,
           },
         ],
-        highlights: sortedClients.slice(0, 4).map(buildClientHighlight),
+        highlights: sortedClients
+          .slice(0, 4)
+          .map((item, index) => buildClientHighlight(item, index)),
       },
       {
         id: "drafts",
@@ -1089,8 +1176,9 @@ export default function DashboardHomeClient({
             value: padCount(borradores.length),
           },
           {
-            label: language === "es" ? "Borradores presupuesto" : "Quote drafts",
-            value: padCount(budgetDrafts),
+            label:
+              language === "es" ? "Borradores propuesta" : "Proposal drafts",
+            value: padCount(proposalDrafts),
           },
           {
             label: language === "es" ? "Ultimo borrador" : "Latest draft",
@@ -1102,7 +1190,9 @@ export default function DashboardHomeClient({
             value: formatShortDate(latestDraft?.updatedAt, language, noDateLabel),
           },
         ],
-        highlights: borradores.slice(0, 4).map(buildDraftHighlight),
+        highlights: borradores
+          .slice(0, 4)
+          .map((item, index) => buildDraftHighlight(item, index)),
       },
       {
         id: "verifactu",
@@ -1155,7 +1245,9 @@ export default function DashboardHomeClient({
               noDocumentsLabel,
           },
         ],
-        highlights: verifactuRecords.slice(0, 4).map(buildVerifactuHighlight),
+        highlights: verifactuRecords
+          .slice(0, 4)
+          .map((item, index) => buildVerifactuHighlight(item, index)),
       },
     ];
 
@@ -1167,6 +1259,7 @@ export default function DashboardHomeClient({
             ? card.highlights
             : [
                 {
+                  key: `${card.id}-empty`,
                   title:
                     language === "es"
                       ? "Aun no hay datos"
@@ -1348,14 +1441,14 @@ export default function DashboardHomeClient({
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                aria-label="Notifications"
+                aria-label={language === "es" ? "Notificaciones" : "Notifications"}
                 className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/70 text-slate-700 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)] backdrop-blur-xl transition hover:bg-white"
               >
                 <Bell className="h-[18px] w-[18px]" strokeWidth={2.1} />
               </button>
               <button
                 type="button"
-                aria-label="Filters"
+                aria-label={language === "es" ? "Filtros" : "Filters"}
                 onClick={openFilterSheet}
                 className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/70 text-slate-700 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)] backdrop-blur-xl transition hover:bg-white"
               >
@@ -1469,7 +1562,7 @@ export default function DashboardHomeClient({
                           </p>
                           <p className="mt-1 text-[13px] leading-5 text-slate-500">
                             {[
-                              item.tipo === "presupuesto" ? labels.budget : labels.invoice,
+                              getLocalizedDocumentLabel(item.tipo, language),
                               item.cliente?.nombre,
                               item.estado,
                               item.fecha,
@@ -1509,7 +1602,7 @@ export default function DashboardHomeClient({
                           </p>
                           <p className="mt-1 text-[13px] leading-5 text-slate-500">
                             {[
-                              item.tipo === "presupuesto" ? labels.budget : labels.invoice,
+                              getLocalizedDocumentLabel(item.tipo, language),
                               item.cliente?.nombre,
                               item.updatedAt
                                 ? new Date(item.updatedAt).toLocaleDateString(language)
@@ -1699,53 +1792,6 @@ export default function DashboardHomeClient({
         )}
       </main>
 
-      {showRegisteredDashboard ? (
-        <nav
-          className="fixed bottom-0 left-1/2 z-20 w-full max-w-[430px] -translate-x-1/2 px-4"
-          style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
-        >
-          <div className="grid grid-cols-5 rounded-[30px] border border-white/10 bg-slate-950/95 px-2 py-3 text-white shadow-[0_24px_60px_-26px_rgba(15,23,42,0.78)] backdrop-blur-xl">
-            {navItems.map(({ label, icon: Icon, active, href }) => {
-              const className = `flex flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center transition ${
-                active
-                  ? "bg-white text-slate-950 shadow-[0_16px_30px_-24px_rgba(255,255,255,1)]"
-                  : "text-white/58 hover:text-white/78"
-              }`;
-
-              if (href) {
-                return (
-                  <Link
-                    key={label}
-                    href={href}
-                    aria-current={active ? "page" : undefined}
-                    className={className}
-                  >
-                    <Icon className="h-[18px] w-[18px]" strokeWidth={2.1} />
-                    <span className="text-[11px] font-medium tracking-[-0.01em]">
-                      {label}
-                    </span>
-                  </Link>
-                );
-              }
-
-              return (
-                <button
-                  key={label}
-                  type="button"
-                  aria-current={active ? "page" : undefined}
-                  className={className}
-                >
-                  <Icon className="h-[18px] w-[18px]" strokeWidth={2.1} />
-                  <span className="text-[11px] font-medium tracking-[-0.01em]">
-                    {label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </nav>
-      ) : null}
-
       {showRegisteredDashboard && selectedInsight ? (
         <>
           <button
@@ -1807,9 +1853,9 @@ export default function DashboardHomeClient({
               </div>
 
               <div className="mt-5 grid grid-cols-2 gap-3">
-                {selectedInsight.metrics.map((metric) => (
+                {selectedInsight.metrics.map((metric, index) => (
                   <div
-                    key={metric.label}
+                    key={`${selectedInsight.id}-${metric.label}-${index}`}
                     className="rounded-[24px] border border-white/70 bg-white/86 p-4 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.24)]"
                   >
                     <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">
@@ -1829,7 +1875,7 @@ export default function DashboardHomeClient({
                 <div className="mt-3 space-y-2">
                   {selectedInsight.highlights.map((item) => (
                     <div
-                      key={`${selectedInsight.id}-${item.title}-${item.subtitle}`}
+                      key={item.key}
                       className="rounded-[22px] border border-white/70 bg-white/84 px-4 py-3 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.22)]"
                     >
                       <p className="text-sm font-semibold text-slate-950">

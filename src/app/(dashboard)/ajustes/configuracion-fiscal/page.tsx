@@ -23,6 +23,7 @@ import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
 function SectionCard({
   eyebrow,
@@ -118,22 +119,18 @@ export default function ConfiguracionFiscalPage() {
           saveError: "Could not save tax settings",
         };
 
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const stored = window.localStorage.getItem(FISCAL_SETTINGS_STORAGE_KEY);
+  useClientLayoutEffect(() => {
+    const stored = window.localStorage.getItem(FISCAL_SETTINGS_STORAGE_KEY);
 
-      if (stored) {
-        try {
-          setSettings(normalizeFiscalSettings(JSON.parse(stored)));
-        } catch (error) {
-          console.error("Error loading fiscal settings", error);
-        }
+    if (stored) {
+      try {
+        setSettings(normalizeFiscalSettings(JSON.parse(stored)));
+      } catch (error) {
+        console.error("Error loading fiscal settings", error);
       }
+    }
 
-      setIsReady(true);
-    });
-
-    return () => window.cancelAnimationFrame(frame);
+    setIsReady(true);
   }, []);
 
   function persistSettings(nextSettings: FiscalSettings) {
@@ -176,7 +173,7 @@ export default function ConfiguracionFiscalPage() {
             <div className="flex items-center gap-3">
               <Link
                 href="/ajustes"
-                aria-label="Volver a ajustes"
+                aria-label={pageCopy.back}
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/84 text-slate-700 shadow-[0_12px_26px_-22px_rgba(15,23,42,0.22)] backdrop-blur-xl transition hover:bg-white"
               >
                 <ArrowLeft className="h-[18px] w-[18px]" strokeWidth={2.4} />

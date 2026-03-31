@@ -22,6 +22,7 @@ import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
 type Empresa = {
   nombre: string;
@@ -110,41 +111,37 @@ export default function ConfiguracionEmpresaPage() {
     ],
   );
 
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const storedCompany = window.localStorage.getItem("datosEmpresa");
-      if (storedCompany) {
-        try {
-          const parsed = JSON.parse(storedCompany) as Partial<Empresa>;
-          setEmpresa({ ...EMPTY_EMPRESA, ...parsed });
-        } catch (error) {
-          console.error("Error loading company profile", error);
-        }
+  useClientLayoutEffect(() => {
+    const storedCompany = window.localStorage.getItem("datosEmpresa");
+    if (storedCompany) {
+      try {
+        const parsed = JSON.parse(storedCompany) as Partial<Empresa>;
+        setEmpresa({ ...EMPTY_EMPRESA, ...parsed });
+      } catch (error) {
+        console.error("Error loading company profile", error);
       }
+    }
 
-      const storedTemplate =
-        window.localStorage.getItem("plantillaSeleccionada") ||
-        window.localStorage.getItem("plantillaUsuario") ||
-        window.localStorage.getItem("plantillaElegida");
+    const storedTemplate =
+      window.localStorage.getItem("plantillaSeleccionada") ||
+      window.localStorage.getItem("plantillaUsuario") ||
+      window.localStorage.getItem("plantillaElegida");
 
-      if (storedTemplate && isPlantilla(storedTemplate)) {
-        setPlantilla(storedTemplate);
-      }
+    if (storedTemplate && isPlantilla(storedTemplate)) {
+      setPlantilla(storedTemplate);
+    }
 
-      const storedLogo = window.localStorage.getItem("logoUsuario");
-      if (storedLogo) {
-        setLogo(storedLogo);
-      }
+    const storedLogo = window.localStorage.getItem("logoUsuario");
+    if (storedLogo) {
+      setLogo(storedLogo);
+    }
 
-      const storedNotes = window.localStorage.getItem("notasUsuario");
-      if (storedNotes) {
-        setNotas(storedNotes);
-      }
+    const storedNotes = window.localStorage.getItem("notasUsuario");
+    if (storedNotes) {
+      setNotas(storedNotes);
+    }
 
-      setIsReady(true);
-    });
-
-    return () => window.cancelAnimationFrame(frame);
+    setIsReady(true);
   }, []);
 
   function persistProfile() {

@@ -7,20 +7,16 @@ import {
   readVerifactuEvents,
   readVerifactuRecords,
 } from "@/features/verifactu/storage";
+import {
+  formatCurrencyByLanguage,
+  formatDateTimeByLanguage,
+} from "@/features/i18n/core";
+import { useAppI18n } from "@/features/i18n/runtime";
 import type {
   VerifactuEvent,
   VerifactuRecord,
   VerifactuRecordStatus,
 } from "@/features/verifactu/types";
-
-const statusLabel: Record<VerifactuRecordStatus, string> = {
-  prepared: "Lista",
-  queued: "En proceso",
-  sent: "Enviada",
-  accepted: "Aceptada",
-  rejected: "Por revisar",
-  error: "Incidencia",
-};
 
 const statusClass: Record<VerifactuRecordStatus, string> = {
   prepared: "border border-sky-200 bg-sky-50 text-sky-700",
@@ -38,64 +34,111 @@ function readVerifactuSnapshot() {
   };
 }
 
-function formatDate(value: string | undefined) {
-  if (!value) {
-    return "Sin fecha";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("es-ES", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
-
-function formatAmount(value: number) {
-  return new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency: "EUR",
-  }).format(value || 0);
-}
-
-function describeSourceAction(sourceAction: VerifactuRecord["sourceAction"]) {
-  if (sourceAction === "emailed") {
-    return "Enviada al cliente";
-  }
-
-  if (sourceAction === "downloaded") {
-    return "Descargada";
-  }
-
-  return "Guardada";
-}
-
-function describeEvent(event: VerifactuEvent) {
-  const invoiceMatch = event.detail.match(/factura\s+([A-Z0-9-]+)/i);
-  const invoiceNumber = invoiceMatch?.[1];
-
-  if (event.type === "record_prepared") {
-    return invoiceNumber
-      ? `Factura ${invoiceNumber} lista para su seguimiento.`
-      : "Factura lista para su seguimiento.";
-  }
-
-  if (event.type === "record_status_changed") {
-    return invoiceNumber
-      ? `Se ha actualizado el estado de la factura ${invoiceNumber}.`
-      : "Se ha actualizado el estado de una factura.";
-  }
-
-  return "Se ha registrado una nueva actividad en VeriFactu.";
-}
 
 export default function AjustesVerifactuPage() {
+  const { language, t } = useAppI18n();
   const [records, setRecords] = useState<VerifactuRecord[]>([]);
   const [events, setEvents] = useState<VerifactuEvent[]>([]);
+
+  const statusLabel: Record<VerifactuRecordStatus, string> = {
+    prepared: t({ es: "Lista", en: "Ready" }),
+    queued: t({ es: "En proceso", en: "In progress" }),
+    sent: t({ es: "Enviada", en: "Sent" }),
+    accepted: t({ es: "Aceptada", en: "Accepted" }),
+    rejected: t({ es: "Por revisar", en: "Needs review" }),
+    error: t({ es: "Incidencia", en: "Issue" }),
+  };
+  const copy = {
+    noDate: t({ es: "Sin fecha", en: "No date" }),
+    sentToClient: t({ es: "Enviada al cliente", en: "Sent to client" }),
+    downloaded: t({ es: "Descargada", en: "Downloaded" }),
+    saved: t({ es: "Guardada", en: "Saved" }),
+    activityPrepared: t({ es: "lista para su seguimiento.", en: "ready for tracking." }),
+    activityStatusChanged: t({ es: "Se ha actualizado el estado de la factura", en: "The status of invoice has been updated" }),
+    activityPreparedGeneric: t({ es: "Factura lista para su seguimiento.", en: "Invoice ready for tracking." }),
+    activityStatusChangedGeneric: t({ es: "Se ha actualizado el estado de una factura.", en: "The status of an invoice has been updated." }),
+    activityGeneric: t({ es: "Se ha registrado una nueva actividad en VeriFactu.", en: "A new VeriFactu activity has been recorded." }),
+    backToSettings: t({ es: "Volver a ajustes", en: "Back to settings" }),
+    badge: t({ es: "VERIFACTU", en: "VERIFACTU" }),
+    eyebrow: t({ es: "Cumplimiento", en: "Compliance" }),
+    title: t({ es: "Seguimiento VeriFactu", en: "VeriFactu tracking" }),
+    description: t({
+      es: "Consulta el estado de tus facturas y revisa rapidamente cualquier incidencia pendiente.",
+      en: "Check the status of your invoices and quickly review any pending issue.",
+    }),
+    summaryTitle: t({ es: "Resumen de seguimiento", en: "Tracking summary" }),
+    summaryDescription: t({
+      es: "Mira de un vistazo cuantas facturas estan listas y cuales necesitan atencion.",
+      en: "See at a glance how many invoices are ready and which ones need attention.",
+    }),
+    invoices: t({ es: "Facturas", en: "Invoices" }),
+    ready: t({ es: "Listas", en: "Ready" }),
+    issues: t({ es: "Incidencias", en: "Issues" }),
+    latestInvoiceUpdated: t({ es: "Ultima factura actualizada:", en: "Last updated invoice:" }),
+    onDate: t({ es: "el", en: "on" }),
+    noTrackedInvoices: t({ es: "Todavia no hay facturas con seguimiento disponible.", en: "There are no invoices with available tracking yet." }),
+    recentInvoices: t({ es: "Facturas recientes", en: "Recent invoices" }),
+    recentInvoicesDescription: t({
+      es: "Cada factura aparecera aqui con su estado y la fecha de la ultima actualizacion.",
+      en: "Each invoice appears here with its status and the date of the latest update.",
+    }),
+    emptyRecentInvoices: t({
+      es: "Cuando descargues o envies una factura, podras verla aqui con su estado de seguimiento.",
+      en: "When you download or send an invoice, you will see it here with its tracking status.",
+    }),
+    invoice: t({ es: "Factura", en: "Invoice" }),
+    issued: t({ es: "Emitida", en: "Issued" }),
+    total: t({ es: "Total", en: "Total" }),
+    lastAction: t({ es: "Ultima accion", en: "Last action" }),
+    updatedAt: t({ es: "Actualizada", en: "Updated" }),
+    issuePending: t({ es: "Hay una incidencia pendiente de revisar en esta factura.", en: "There is a pending issue to review on this invoice." }),
+    trackingUpdated: t({ es: "El seguimiento de esta factura esta actualizado.", en: "The tracking for this invoice is up to date." }),
+    recentActivity: t({ es: "Actividad reciente", en: "Recent activity" }),
+    recentActivityDescription: t({
+      es: "Revisa los ultimos movimientos relacionados con tus facturas.",
+      en: "Review the latest movements related to your invoices.",
+    }),
+    emptyActivity: t({ es: "Todavia no hay actividad registrada.", en: "There is no recorded activity yet." }),
+  };
+
+  function formatDate(value: string | undefined) {
+    return formatDateTimeByLanguage(language, value, copy.noDate);
+  }
+
+  function formatAmount(value: number) {
+    return formatCurrencyByLanguage(language, value || 0);
+  }
+
+  function describeSourceAction(sourceAction: VerifactuRecord["sourceAction"]) {
+    if (sourceAction === "emailed") {
+      return copy.sentToClient;
+    }
+
+    if (sourceAction === "downloaded") {
+      return copy.downloaded;
+    }
+
+    return copy.saved;
+  }
+
+  function describeEvent(event: VerifactuEvent) {
+    const invoiceMatch = event.detail.match(/factura\s+([A-Z0-9-]+)/i);
+    const invoiceNumber = invoiceMatch?.[1];
+
+    if (event.type === "record_prepared") {
+      return invoiceNumber
+        ? `${copy.invoice} ${invoiceNumber} ${copy.activityPrepared}`
+        : copy.activityPreparedGeneric;
+    }
+
+    if (event.type === "record_status_changed") {
+      return invoiceNumber
+        ? `${copy.activityStatusChanged} ${invoiceNumber}.`
+        : copy.activityStatusChangedGeneric;
+    }
+
+    return copy.activityGeneric;
+  }
 
   useEffect(() => {
     const refresh = () => {
@@ -129,27 +172,26 @@ export default function AjustesVerifactuPage() {
           <div className="flex items-center justify-between gap-4">
             <Link
               href="/ajustes"
-              aria-label="Volver a ajustes"
+              aria-label={copy.backToSettings}
               className="flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/84 text-slate-700 shadow-[0_12px_26px_-22px_rgba(15,23,42,0.22)] backdrop-blur-xl transition hover:bg-white"
             >
               <ArrowLeft className="h-[18px] w-[18px]" strokeWidth={2.4} />
             </Link>
 
             <div className="rounded-full border border-white/70 bg-white/82 px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] text-slate-500 shadow-[0_12px_26px_-22px_rgba(15,23,42,0.18)]">
-              VERIFACTU
+              {copy.badge}
             </div>
           </div>
 
           <div className="mt-6">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-              Cumplimiento
+              {copy.eyebrow}
             </p>
             <h1 className="mt-2 text-[2.05rem] font-semibold tracking-[-0.055em] text-slate-950">
-              Seguimiento VeriFactu
+              {copy.title}
             </h1>
             <p className="mt-3 max-w-[19rem] text-[14px] leading-6 text-slate-500">
-              Consulta el estado de tus facturas y revisa rapidamente cualquier
-              incidencia pendiente.
+              {copy.description}
             </p>
           </div>
         </header>
@@ -161,11 +203,10 @@ export default function AjustesVerifactuPage() {
             </span>
             <div>
               <p className="text-sm font-semibold text-slate-950">
-                Resumen de seguimiento
+                {copy.summaryTitle}
               </p>
               <p className="mt-1 text-[13px] leading-5 text-slate-500">
-                Mira de un vistazo cuantas facturas estan listas y cuales
-                necesitan atencion.
+                {copy.summaryDescription}
               </p>
             </div>
           </div>
@@ -173,7 +214,7 @@ export default function AjustesVerifactuPage() {
           <div className="mt-5 grid grid-cols-3 gap-3">
             <article className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Facturas
+                {copy.invoices}
               </p>
               <p className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {records.length}
@@ -181,7 +222,7 @@ export default function AjustesVerifactuPage() {
             </article>
             <article className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Listas
+                {copy.ready}
               </p>
               <p className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {readyCount}
@@ -189,7 +230,7 @@ export default function AjustesVerifactuPage() {
             </article>
             <article className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Incidencias
+                {copy.issues}
               </p>
               <p className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {issueCount}
@@ -200,15 +241,15 @@ export default function AjustesVerifactuPage() {
           <div className="mt-5 rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,rgba(248,250,252,0.92),rgba(255,255,255,0.96))] p-4">
             {lastRecord ? (
               <p className="text-[13px] leading-6 text-slate-500">
-                Ultima factura actualizada:{" "}
+                {copy.latestInvoiceUpdated}{" "}
                 <span className="font-semibold text-slate-950">
                   {lastRecord.invoiceNumber}
                 </span>{" "}
-                el {formatDate(lastRecord.generatedAt)}.
+                {copy.onDate} {formatDate(lastRecord.generatedAt)}.
               </p>
             ) : (
               <p className="text-[13px] leading-6 text-slate-500">
-                Todavia no hay facturas con seguimiento disponible.
+                {copy.noTrackedInvoices}
               </p>
             )}
           </div>
@@ -221,19 +262,17 @@ export default function AjustesVerifactuPage() {
             </span>
             <div>
               <p className="text-sm font-semibold text-slate-950">
-                Facturas recientes
+                {copy.recentInvoices}
               </p>
               <p className="mt-1 text-[13px] leading-5 text-slate-500">
-                Cada factura aparecera aqui con su estado y la fecha de la
-                ultima actualizacion.
+                {copy.recentInvoicesDescription}
               </p>
             </div>
           </div>
 
           {records.length === 0 ? (
             <div className="mt-5 rounded-[24px] border border-dashed border-slate-200 bg-slate-50/75 p-5 text-[14px] leading-6 text-slate-500">
-              Cuando descargues o envies una factura, podras verla aqui con su
-              estado de seguimiento.
+              {copy.emptyRecentInvoices}
             </div>
           ) : (
             <div className="mt-5 space-y-3">
@@ -245,7 +284,7 @@ export default function AjustesVerifactuPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                        Factura
+                        {copy.invoice}
                       </p>
                       <h2 className="mt-1 text-[1.1rem] font-semibold tracking-[-0.04em] text-slate-950">
                         {record.invoiceNumber}
@@ -260,25 +299,25 @@ export default function AjustesVerifactuPage() {
 
                   <div className="mt-4 grid gap-2 text-[13px] leading-6 text-slate-500">
                     <div className="flex items-center justify-between gap-3">
-                      <span>Emitida</span>
+                      <span>{copy.issued}</span>
                       <span className="font-semibold text-slate-950">
                         {record.issueDate}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
-                      <span>Total</span>
+                      <span>{copy.total}</span>
                       <span className="font-semibold text-slate-950">
                         {formatAmount(record.totalAmount)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
-                      <span>Ultima accion</span>
+                      <span>{copy.lastAction}</span>
                       <span className="font-semibold text-slate-950">
                         {describeSourceAction(record.sourceAction)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-3">
-                      <span>Actualizada</span>
+                      <span>{copy.updatedAt}</span>
                       <span className="font-semibold text-slate-950">
                         {formatDate(record.generatedAt)}
                       </span>
@@ -287,8 +326,8 @@ export default function AjustesVerifactuPage() {
 
                   <div className="mt-4 rounded-[20px] border border-slate-200 bg-white px-3 py-3 text-[12px] leading-5 text-slate-500">
                     {record.status === "error" || record.lastError
-                      ? "Hay una incidencia pendiente de revisar en esta factura."
-                      : "El seguimiento de esta factura esta actualizado."}
+                      ? copy.issuePending
+                      : copy.trackingUpdated}
                   </div>
                 </article>
               ))}
@@ -297,14 +336,14 @@ export default function AjustesVerifactuPage() {
         </section>
 
         <section className="mt-6 rounded-[32px] border border-white/70 bg-white/82 p-5 shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)] backdrop-blur-xl">
-          <p className="text-sm font-semibold text-slate-950">Actividad reciente</p>
+          <p className="text-sm font-semibold text-slate-950">{copy.recentActivity}</p>
           <p className="mt-1 text-[13px] leading-5 text-slate-500">
-            Revisa los ultimos movimientos relacionados con tus facturas.
+            {copy.recentActivityDescription}
           </p>
 
           {events.length === 0 ? (
             <div className="mt-5 rounded-[24px] border border-dashed border-slate-200 bg-slate-50/75 p-5 text-[14px] leading-6 text-slate-500">
-              Todavia no hay actividad registrada.
+              {copy.emptyActivity}
             </div>
           ) : (
             <div className="mt-5 space-y-3">

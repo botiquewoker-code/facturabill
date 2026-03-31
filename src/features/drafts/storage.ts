@@ -3,6 +3,7 @@
 export const DRAFTS_STORAGE_KEY = "borradores";
 export const ACTIVE_DRAFT_STORAGE_KEY = "borradorActivo";
 export const DRAFT_RETENTION_DAYS = 7;
+export const DRAFTS_UPDATED_EVENT = "facturabill:drafts-updated";
 
 const DRAFT_RETENTION_MS = DRAFT_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
@@ -43,6 +44,7 @@ export function writeDrafts<T extends DraftRecord>(drafts: T[]) {
   }
 
   window.localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify(drafts));
+  window.dispatchEvent(new CustomEvent(DRAFTS_UPDATED_EVENT));
 }
 
 export function readDrafts<T extends DraftRecord>(): T[] {

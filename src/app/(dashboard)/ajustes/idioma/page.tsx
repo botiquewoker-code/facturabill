@@ -30,7 +30,7 @@ export default function AjustesIdiomaPage() {
           <div className="flex items-center justify-between gap-4">
             <Link
               href="/ajustes"
-              aria-label="Back to settings"
+              aria-label={language === "es" ? "Volver a ajustes" : "Back to settings"}
               className="flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/84 text-slate-700 shadow-[0_12px_26px_-22px_rgba(15,23,42,0.22)] backdrop-blur-xl transition hover:bg-white"
             >
               <ArrowLeft className="h-[18px] w-[18px]" strokeWidth={2.4} />

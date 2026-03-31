@@ -1,8 +1,10 @@
+import type { InvoiceDocumentType } from "@/features/invoices/document-types";
+
 export const CATALOG_STORAGE_KEY = "facturabill-catalog-items";
 
 export type CatalogItemType = "producto" | "servicio";
 export type CatalogItemStatus = "active" | "archived";
-export type CatalogDocumentType = "factura" | "presupuesto" | "albaran";
+export type CatalogDocumentType = InvoiceDocumentType;
 
 export type CatalogItemDraft = {
   type: CatalogItemType;
@@ -27,6 +29,7 @@ export type CatalogItem = CatalogItemDraft & {
 export const DEFAULT_SUPPORTED_DOCUMENTS: CatalogDocumentType[] = [
   "factura",
   "presupuesto",
+  "proforma",
   "albaran",
 ];
 
@@ -54,7 +57,10 @@ function sanitizeSupportedDocuments(value: unknown): CatalogDocumentType[] {
 
   const normalized = value.filter(
     (item): item is CatalogDocumentType =>
-      item === "factura" || item === "presupuesto" || item === "albaran",
+      item === "factura" ||
+      item === "presupuesto" ||
+      item === "proforma" ||
+      item === "albaran",
   );
 
   return normalized.length

@@ -26,6 +26,7 @@ import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import { useAppI18n } from "@/features/i18n/runtime";
 
 Amplify.configure(awsconfig);
 
@@ -34,11 +35,57 @@ const inputClass =
 
 export default function Login() {
   const router = useRouter();
+  const { t } = useAppI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [localCredentials, setLocalCredentials] = useState(null);
   const [hasCheckedCredentials, setHasCheckedCredentials] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const copy = {
+    missingCredentials: t({
+      es: "Introduce el correo y la contrasena para entrar",
+      en: "Enter your email and password to sign in",
+    }),
+    wrongEmail: t({
+      es: "Este correo no coincide con la cuenta que has creado",
+      en: "This email does not match the account you created",
+    }),
+    wrongPassword: t({ es: "La contrasena no coincide", en: "The password does not match" }),
+    loggedIn: t({ es: "Sesion iniciada", en: "Signed in" }),
+    loginUnavailable: t({ es: "No se pudo iniciar sesion", en: "Unable to sign in" }),
+    sessionAlreadyOpen: t({ es: "Ya hay una sesion iniciada", en: "A session is already open" }),
+    backHome: t({ es: "Volver al inicio", en: "Back home" }),
+    badge: t({ es: "ACCESO", en: "ACCESS" }),
+    eyebrow: t({ es: "Cuenta", en: "Account" }),
+    title: t({ es: "Iniciar sesion", en: "Sign in" }),
+    description: t({
+      es: "Entra con el correo y la contrasena de tu cuenta para continuar.",
+      en: "Sign in with your account email and password to continue.",
+    }),
+    checkingTitle: t({ es: "Comprobando acceso", en: "Checking access" }),
+    checkingDescription: t({ es: "Estamos preparando tu acceso.", en: "We are preparing your access." }),
+    accountDetected: t({ es: "Cuenta detectada", en: "Account detected" }),
+    accountDetectedDescription: t({
+      es: `Hemos encontrado la cuenta de ${localCredentials?.displayName || ""}. Introduce el correo y la contrasena para continuar.`,
+      en: `We found the account for ${localCredentials?.displayName || ""}. Enter the email and password to continue.`,
+    }),
+    email: t({ es: "Correo", en: "Email" }),
+    emailPlaceholder: t({ es: "tu@negocio.com", en: "you@business.com" }),
+    password: t({ es: "Contrasena", en: "Password" }),
+    passwordPlaceholder: t({ es: "Tu contrasena", en: "Your password" }),
+    signingIn: t({ es: "Entrando...", en: "Signing in..." }),
+    signIn: t({ es: "Entrar", en: "Sign in" }),
+    detectedAccess: t({ es: "Acceso detectado", en: "Detected access" }),
+    user: t({ es: "Usuario", en: "User" }),
+    savedEmail: t({ es: "Correo guardado", en: "Saved email" }),
+    noUserTitle: t({ es: "No hay usuario registrado", en: "No registered user" }),
+    noUserDescription: t({
+      es: "Todavia no hay ninguna cuenta creada. Primero tienes que registrarte y despues podras iniciar sesion.",
+      en: "No account has been created yet. You need to register first and then you will be able to sign in.",
+    }),
+    goToRegister: t({ es: "Ir a registro", en: "Go to register" }),
+  };
 
   useEffect(() => {
     startTransition(() => {
@@ -54,7 +101,7 @@ export default function Login() {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (!normalizedEmail || !password.trim()) {
-      showWarningToast("Introduce el correo y la contrasena para entrar");
+      showWarningToast(copy.missingCredentials);
       return;
     }
 
@@ -63,7 +110,7 @@ export default function Login() {
       normalizedEmail !== localCredentials.email.toLowerCase()
     ) {
       showWarningToast(
-        "Este correo no coincide con la cuenta que has creado",
+        copy.wrongEmail,
       );
       return;
     }
@@ -78,7 +125,7 @@ export default function Login() {
         );
 
         if (!isValid) {
-          showWarningToast("La contrasena no coincide");
+          showWarningToast(copy.wrongPassword);
           return;
         }
 
@@ -92,7 +139,7 @@ export default function Login() {
             storedProfile?.registeredAt || localCredentials.registeredAt,
         });
 
-        showSuccessToast("Sesion iniciada");
+        showSuccessToast(copy.loggedIn);
         router.push("/");
         return;
       }
@@ -113,14 +160,14 @@ export default function Login() {
         registeredAt: new Date().toISOString(),
       });
 
-      showSuccessToast("Sesion iniciada");
+      showSuccessToast(copy.loggedIn);
       router.push("/");
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "No se pudo iniciar sesion";
+        error instanceof Error ? error.message : copy.loginUnavailable;
 
       if (message.includes("already a signed in user")) {
-        showWarningToast("Ya hay una sesion iniciada");
+        showWarningToast(copy.sessionAlreadyOpen);
         return;
       }
 
@@ -141,26 +188,26 @@ export default function Login() {
           <div className="flex items-center justify-between gap-4">
             <Link
               href="/"
-              aria-label="Volver al inicio"
+              aria-label={copy.backHome}
               className="flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/84 text-slate-700 shadow-[0_12px_26px_-22px_rgba(15,23,42,0.22)] backdrop-blur-xl transition hover:bg-white"
             >
               <ArrowLeft className="h-[18px] w-[18px]" strokeWidth={2.4} />
             </Link>
 
             <div className="rounded-full border border-white/70 bg-white/82 px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] text-slate-500 shadow-[0_12px_26px_-22px_rgba(15,23,42,0.18)]">
-              ACCESO
+              {copy.badge}
             </div>
           </div>
 
           <div className="mt-6">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-              Cuenta
+              {copy.eyebrow}
             </p>
             <h1 className="mt-2 text-[2.05rem] font-semibold tracking-[-0.055em] text-slate-950">
-              Iniciar sesion
+              {copy.title}
             </h1>
             <p className="mt-3 max-w-[18rem] text-[14px] leading-6 text-slate-500">
-              Entra con el correo y la contrasena de tu cuenta para continuar.
+              {copy.description}
             </p>
           </div>
         </header>
@@ -173,10 +220,10 @@ export default function Login() {
               </span>
               <div>
                 <p className="text-sm font-semibold text-slate-950">
-                  Comprobando acceso
+                  {copy.checkingTitle}
                 </p>
                 <p className="mt-1 text-[13px] leading-5 text-slate-500">
-                  Estamos preparando tu acceso.
+                  {copy.checkingDescription}
                 </p>
               </div>
             </div>
@@ -190,11 +237,10 @@ export default function Login() {
                 </span>
                 <div>
                 <p className="text-sm font-semibold text-slate-950">
-                  Cuenta detectada
+                  {copy.accountDetected}
                 </p>
                 <p className="mt-1 text-[13px] leading-5 text-slate-500">
-                    Hemos encontrado la cuenta de {localCredentials.displayName}.
-                    Introduce el correo y la contrasena para continuar.
+                    {copy.accountDetectedDescription}
                 </p>
                 </div>
               </div>
@@ -203,13 +249,13 @@ export default function Login() {
                 <label className="block">
                   <span className="mb-2 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                     <Mail className="h-4 w-4" strokeWidth={2.2} />
-                    Correo
+                    {copy.email}
                   </span>
                   <input
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    placeholder="tu@negocio.com"
+                    placeholder={copy.emailPlaceholder}
                     className={inputClass}
                   />
                 </label>
@@ -217,13 +263,13 @@ export default function Login() {
                 <label className="block">
                   <span className="mb-2 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                     <LockKeyhole className="h-4 w-4" strokeWidth={2.2} />
-                    Contrasena
+                    {copy.password}
                   </span>
                   <input
                     type="password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Tu contrasena"
+                    placeholder={copy.passwordPlaceholder}
                     className={inputClass}
                   />
                 </label>
@@ -235,19 +281,19 @@ export default function Login() {
                 disabled={isSubmitting}
                 className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition enabled:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-55"
               >
-                {isSubmitting ? "Entrando..." : "Entrar"}
+                {isSubmitting ? copy.signingIn : copy.signIn}
                 <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
               </button>
             </section>
 
             <section className="mt-4 rounded-[28px] border border-white/70 bg-white/76 p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.2)] backdrop-blur-xl">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Acceso detectado
+                {copy.detectedAccess}
               </p>
               <div className="mt-3 grid gap-3">
                 <div className="rounded-[22px] border border-slate-200 bg-white/88 px-4 py-3">
                   <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                    Usuario
+                    {copy.user}
                   </p>
                   <p className="mt-2 text-sm font-semibold text-slate-950">
                     {localCredentials.displayName}
@@ -255,7 +301,7 @@ export default function Login() {
                 </div>
                 <div className="rounded-[22px] border border-slate-200 bg-white/88 px-4 py-3">
                   <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                    Correo guardado
+                    {copy.savedEmail}
                   </p>
                   <p className="mt-2 text-sm font-semibold text-slate-950">
                     {localCredentials.email}
@@ -272,11 +318,10 @@ export default function Login() {
               </span>
               <div>
                 <p className="text-sm font-semibold text-slate-950">
-                  No hay usuario registrado
+                  {copy.noUserTitle}
                 </p>
                 <p className="mt-1 text-[13px] leading-5 text-slate-500">
-                  Todavia no hay ninguna cuenta creada. Primero tienes que
-                  registrarte y despues podras iniciar sesion.
+                  {copy.noUserDescription}
                 </p>
               </div>
             </div>
@@ -285,7 +330,7 @@ export default function Login() {
               href="/registro"
               className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition hover:bg-slate-800"
             >
-              Ir a registro
+              {copy.goToRegister}
               <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
             </Link>
           </section>
