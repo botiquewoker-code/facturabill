@@ -9,6 +9,8 @@ export type LocalAccountCredentials = {
   updatedAt: string;
 };
 
+const FALLBACK_HASH_PREFIX = "fallback:";
+
 function normalizeString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -74,17 +76,34 @@ export function writeLocalAccountCredentials(
   );
 }
 
-export async function hashLocalAccountPassword(password: string) {
-  if (!globalThis.crypto?.subtle) {
-    throw new Error("Secure password hashing is not available");
+function hashLocalAccountPasswordFallback(password: string) {
+  let hash = 2166136261;
+
+  for (const char of password) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
   }
 
-  const bytes = new TextEncoder().encode(password);
-  const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+  return `${FALLBACK_HASH_PREFIX}${(hash >>> 0)
+    .toString(16)
+    .padStart(8, "0")}:${password.length.toString(16)}`;
+}
 
-  return Array.from(new Uint8Array(digest))
-    .map((value) => value.toString(16).padStart(2, "0"))
-    .join("");
+export async function hashLocalAccountPassword(password: string) {
+  if (!globalThis.crypto?.subtle) {
+    return hashLocalAccountPasswordFallback(password);
+  }
+
+  try {
+    const bytes = new TextEncoder().encode(password);
+    const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+
+    return Array.from(new Uint8Array(digest))
+      .map((value) => value.toString(16).padStart(2, "0"))
+      .join("");
+  } catch {
+    return hashLocalAccountPasswordFallback(password);
+  }
 }
 
 export async function verifyLocalAccountPassword(
@@ -95,6 +114,9 @@ export async function verifyLocalAccountPassword(
     return false;
   }
 
-  const passwordHash = await hashLocalAccountPassword(password);
+  const passwordHash = credentials.passwordHash.startsWith(FALLBACK_HASH_PREFIX)
+    ? hashLocalAccountPasswordFallback(password)
+    : await hashLocalAccountPassword(password);
+
   return passwordHash === credentials.passwordHash;
 }

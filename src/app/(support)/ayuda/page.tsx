@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   ArrowRight,
   CircleHelp,
-  Database,
   FileText,
   Mail,
   ReceiptText,
@@ -41,12 +40,12 @@ const faqItems = [
     ],
   },
   {
-    title: "Donde se guardan los datos",
-    icon: Database,
+    title: "Disponibilidad de tu informacion",
+    icon: CircleHelp,
     content: [
-      "Muchas funciones usan almacenamiento local del navegador.",
-      "Eso implica que tus datos pueden no aparecer en otro dispositivo.",
-      "Tambien pueden perderse si borras el almacenamiento del navegador.",
+      "Antes de seguir trabajando, confirma que ves tus documentos y clientes habituales.",
+      "Si vas a cambiar de equipo o navegador, exporta una copia desde ajustes para conservar tu informacion.",
+      "Revisa siempre que tus datos esten disponibles antes de enviar o descargar documentos importantes.",
     ],
   },
   {
@@ -65,7 +64,7 @@ export default function AyudaPage() {
       badge="Ayuda"
       eyebrow="Centro de ayuda"
       title="Preguntas frecuentes"
-      description="Una guia rapida para resolver dudas comunes sobre facturas, PDFs, borradores y almacenamiento."
+      description="Una guia rapida para resolver dudas comunes sobre facturas, PDF, borradores y uso diario."
       icon={CircleHelp}
     >
       <section className="mt-6 space-y-4">

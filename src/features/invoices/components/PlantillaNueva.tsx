@@ -8,21 +8,20 @@ import {
   View,
 } from "@react-pdf/renderer";
 
+const PURPLE = "#5b2d8b";
+const LIGHT_PURPLE = "#f2eef6";
+const PAGE_BG = "#f7f5fa";
+const BORDER = "#d8cfe4";
+const TEXT = "#1f2937";
+const MUTED = "#6b7280";
+
 const styles = StyleSheet.create({
   page: {
-    paddingHorizontal: 34,
-    paddingTop: 32,
-    paddingBottom: 28,
-    backgroundColor: "#fffaf5",
-    color: "#1f2937",
+    padding: 40,
     fontSize: 10,
     fontFamily: "Helvetica",
-  },
-  eyebrow: {
-    fontSize: 9,
-    letterSpacing: 1.8,
-    textTransform: "uppercase",
-    color: "#9f6b42",
+    backgroundColor: PAGE_BG,
+    color: TEXT,
   },
   header: {
     flexDirection: "row",
@@ -30,179 +29,130 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 24,
   },
-  brandColumn: {
-    width: "46%",
+  companyColumn: {
+    width: "48%",
+  },
+  documentColumn: {
+    width: "38%",
+    alignItems: "flex-end",
   },
   logoWrap: {
-    width: 84,
-    height: 84,
+    width: 92,
+    height: 92,
     justifyContent: "center",
     alignItems: "flex-start",
     marginBottom: 16,
   },
   logo: {
-    width: 84,
-    height: 84,
+    width: 92,
+    height: 92,
     objectFit: "contain",
   },
   companyName: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 6,
-    color: "#111827",
+    marginBottom: 4,
+    color: TEXT,
   },
   companyLine: {
-    fontSize: 10,
+    fontSize: 10.5,
     lineHeight: 1.45,
-    color: "#475569",
+    color: MUTED,
     marginBottom: 2,
   },
-  documentColumn: {
-    width: "42%",
-    padding: 18,
-    borderRadius: 18,
-    backgroundColor: "#f4ede5",
-    borderWidth: 1,
-    borderColor: "#eadbca",
-  },
-  documentTitle: {
-    marginTop: 10,
-    fontSize: 28,
+  title: {
+    fontSize: 30,
     fontWeight: "bold",
-    color: "#111827",
+    color: PURPLE,
   },
   documentCode: {
-    marginTop: 10,
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#9f6b42",
-  },
-  metaGrid: {
-    marginTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: "#d8c4ad",
-    paddingTop: 12,
-  },
-  metaRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  metaLabel: {
-    fontSize: 9,
-    textTransform: "uppercase",
-    color: "#8b735c",
-  },
-  metaValue: {
-    width: "56%",
-    fontSize: 10,
-    textAlign: "right",
-    color: "#111827",
-  },
-  clientCard: {
-    marginBottom: 22,
-    padding: 18,
-    borderRadius: 18,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#ece6de",
-  },
-  sectionHeader: {
-    marginBottom: 14,
-  },
-  sectionTitle: {
     marginTop: 6,
-    fontSize: 13,
-    fontWeight: "bold",
-    color: "#111827",
-  },
-  clientGrid: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  clientColumn: {
-    width: "47%",
-  },
-  clientLabel: {
-    fontSize: 9,
-    textTransform: "uppercase",
-    color: "#94a3b8",
-    marginBottom: 6,
-  },
-  clientName: {
     fontSize: 12,
     fontWeight: "bold",
-    color: "#111827",
-    marginBottom: 5,
+    color: TEXT,
+  },
+  metaLine: {
+    marginTop: 4,
+    fontSize: 10.5,
+    color: MUTED,
+  },
+  clientCard: {
+    marginBottom: 24,
+    padding: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: "#ffffff",
+  },
+  sectionLabel: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: PURPLE,
+    marginBottom: 8,
+    textTransform: "uppercase",
+  },
+  clientName: {
+    fontSize: 11.5,
+    fontWeight: "bold",
+    color: TEXT,
+    marginBottom: 4,
   },
   clientLine: {
     fontSize: 10,
-    lineHeight: 1.45,
-    color: "#475569",
+    lineHeight: 1.4,
+    color: TEXT,
     marginBottom: 2,
   },
   table: {
-    marginBottom: 22,
-    borderRadius: 18,
-    overflow: "hidden",
+    marginBottom: 24,
     borderWidth: 1,
-    borderColor: "#ece6de",
+    borderColor: BORDER,
+    borderRadius: 8,
+    overflow: "hidden",
     backgroundColor: "#ffffff",
   },
   tableHeader: {
     flexDirection: "row",
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    backgroundColor: "#f6f0ea",
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    backgroundColor: LIGHT_PURPLE,
     borderBottomWidth: 1,
-    borderBottomColor: "#ece6de",
+    borderBottomColor: BORDER,
   },
   tableHeaderText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: "bold",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    color: "#8b735c",
+    color: PURPLE,
   },
   tableRow: {
     flexDirection: "row",
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#f1ede7",
+    borderBottomColor: "#ede7f5",
   },
   tableRowLast: {
     borderBottomWidth: 0,
   },
   colConcept: {
-    width: "49%",
+    width: "50%",
     paddingRight: 8,
   },
   colQty: {
-    width: "13%",
-    textAlign: "center",
+    width: "15%",
+    textAlign: "right",
   },
   colPrice: {
-    width: "18%",
+    width: "15%",
     textAlign: "right",
   },
   colTotal: {
     width: "20%",
     textAlign: "right",
   },
-  lineConcept: {
-    fontSize: 10.5,
-    fontWeight: "bold",
-    color: "#111827",
-  },
-  lineCaption: {
-    marginTop: 4,
-    fontSize: 9,
-    color: "#94a3b8",
-  },
-  lineValue: {
+  rowText: {
     fontSize: 10,
-    color: "#334155",
+    color: TEXT,
   },
   bottomRow: {
     flexDirection: "row",
@@ -210,70 +160,67 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   notesCard: {
-    width: "55%",
-    minHeight: 138,
-    padding: 18,
-    borderRadius: 18,
-    backgroundColor: "#f7f2eb",
+    width: "52%",
+    minHeight: 118,
+    padding: 14,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#ebe1d5",
+    borderColor: BORDER,
+    backgroundColor: "#ffffff",
   },
   notesText: {
-    marginTop: 10,
     fontSize: 10,
-    lineHeight: 1.55,
-    color: "#475569",
+    lineHeight: 1.5,
+    color: TEXT,
   },
   totalsCard: {
-    width: "38%",
-    padding: 18,
-    borderRadius: 18,
-    backgroundColor: "#172033",
-  },
-  totalsLabel: {
-    fontSize: 9,
-    textTransform: "uppercase",
-    letterSpacing: 1.4,
-    color: "#d8c4ad",
+    width: 220,
+    padding: 14,
+    borderRadius: 10,
+    backgroundColor: LIGHT_PURPLE,
   },
   totalsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 12,
+    marginBottom: 8,
   },
   totalsText: {
-    fontSize: 10,
-    color: "#f8fafc",
+    fontSize: 10.5,
+    color: TEXT,
   },
   totalsDivider: {
-    marginTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(216,196,173,0.35)",
+    height: 1,
+    backgroundColor: BORDER,
+    marginVertical: 6,
   },
-  totalAmount: {
-    marginTop: 16,
-    fontSize: 24,
+  totalHighlight: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: PURPLE,
+  },
+  totalHighlightText: {
+    fontSize: 12,
     fontWeight: "bold",
     color: "#ffffff",
   },
-  totalCaption: {
-    marginTop: 4,
-    fontSize: 9,
-    color: "#cbd5e1",
-  },
   footer: {
     position: "absolute",
-    left: 34,
-    right: 34,
+    left: 40,
+    right: 40,
     bottom: 18,
-    paddingTop: 10,
+    paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: "#ece6de",
+    borderTopColor: BORDER,
   },
   footerText: {
-    fontSize: 8.5,
     textAlign: "center",
-    color: "#94a3b8",
+    fontSize: 8.5,
+    color: MUTED,
   },
 });
 
@@ -317,7 +264,6 @@ function formatDocumentDate(value: unknown) {
   }
 
   const parsed = new Date(value);
-
   return Number.isNaN(parsed.getTime())
     ? value
     : parsed.toLocaleDateString("es-ES");
@@ -344,10 +290,10 @@ const PlantillaNueva = ({
   conceptos?: PdfConcepto[];
 }) => {
   const isPresupuesto = Boolean(datos?.esPresupuesto);
-  const taxRate = Number(datos?.tipoIVA || datos?.tipiIVA || 21);
+  const taxRate = Number(datos?.ivaPct ?? datos?.iva ?? datos?.tipoIVA ?? datos?.tipiIVA ?? 21);
   const taxLabel = datos?.taxLabel?.trim() || "IVA";
   const subtotal = conceptos.reduce(
-    (sum, item) => sum + Number(item.cant || 0) * Number(item.precio || 0),
+    (sum, item) => sum + (Number(item.precio) || 0) * (Number(item.cant) || 0),
     0,
   );
   const taxAmount = subtotal * (taxRate / 100);
@@ -367,7 +313,7 @@ const PlantillaNueva = ({
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <View style={styles.brandColumn}>
+          <View style={styles.companyColumn}>
             {datos?.logo ? (
               <View style={styles.logoWrap}>
                 <PdfImage style={styles.logo} src={datos.logo} />
@@ -385,71 +331,34 @@ const PlantillaNueva = ({
           </View>
 
           <View style={styles.documentColumn}>
-            <Text style={styles.eyebrow}>Editorial Layout</Text>
-            <Text style={styles.documentTitle}>
-              {isPresupuesto ? "Presupuesto" : "Factura"}
+            <Text style={styles.title}>
+              {isPresupuesto ? "PRESUPUESTO" : "FACTURA"}
             </Text>
             <Text style={styles.documentCode}>
               {isPresupuesto ? "PRES-" : "FACT-"}
               {numeroFactura}
             </Text>
-
-            <View style={styles.metaGrid}>
-              <View style={styles.metaRow}>
-                <Text style={styles.metaLabel}>Fecha</Text>
-                <Text style={styles.metaValue}>
-                  {formatDocumentDate(datos?.fecha)}
-                </Text>
-              </View>
-              {!isPresupuesto && datos?.fechaVencimiento ? (
-                <View style={styles.metaRow}>
-                  <Text style={styles.metaLabel}>Vencimiento</Text>
-                  <Text style={styles.metaValue}>
-                    {formatDocumentDate(datos.fechaVencimiento)}
-                  </Text>
-                </View>
-              ) : null}
-              <View style={styles.metaRow}>
-                <Text style={styles.metaLabel}>IVA</Text>
-                <Text style={styles.metaValue}>
-                  {taxLabel} {taxRate}%
-                </Text>
-              </View>
-            </View>
+            <Text style={styles.metaLine}>
+              Fecha: {formatDocumentDate(datos?.fecha)}
+            </Text>
+            {!isPresupuesto && datos?.fechaVencimiento ? (
+              <Text style={styles.metaLine}>
+                Vencimiento: {formatDocumentDate(datos.fechaVencimiento)}
+              </Text>
+            ) : null}
           </View>
         </View>
 
         <View style={styles.clientCard}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.eyebrow}>Datos clave</Text>
-            <Text style={styles.sectionTitle}>Cliente y emision</Text>
-          </View>
-
-          <View style={styles.clientGrid}>
-            <View style={styles.clientColumn}>
-              <Text style={styles.clientLabel}>Cliente</Text>
-              <Text style={styles.clientName}>{datos?.cliente?.nombre || ""}</Text>
-              <Text style={styles.clientLine}>
-                {datos?.cliente?.nif || datos?.cliente?.dni || ""}
-              </Text>
-              <Text style={styles.clientLine}>{clientLocation}</Text>
-              <Text style={styles.clientLine}>
-                {joinParts([datos?.cliente?.telefono, datos?.cliente?.email])}
-              </Text>
-            </View>
-
-            <View style={styles.clientColumn}>
-              <Text style={styles.clientLabel}>Emisor</Text>
-              <Text style={styles.clientName}>{datos?.empresa?.nombre || ""}</Text>
-              <Text style={styles.clientLine}>{companyLocation}</Text>
-              <Text style={styles.clientLine}>
-                {joinParts([
-                  datos?.empresa?.telefono,
-                  datos?.empresa?.email,
-                ])}
-              </Text>
-            </View>
-          </View>
+          <Text style={styles.sectionLabel}>Datos del cliente</Text>
+          <Text style={styles.clientName}>{datos?.cliente?.nombre || ""}</Text>
+          <Text style={styles.clientLine}>
+            {datos?.cliente?.nif || datos?.cliente?.dni || ""}
+          </Text>
+          <Text style={styles.clientLine}>{clientLocation}</Text>
+          <Text style={styles.clientLine}>
+            {joinParts([datos?.cliente?.telefono, datos?.cliente?.email])}
+          </Text>
         </View>
 
         <View style={styles.table}>
@@ -457,7 +366,7 @@ const PlantillaNueva = ({
             <Text style={[styles.tableHeaderText, styles.colConcept]}>Concepto</Text>
             <Text style={[styles.tableHeaderText, styles.colQty]}>Cant.</Text>
             <Text style={[styles.tableHeaderText, styles.colPrice]}>Precio</Text>
-            <Text style={[styles.tableHeaderText, styles.colTotal]}>Importe</Text>
+            <Text style={[styles.tableHeaderText, styles.colTotal]}>Total</Text>
           </View>
 
           {conceptos.map((item, index) => {
@@ -474,17 +383,14 @@ const PlantillaNueva = ({
                     : styles.tableRow
                 }
               >
-                <View style={styles.colConcept}>
-                  <Text style={styles.lineConcept}>{item.desc || "Concepto"}</Text>
-                  <Text style={styles.lineCaption}>
-                    Linea {String(index + 1).padStart(2, "0")}
-                  </Text>
-                </View>
-                <Text style={[styles.lineValue, styles.colQty]}>{quantity}</Text>
-                <Text style={[styles.lineValue, styles.colPrice]}>
+                <Text style={[styles.rowText, styles.colConcept]}>
+                  {item.desc?.trim() || "-"}
+                </Text>
+                <Text style={[styles.rowText, styles.colQty]}>{quantity}</Text>
+                <Text style={[styles.rowText, styles.colPrice]}>
                   {formatCurrency(price)}
                 </Text>
-                <Text style={[styles.lineValue, styles.colTotal]}>
+                <Text style={[styles.rowText, styles.colTotal]}>
                   {formatCurrency(rowTotal)}
                 </Text>
               </View>
@@ -494,37 +400,35 @@ const PlantillaNueva = ({
 
         <View style={styles.bottomRow}>
           <View style={styles.notesCard}>
-            <Text style={styles.eyebrow}>Notas</Text>
-            <Text style={styles.sectionTitle}>Mensaje final</Text>
+            <Text style={styles.sectionLabel}>Notas</Text>
             <Text style={styles.notesText}>
-              {datos?.notas?.trim() ||
-                "Gracias por la confianza. Este documento resume el alcance, los importes y las condiciones indicadas para esta operacion."}
+              {datos?.notas?.trim() || "Sin observaciones adicionales."}
             </Text>
             {datos?.taxNote?.trim() ? (
-              <Text style={styles.notesText}>
+              <Text style={[styles.notesText, { marginTop: 10 }]}>
                 Nota fiscal: {datos.taxNote}
               </Text>
             ) : null}
           </View>
 
           <View style={styles.totalsCard}>
-            <Text style={styles.totalsLabel}>Resumen economico</Text>
-
             <View style={styles.totalsRow}>
               <Text style={styles.totalsText}>Base imponible</Text>
               <Text style={styles.totalsText}>{formatCurrency(subtotal)}</Text>
             </View>
-
             <View style={styles.totalsRow}>
-              <Text style={styles.totalsText}>{taxLabel} ({taxRate}%)</Text>
+              <Text style={styles.totalsText}>
+                {taxLabel} ({taxRate}%)
+              </Text>
               <Text style={styles.totalsText}>{formatCurrency(taxAmount)}</Text>
             </View>
-
             <View style={styles.totalsDivider} />
-            <Text style={styles.totalAmount}>{formatCurrency(total)}</Text>
-            <Text style={styles.totalCaption}>
-              Total {isPresupuesto ? "estimado" : "a pagar"}
-            </Text>
+            <View style={styles.totalHighlight}>
+              <Text style={styles.totalHighlightText}>TOTAL</Text>
+              <Text style={styles.totalHighlightText}>
+                {formatCurrency(total)}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -534,6 +438,7 @@ const PlantillaNueva = ({
               datos?.empresa?.nombre,
               datos?.empresa?.nif ? `NIF ${datos.empresa.nif}` : "",
               companyLocation,
+              datos?.empresa?.telefono,
               datos?.empresa?.email,
             ])}
           </Text>

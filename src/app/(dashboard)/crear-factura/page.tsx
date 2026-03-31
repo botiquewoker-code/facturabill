@@ -11,7 +11,6 @@ import {
   Search,
   Save,
   Send,
-  Sparkles,
   Trash2,
   UsersRound,
   Wallet,
@@ -40,6 +39,10 @@ import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import {
+  getUserFirstName,
+  readUserProfile,
+} from "@/features/account/profile";
 import { prepareVerifactuInvoiceRecord } from "@/features/verifactu/service";
 import type { VerifactuSourceAction } from "@/features/verifactu/types";
 
@@ -253,6 +256,8 @@ export default function CrearFacturaPage() {
   const [fiscalSettings, setFiscalSettings] = useState<FiscalSettings>(
     DEFAULT_FISCAL_SETTINGS,
   );
+  const [hasRegisteredUser, setHasRegisteredUser] = useState(false);
+  const [hasLoadedAccount, setHasLoadedAccount] = useState(false);
   const [plantilla, setPlantilla] = useState<Plantilla>("InvoicePDF");
   const [linkedClientId, setLinkedClientId] = useState("");
   const [clientSearch, setClientSearch] = useState("");
@@ -263,7 +268,7 @@ export default function CrearFacturaPage() {
     const query = clientSearch.trim().toLowerCase();
     const base = query
       ? clientesGuardados.filter((item) => clientMatchesSearch(item, query))
-      : clientesGuardados;
+      : [];
 
     return base.filter((item) => item.id !== linkedClientId).slice(0, 6);
   }, [clientSearch, clientesGuardados, linkedClientId]);
@@ -314,7 +319,7 @@ export default function CrearFacturaPage() {
         downloadLabel: "Descargar presupuesto",
         sendLabel: "Enviar presupuesto",
         sendHint: (email: string) => `Se enviara el presupuesto a ${email}`,
-        emptyEmailHint: "Anade un email para enviarlo desde aqui.",
+        emptyEmailHint: "Anade un email para poder enviarlo al cliente.",
       }
     : {
         workspace: "Facturacion",
@@ -333,8 +338,25 @@ export default function CrearFacturaPage() {
         downloadLabel: "Descargar PDF",
         sendLabel: "Enviar al cliente",
         sendHint: (email: string) => `Se enviara a ${email}`,
-        emptyEmailHint: "Anade un email para enviarlo desde aqui.",
+        emptyEmailHint: "Anade un email para poder enviarlo al cliente.",
       };
+  const guestModeCopy = {
+    eyebrow: "Acceso",
+    title: esPresupuesto ? "Presupuesto basico" : "Factura basica",
+    description: esPresupuesto
+      ? "Muestra solo lo esencial para preparar el presupuesto y descargarlo."
+      : "Muestra solo lo esencial para preparar la factura y descargarla.",
+    accessDescription:
+      "Crea una cuenta o inicia sesion para usar clientes guardados, borradores y envio por correo.",
+    registerAction: "Crear cuenta",
+    loginAction: "Iniciar sesion",
+    clientDescription:
+      "Completa los datos del cliente directamente en este formulario.",
+    companyHint:
+      "Completa los datos de empresa antes de descargar el documento.",
+    companyAction: "Datos de empresa",
+  };
+  const showAdvancedTools = hasLoadedAccount && hasRegisteredUser;
   const primaryActionClass = esPresupuesto
     ? "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#8a5a33] px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(138,90,51,0.9)] transition hover:bg-[#754a28]"
     : "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition hover:bg-slate-800";
@@ -376,10 +398,13 @@ export default function CrearFacturaPage() {
       const storedClients = readClients();
       const routeClientId = params.get("clienteId") || "";
       const storedFiscalSettings = readFiscalSettings();
+      const storedProfile = readUserProfile();
 
       setClientesGuardados(storedClients);
       setFiscalSettings(storedFiscalSettings);
       setTipoIVA(storedFiscalSettings.defaultTaxRate);
+      setHasRegisteredUser(getUserFirstName(storedProfile).length > 0);
+      setHasLoadedAccount(true);
 
       const rawCompany = localStorage.getItem("datosEmpresa");
       if (rawCompany) try { setEmpresa(normalizeEmpresa(JSON.parse(rawCompany))); } catch {}
@@ -566,13 +591,13 @@ export default function CrearFacturaPage() {
     }
 
     if (recommendations.length > 0) {
-      showWarningToast(`Recomendacion: ${recommendations.join(", ")}.`);
+      showWarningToast(`Antes de continuar, te recomendamos ${recommendations.join(", ")}.`);
     }
 
     if (requireEmail && !cliente.email.trim()) {
       return (
         showWarningToast(
-          "Advertencia: anade el email del cliente si quieres enviar el documento desde aqui.",
+          "Anade el email del cliente para poder enviar el documento.",
         ),
         false
       );
@@ -643,15 +668,10 @@ export default function CrearFacturaPage() {
           qrPreview: verifactuRecord.qr.previewText,
         };
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "No se pudo preparar VeriFactu";
-
         console.error("Error preparing local VeriFactu record", error);
         verifactuSummary = {
           status: "error",
-          lastError: message,
+          lastError: "No se pudo actualizar el seguimiento de esta factura.",
         };
       }
     }
@@ -728,7 +748,7 @@ export default function CrearFacturaPage() {
         error instanceof Error ? error.message : "No se pudo enviar el documento";
 
       if (message === "Email service is not configured correctly") {
-        showWarningToast("El correo no esta configurado en el servidor");
+        showWarningToast("El envio por correo no esta disponible en este momento");
         return;
       }
 
@@ -738,11 +758,11 @@ export default function CrearFacturaPage() {
       }
 
       if (message.toLowerCase().includes("not verified")) {
-        showWarningToast("AWS SES esta bloqueando el envio: verifica remitente o destinatario");
+        showWarningToast("No se pudo completar el envio. Revisa los datos del correo y vuelve a intentarlo.");
         return;
       }
 
-      showWarningToast(message || "No se pudo enviar el documento");
+      showWarningToast("No se pudo enviar el documento. Intentalo de nuevo.");
     }
   };
 
@@ -768,148 +788,16 @@ export default function CrearFacturaPage() {
               {modeCopy.subtitle}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={saveDraftNow}
-            className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)] transition hover:bg-slate-800"
-          >
-            <Save className="h-[18px] w-[18px]" strokeWidth={2.1} />
-          </button>
-        </header>
-
-        {esPresupuesto ? (
-          <section className="mt-6 rounded-[28px] border border-[#ecd3ba] bg-[linear-gradient(180deg,rgba(255,248,240,0.98),rgba(255,255,255,0.94))] p-4 shadow-[0_24px_54px_-36px_rgba(185,122,69,0.34)] backdrop-blur-xl">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#8a5a33] text-white shadow-[0_18px_28px_-18px_rgba(138,90,51,0.9)]">
-                  <Sparkles className="h-4 w-4" strokeWidth={2.1} />
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-slate-950">
-                    Presupuesto
-                  </p>
-                  <p className="text-[13px] text-slate-600">
-                    Documento listo para revisar o enviar.
-                  </p>
-                </div>
-              </div>
-              <div className="rounded-full border border-[#e6c4a0] bg-white px-3 py-1.5 text-xs font-semibold text-[#8a5a33]">
-                {documentPrefix}-{numeroFacturaActual}
-              </div>
-            </div>
-          </section>
-        ) : null}
-
-        <section className={`${esPresupuesto ? "mt-5" : "mt-6"} rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl`}>
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <span className={`flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)] ${esPresupuesto ? "bg-[#8a5a33]" : "bg-slate-950"}`}>
-                <Search className="h-[18px] w-[18px]" strokeWidth={2.1} />
-              </span>
-              <div>
-                <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
-                  Cliente
-                </p>
-                <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
-                  Buscar cliente existente
-                </h2>
-                <p className="mt-2 max-w-xs text-[14px] leading-6 text-slate-500">
-                  {modeCopy.clientSearchDescription}
-                </p>
-              </div>
-            </div>
-            <Link
-              href="/clientes"
-              className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          {showAdvancedTools ? (
+            <button
+              type="button"
+              onClick={saveDraftNow}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)] transition hover:bg-slate-800"
             >
-              Clientes
-            </Link>
-          </div>
-          <div className="relative mt-6">
-            <Search
-              className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-              strokeWidth={2}
-            />
-            <input
-              value={clientSearch}
-              onChange={(event) => {
-                setClientSearch(event.target.value);
-                if (linkedClientId) {
-                  setLinkedClientId("");
-                }
-              }}
-              placeholder={
-                clientesGuardados.length
-                  ? "Buscar por nombre, NIF, email o telefono"
-                  : "No hay clientes guardados todavia"
-              }
-              disabled={!clientesGuardados.length}
-              className={`${inputClass} pl-11`}
-            />
-          </div>
-          {linkedClientId ? (
-            <div className={selectedClientCardClass}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className={`text-[11px] font-medium uppercase tracking-[0.16em] ${selectedClientEyebrowClass}`}>
-                    {modeCopy.selectedClientLabel}
-                  </p>
-                  <p className="mt-2 truncate text-sm font-semibold text-slate-950">
-                    {cliente.nombre.trim() || "Cliente sin nombre"}
-                  </p>
-                  <p className="mt-1 text-[13px] leading-5 text-slate-600">
-                    {[cliente.nif, cliente.email, cliente.telefono]
-                      .filter((value) => value.trim())
-                      .join(" / ") || "Datos cargados en el formulario inferior."}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={detachClient}
-                  className={detachButtonClass}
-                >
-                  Desvincular
-                </button>
-              </div>
-            </div>
+              <Save className="h-[18px] w-[18px]" strokeWidth={2.1} />
+            </button>
           ) : null}
-          {!clientesGuardados.length ? (
-            <div className="mt-4 rounded-[24px] border border-dashed border-slate-200 bg-white/70 px-4 py-4 text-sm text-slate-500">
-              No hay clientes guardados. Crea uno en la seccion de clientes y volvera a aparecer aqui.
-            </div>
-          ) : !linkedClientId ? (
-            <div className="mt-4 space-y-2">
-              {clientesFiltrados.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => selectClient(item)}
-                  className="flex w-full items-start justify-between gap-3 rounded-[24px] border border-white/70 bg-white/85 px-4 py-4 text-left shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)] transition hover:border-slate-200 hover:bg-white"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-950">
-                      {item.nombre || "Cliente sin nombre"}
-                    </p>
-                    <p className="mt-1 text-[13px] leading-5 text-slate-500">
-                      {[item.nif, item.email, item.telefono]
-                        .filter((value) => value.trim())
-                        .join(" / ") || "Sin datos de contacto"}
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600">
-                    Usar
-                  </span>
-                </button>
-              ))}
-              {!clientesFiltrados.length && clientSearch.trim() ? (
-                <div className="rounded-[24px] border border-dashed border-slate-200 bg-white/70 px-4 py-4 text-sm text-slate-500">
-                  No hay coincidencias para esa busqueda.
-                </div>
-              ) : null}
-            </div>
-          ) : null
-          }
-        </section>
+        </header>
 
         {!esPresupuesto ? (
           <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
@@ -993,6 +881,37 @@ export default function CrearFacturaPage() {
           </section>
         ) : null}
 
+        {!showAdvancedTools ? (
+          <section className="mt-5 rounded-[28px] border border-white/70 bg-white/82 p-5 shadow-[0_18px_45px_-26px_rgba(15,23,42,0.32)] backdrop-blur-xl">
+            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+              {guestModeCopy.eyebrow}
+            </p>
+            <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+              {guestModeCopy.title}
+            </h2>
+            <p className="mt-2 text-[14px] leading-6 text-slate-500">
+              {guestModeCopy.description}
+            </p>
+            <p className="mt-3 text-sm leading-6 text-slate-500">
+              {guestModeCopy.accessDescription}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link
+                href="/registro"
+                className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_18px_32px_-22px_rgba(15,23,42,0.88)] transition hover:bg-slate-800"
+              >
+                {guestModeCopy.registerAction}
+              </Link>
+              <Link
+                href="/login"
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                {guestModeCopy.loginAction}
+              </Link>
+            </div>
+          </section>
+        ) : null}
+
         <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
 
           <div className="flex items-start gap-3">
@@ -1009,6 +928,104 @@ export default function CrearFacturaPage() {
             </div>
           </div>
           <div className="mt-6 space-y-3">
+            {showAdvancedTools ? (
+              <>
+                <div className="grid grid-cols-[1fr_auto] gap-3">
+                  <div className="relative">
+                    <Search
+                      className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                      strokeWidth={2}
+                    />
+                    <input
+                      value={clientSearch}
+                      onChange={(event) => {
+                        setClientSearch(event.target.value);
+                        if (linkedClientId) {
+                          setLinkedClientId("");
+                        }
+                      }}
+                      placeholder={
+                        clientesGuardados.length
+                          ? "Buscar cliente por nombre, NIF, email o telefono"
+                          : "No hay clientes guardados todavia"
+                      }
+                      disabled={!clientesGuardados.length}
+                      className={`${inputClass} pl-11`}
+                    />
+                  </div>
+                  <Link
+                    href="/clientes"
+                    className="inline-flex min-h-14 items-center justify-center rounded-[22px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Clientes
+                  </Link>
+                </div>
+
+                {linkedClientId ? (
+                  <div className={selectedClientCardClass}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className={`text-[11px] font-medium uppercase tracking-[0.16em] ${selectedClientEyebrowClass}`}>
+                          {modeCopy.selectedClientLabel}
+                        </p>
+                        <p className="mt-2 truncate text-sm font-semibold text-slate-950">
+                          {cliente.nombre.trim() || "Cliente sin nombre"}
+                        </p>
+                        <p className="mt-1 text-[13px] leading-5 text-slate-600">
+                          {[cliente.nif, cliente.email, cliente.telefono]
+                            .filter((value) => value.trim())
+                            .join(" / ") || "Datos cargados en el formulario inferior."}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={detachClient}
+                        className={detachButtonClass}
+                      >
+                        Desvincular
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
+                {!linkedClientId && clientSearch.trim() ? (
+                  <div className="space-y-2">
+                    {clientesFiltrados.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => selectClient(item)}
+                        className="flex w-full items-start justify-between gap-3 rounded-[24px] border border-white/70 bg-white/85 px-4 py-4 text-left shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)] transition hover:border-slate-200 hover:bg-white"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-950">
+                            {item.nombre || "Cliente sin nombre"}
+                          </p>
+                          <p className="mt-1 text-[13px] leading-5 text-slate-500">
+                            {[item.nif, item.email, item.telefono]
+                              .filter((value) => value.trim())
+                              .join(" / ") || "Sin datos de contacto"}
+                          </p>
+                        </div>
+                        <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600">
+                          Usar
+                        </span>
+                      </button>
+                    ))}
+                    {!clientesFiltrados.length ? (
+                      <div className="rounded-[24px] border border-dashed border-slate-200 bg-white/70 px-4 py-4 text-sm text-slate-500">
+                        No hay coincidencias para esa busqueda.
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <p className="text-sm leading-6 text-slate-500">
+                {guestModeCopy.clientDescription}
+              </p>
+            )}
+
             <input placeholder="Nombre o razon social" value={cliente.nombre} onChange={(e) => updateCliente("nombre", e.target.value)} className={inputClass} />
             <input placeholder="NIF / DNI" value={cliente.nif} onChange={(e) => updateCliente("nif", e.target.value)} className={inputClass} />
             <input placeholder="Direccion" value={cliente.direccion} onChange={(e) => updateCliente("direccion", e.target.value)} className={inputClass} />
@@ -1138,28 +1155,30 @@ export default function CrearFacturaPage() {
               </div>
             </div>
           </div>
-          <div className="mt-4 rounded-[24px] border border-white/70 bg-white/84 px-4 py-4 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)]">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+          {showAdvancedTools ? (
+            <div className="mt-4 rounded-[24px] border border-white/70 bg-white/84 px-4 py-4 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)]">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                    Fiscal
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-slate-950">
+                    {currentTaxLabel} por defecto aplicado al documento
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                    {currentTaxNote ||
+                      "Sin nota fiscal adicional. Puedes cambiarlo desde Configuracion fiscal."}
+                  </p>
+                </div>
+                <Link
+                  href="/ajustes/configuracion-fiscal"
+                  className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
                   Fiscal
-                </p>
-                <p className="mt-2 text-sm font-semibold text-slate-950">
-                  {currentTaxLabel} por defecto aplicado al documento
-                </p>
-                <p className="mt-1 text-sm leading-6 text-slate-500">
-                  {currentTaxNote ||
-                    "Sin nota fiscal adicional. Puedes cambiarlo desde Configuracion fiscal."}
-                </p>
+                </Link>
               </div>
-              <Link
-                href="/ajustes/configuracion-fiscal"
-                className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                Fiscal
-              </Link>
             </div>
-          </div>
+          ) : null}
           <div className="mt-6 grid gap-3">
             <button
               type="button"
@@ -1169,26 +1188,30 @@ export default function CrearFacturaPage() {
               <Download className="h-4 w-4" strokeWidth={2.2} />
               {modeCopy.downloadLabel}
             </button>
-            <button
-              type="button"
-              onClick={enviar}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-            >
-              <Send className="h-4 w-4" strokeWidth={2.2} />
-              {modeCopy.sendLabel}
-            </button>
+            {showAdvancedTools ? (
+              <button
+                type="button"
+                onClick={enviar}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                <Send className="h-4 w-4" strokeWidth={2.2} />
+                {modeCopy.sendLabel}
+              </button>
+            ) : null}
           </div>
           <div className="mt-4 flex items-center justify-between gap-3 rounded-[22px] border border-white/70 bg-white/82 px-4 py-3 text-sm text-slate-500 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)]">
             <p>
-              {cliente.email.trim()
-                ? modeCopy.sendHint(cliente.email)
-                : modeCopy.emptyEmailHint}
+              {showAdvancedTools
+                ? cliente.email.trim()
+                  ? modeCopy.sendHint(cliente.email)
+                  : modeCopy.emptyEmailHint
+                : guestModeCopy.companyHint}
             </p>
             <Link
               href="/empresa"
               className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
-              Perfil
+              {showAdvancedTools ? "Perfil" : guestModeCopy.companyAction}
             </Link>
           </div>
         </section>

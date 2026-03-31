@@ -22,7 +22,7 @@ export default function Apoyar() {
 
       <p className="text-sm text-gray-600 mb-6">
         Facturabill es una herramienta gratuita y sin publicidad para crear y
-        gestionar facturas fácilmente. Mantener los servidores y el desarrollo
+        gestionar facturas fácilmente. Mantener y mejorar el servicio
         tiene un coste. Si esta herramienta te resulta útil, puedes apoyar el
         proyecto con una pequeña donación para ayudar a mantener el servicio
         gratuito para todos.

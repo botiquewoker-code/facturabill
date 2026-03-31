@@ -3,18 +3,18 @@ import Link from "next/link";
 export default function Privacidad() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-6 py-16">
-        <h1 className="text-5xl font-bold text-center mb-12 text-gray-800">
-          Política de privacidad de Facturabill.net
+      <div className="mx-auto max-w-4xl px-6 py-16">
+        <h1 className="mb-12 text-center text-5xl font-bold text-gray-800">
+          Politica de privacidad de Facturabill.net
         </h1>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 space-y-10 text-gray-700 leading-relaxed text-lg">
+        <div className="space-y-10 rounded-2xl bg-white p-8 text-lg leading-relaxed text-gray-700 shadow-lg md:p-12">
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
               1. Responsable del tratamiento
             </h2>
             <p>
-              El responsable del tratamiento de los datos recabados a través de
+              El responsable del tratamiento de los datos recabados a traves de
               la plataforma Facturabill.net es el titular del dominio.
             </p>
             <p className="mt-4">
@@ -29,149 +29,146 @@ export default function Privacidad() {
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
               2. Principios generales
             </h2>
             <p>
               En Facturabill.net nos comprometemos a proteger tu privacidad y a
-              tratar tus datos de forma transparente, lícita y segura,
-              cumpliendo con la normativa vigente en materia de protección de
-              datos (RGPD y LOPDGDD).
+              tratar tus datos de forma transparente, licita y segura,
+              cumpliendo con la normativa vigente en materia de proteccion de
+              datos.
             </p>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
               3. Datos que recopilamos
             </h2>
             <p>
-              Facturabill.net recopila únicamente los datos estrictamente
-              necesarios para prestar el servicio:
+              Facturabill.net recopila unicamente los datos necesarios para
+              prestar el servicio:
             </p>
-            <ul className="list-disc pl-8 mt-4 space-y-3">
+            <ul className="mt-4 list-disc space-y-3 pl-8">
               <li>
-                Datos introducidos por el usuario en el formulario de factura
-                (nombre de empresa, cliente, dirección, email, items, etc.).
+                Datos introducidos por el usuario en formularios y documentos,
+                como empresa, cliente, direccion, correo o conceptos.
               </li>
               <li>
-                Datos técnicos básicos del navegador (tipo de dispositivo,
-                resolución de pantalla) para optimizar la experiencia de
-                usuario.
+                Informacion necesaria para adaptar la experiencia de uso y
+                mantener la calidad del servicio.
               </li>
               <li>
-                En caso de suscripción o pago: datos de facturación necesarios
-                para la gestión del servicio.
+                En caso de suscripcion o pago, los datos de facturacion
+                necesarios para la gestion del servicio.
               </li>
             </ul>
             <p className="mt-4">
-              <strong>Importante:</strong> Las facturas se generan
-              exclusivamente en tu dispositivo. No se transmiten ni almacenan en
-              nuestros servidores los contenidos de las facturas creadas.
+              <strong>Importante:</strong> El contenido de tus facturas se trata
+              unicamente para ofrecerte las funciones de creacion, revision,
+              descarga y envio de documentos.
             </p>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
               4. Finalidad del tratamiento
             </h2>
-            <p>Los datos se utilizan únicamente para:</p>
-            <ul className="list-disc pl-8 mt-4 space-y-3">
-              <li>Prestar el servicio de generación y envío de facturas.</li>
+            <p>Los datos se utilizan unicamente para:</p>
+            <ul className="mt-4 list-disc space-y-3 pl-8">
+              <li>Prestar el servicio de generacion y envio de facturas.</li>
               <li>Gestionar suscripciones y pagos cuando corresponda.</li>
               <li>Mejorar la funcionalidad y usabilidad de la plataforma.</li>
               <li>
-                Enviar comunicaciones relacionadas con el servicio
-                (actualizaciones, avisos importantes).
+                Enviar comunicaciones relacionadas con el servicio, como avisos
+                importantes o actualizaciones relevantes.
               </li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
               5. Base legal del tratamiento
             </h2>
             <p>El tratamiento de datos se basa en:</p>
-            <ul className="list-disc pl-8 mt-4 space-y-3">
+            <ul className="mt-4 list-disc space-y-3 pl-8">
+              <li>La ejecucion del servicio solicitado por el usuario.</li>
+              <li>El consentimiento del usuario al aceptar esta politica.</li>
               <li>
-                La ejecución del contrato de prestación de servicios (uso de la
-                plataforma).
-              </li>
-              <li>El consentimiento del usuario al aceptar esta política.</li>
-              <li>
-                El interés legítimo para mejorar el servicio y garantizar su
+                El interes legitimo para mejorar el servicio y garantizar su
                 seguridad.
               </li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
-              6. Conservación de datos
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
+              6. Conservacion de datos
             </h2>
             <p>
-              Los datos introducidos en las facturas no se conservan en nuestros
-              servidores, ya que el procesamiento es local.
+              La informacion se conserva durante el tiempo necesario para
+              prestar el servicio, atender obligaciones legales y gestionar
+              incidencias o solicitudes relacionadas con la cuenta.
             </p>
             <p className="mt-4">
-              Los datos de suscripción o facturación se conservarán durante el
-              tiempo necesario para cumplir con las obligaciones legales (máximo
-              5 años tras la finalización del servicio).
+              Los datos de suscripcion o facturacion se conservaran durante el
+              tiempo exigido por la normativa aplicable.
             </p>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
               7. Derechos de los usuarios
             </h2>
             <p>Puedes ejercer tus derechos de:</p>
-            <ul className="list-disc pl-8 mt-4 space-y-3">
-              <li>Acceso, rectificación y supresión de datos.</li>
-              <li>Limitación del tratamiento y oposición.</li>
+            <ul className="mt-4 list-disc space-y-3 pl-8">
+              <li>Acceso, rectificacion y supresion de datos.</li>
+              <li>Limitacion del tratamiento y oposicion.</li>
               <li>Portabilidad de los datos.</li>
             </ul>
             <p className="mt-4">
-              Envía tu solicitud a{" "}
+              Envia tu solicitud a{" "}
               <a
                 href="mailto:facturabill.net@gmail.com"
                 className="text-blue-600 hover:underline"
               >
                 facturabill.net@gmail.com
               </a>
-              . Responderemos en el plazo máximo de un mes.
+              . Responderemos en el plazo maximo previsto por la normativa.
             </p>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
               8. Seguridad
             </h2>
             <p>
-              Aplicamos medidas técnicas y organizativas adecuadas para proteger
-              tus datos contra acceso no autorizado, pérdida o alteración.
+              Aplicamos medidas tecnicas y organizativas adecuadas para
+              proteger tus datos frente a accesos no autorizados, perdida,
+              alteracion o tratamiento indebido.
             </p>
           </section>
 
           <section>
-            <h2 className="text-3xl font-semibold mb-6 text-gray-800">
+            <h2 className="mb-6 text-3xl font-semibold text-gray-800">
               9. Modificaciones
             </h2>
             <p>
-              Podemos actualizar esta política de privacidad. Los cambios serán
-              publicados en esta página con la fecha de actualización
+              Podemos actualizar esta politica de privacidad. Los cambios se
+              publicaran en esta pagina con la fecha de actualizacion
               correspondiente.
             </p>
           </section>
 
-          <p className="text-center text-gray-500 mt-16 text-base">
-            Última actualización: 24 de diciembre de 2025
+          <p className="mt-16 text-center text-base text-gray-500">
+            Ultima actualizacion: 31 de marzo de 2026
           </p>
 
-          <div className="text-center mt-12">
+          <div className="mt-12 text-center">
             <Link
               href="/"
-              className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition font-medium"
+              className="inline-block rounded-lg bg-blue-600 px-8 py-3 font-medium text-white transition hover:bg-blue-700"
             >
-              ← Volver a Facturabill.net
+              Volver a Facturabill.net
             </Link>
           </div>
         </div>

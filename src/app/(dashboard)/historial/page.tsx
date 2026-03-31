@@ -192,15 +192,15 @@ export default function HistorialPage() {
                         </div>
                         {doc.verifactu?.fingerprint ? (
                           <p className="mt-2 text-[12px] leading-5 text-slate-500">
-                            Huella local {doc.verifactu.fingerprint.slice(0, 16)}
+                            Esta factura ya tiene su seguimiento actualizado.
                           </p>
                         ) : doc.verifactu?.lastError ? (
                           <p className="mt-2 text-[12px] leading-5 text-red-600">
-                            {doc.verifactu.lastError}
+                            Hay una incidencia pendiente de revisar en esta factura.
                           </p>
                         ) : (
                           <p className="mt-2 text-[12px] leading-5 text-slate-500">
-                            La preparacion se activara cuando emitas la factura.
+                            El seguimiento se activara cuando emitas la factura.
                           </p>
                         )}
                       </div>

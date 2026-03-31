@@ -63,7 +63,7 @@ export default function Login() {
       normalizedEmail !== localCredentials.email.toLowerCase()
     ) {
       showWarningToast(
-        "Este correo no coincide con la cuenta registrada en este dispositivo",
+        "Este correo no coincide con la cuenta que has creado",
       );
       return;
     }
@@ -160,8 +160,7 @@ export default function Login() {
               Iniciar sesion
             </h1>
             <p className="mt-3 max-w-[18rem] text-[14px] leading-6 text-slate-500">
-              Entra con el correo y la contrasena del usuario o gerente que ya
-              se registro en este dispositivo.
+              Entra con el correo y la contrasena de tu cuenta para continuar.
             </p>
           </div>
         </header>
@@ -177,8 +176,7 @@ export default function Login() {
                   Comprobando acceso
                 </p>
                 <p className="mt-1 text-[13px] leading-5 text-slate-500">
-                  Estamos revisando si ya existe una cuenta guardada en este
-                  dispositivo.
+                  Estamos preparando tu acceso.
                 </p>
               </div>
             </div>
@@ -191,13 +189,13 @@ export default function Login() {
                   <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={2.1} />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-slate-950">
-                    Cuenta detectada
-                  </p>
-                  <p className="mt-1 text-[13px] leading-5 text-slate-500">
-                    Hemos encontrado el acceso de {localCredentials.displayName}.
+                <p className="text-sm font-semibold text-slate-950">
+                  Cuenta detectada
+                </p>
+                <p className="mt-1 text-[13px] leading-5 text-slate-500">
+                    Hemos encontrado la cuenta de {localCredentials.displayName}.
                     Introduce el correo y la contrasena para continuar.
-                  </p>
+                </p>
                 </div>
               </div>
 
@@ -277,9 +275,8 @@ export default function Login() {
                   No hay usuario registrado
                 </p>
                 <p className="mt-1 text-[13px] leading-5 text-slate-500">
-                  En este dispositivo todavia no existe una cuenta guardada.
-                  Primero tienes que registrarte y despues podras iniciar
-                  sesion aqui.
+                  Todavia no hay ninguna cuenta creada. Primero tienes que
+                  registrarte y despues podras iniciar sesion.
                 </p>
               </div>
             </div>

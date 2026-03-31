@@ -134,7 +134,7 @@ export default function DatosAccesoPage() {
             </h1>
             <p className="mt-3 max-w-[18rem] text-[14px] leading-6 text-slate-500">
               Actualiza el nombre, correo y la contrasena personal o del
-              gerente que entra en este dispositivo.
+              gerente que usa esta cuenta.
             </p>
           </div>
         </header>
@@ -146,11 +146,10 @@ export default function DatosAccesoPage() {
             </span>
             <div>
               <p className="text-sm font-semibold text-slate-950">
-                Acceso local
+                Seguridad de acceso
               </p>
               <p className="mt-1 text-[13px] leading-5 text-slate-500">
-                La contrasena se guarda como hash local hasta conectar la cuenta
-                real al backend.
+                Actualiza tus datos para acceder a la cuenta de forma segura.
               </p>
             </div>
           </div>

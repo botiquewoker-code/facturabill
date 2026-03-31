@@ -114,9 +114,9 @@ export default function AvisoLegal() {
       </p>
 
       <p className="mb-4">
-        El titular del sitio web no almacena directamente los datos completos de
-        tarjetas bancarias de los usuarios, siendo dichos datos tratados
-        directamente por los proveedores de pago correspondientes.
+        La informacion necesaria para completar los pagos se tratara conforme a
+        las condiciones y medidas de seguridad aplicables de los proveedores de
+        pago correspondientes.
       </p>
 
       <h2 className="text-xl font-semibold mt-6 mb-2">

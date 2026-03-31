@@ -398,6 +398,8 @@ export default function DashboardHomeClient({
   const [selectedInsightId, setSelectedInsightId] =
     useState<InsightCardId | null>(null);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+  const firstName = getUserFirstName(userProfile);
+  const hasRegisteredUser = firstName.length > 0;
 
   const navItems = [
     { label: copy.nav.home, icon: House, active: true },
@@ -412,7 +414,7 @@ export default function DashboardHomeClient({
       ? {
           title: "Personaliza el inicio",
           description:
-            "Oculta los bloques que no quieres ver en el home y pulsa Guardar. Se guardara solo en este dispositivo.",
+            "Oculta los bloques que no quieres ver en el inicio y guarda los cambios para dejar el panel a tu gusto.",
           save: "Guardar",
           close: "Cerrar",
           search: {
@@ -435,7 +437,7 @@ export default function DashboardHomeClient({
       : {
           title: "Customize home",
           description:
-            "Hide the blocks you do not want on the home screen and press Save. This is saved only on this device.",
+            "Hide the blocks you do not want on the home screen and save the changes to keep the dashboard focused on what matters to you.",
           save: "Save",
           close: "Close",
           search: {
@@ -491,7 +493,7 @@ export default function DashboardHomeClient({
           promptEyebrow: "Cuenta",
           promptTitle: "Completa tu registro",
           promptDescription:
-            "Guarda tu nombre para personalizar el inicio y dejar lista tu cuenta desde este dispositivo.",
+            "Guarda tu nombre para personalizar el inicio y dejar lista tu cuenta.",
           promptAction: "Crear cuenta",
         }
       : {
@@ -499,8 +501,26 @@ export default function DashboardHomeClient({
           promptEyebrow: "Account",
           promptTitle: "Complete your registration",
           promptDescription:
-            "Save your name to personalize the home screen and finish setting up this device.",
+            "Save your name to personalize the home screen and finish setting up your account.",
           promptAction: "Create account",
+        };
+  const publicUi =
+    language === "es"
+      ? {
+          title: "Factura o presupuesto en minutos",
+          description:
+            "Accede a una creacion basica y prepara tu documento con una interfaz clara y sin distracciones.",
+          accessDescription:
+            "Registra tu cuenta o inicia sesion para usar clientes guardados, historial y funciones avanzadas.",
+          loginAction: "Iniciar sesion",
+        }
+      : {
+          title: "Invoice or quote in minutes",
+          description:
+            "Access the essential workflow and prepare your document with a focused, distraction-free interface.",
+          accessDescription:
+            "Create an account or sign in to use saved clients, history, and advanced tools.",
+          loginAction: "Sign in",
         };
 
   useEffect(() => {
@@ -752,7 +772,7 @@ export default function DashboardHomeClient({
       subtitle: [
         item.status === "prepared"
           ? language === "es"
-            ? "Preparado"
+            ? "Lista"
             : "Prepared"
           : item.status === "error"
             ? language === "es"
@@ -763,9 +783,9 @@ export default function DashboardHomeClient({
                 ? "Aceptado"
                 : "Accepted"
               : item.status === "queued"
-                ? language === "es"
-                  ? "En cola"
-                  : "Queued"
+              ? language === "es"
+                  ? "En proceso"
+                  : "In progress"
                 : item.status === "sent"
                   ? language === "es"
                     ? "Enviado"
@@ -980,11 +1000,11 @@ export default function DashboardHomeClient({
               : `${padCount(incompleteClients.length)} profiles need completion`
             : language === "es"
               ? "Sin clientes guardados"
-              : "No saved clients",
+              : "No clients yet",
         description:
           language === "es"
-            ? "Fichas disponibles para facturar rapido y detectar datos de contacto incompletos."
-            : "Saved client records ready for invoicing, with incomplete contacts easy to spot.",
+            ? "Tus clientes listos para facturar, con los datos pendientes faciles de revisar."
+            : "Clients ready for invoicing, with missing details easy to review.",
         actionLabel:
           latestClient && language === "es"
             ? "Abrir cliente"
@@ -1093,15 +1113,15 @@ export default function DashboardHomeClient({
                 ? `${padCount(verifactuErrorCount)} incidencias por revisar`
                 : `${padCount(verifactuErrorCount)} issues to review`
               : language === "es"
-                ? `${padCount(preparedVerifactuRecords.length)} registros preparados`
-                : `${padCount(preparedVerifactuRecords.length)} records prepared`
+                ? `${padCount(preparedVerifactuRecords.length)} facturas listas`
+                : `${padCount(preparedVerifactuRecords.length)} invoices ready`
             : language === "es"
-              ? "Sin registros preparados todavia"
-              : "No prepared records yet",
+              ? "Sin facturas con seguimiento todavia"
+              : "No invoices tracked yet",
         description:
           language === "es"
-            ? "Resumen local del estado VERI*FACTU antes de conectar la remision real y la base de datos."
-            : "Local VERI*FACTU overview before connecting real remittance and database flows.",
+            ? "Consulta rapidamente el estado de tus facturas en VeriFactu."
+            : "Check your invoice status in VeriFactu at a glance.",
         actionLabel:
           language === "es" ? "Abrir panel VeriFactu" : "Open VeriFactu panel",
         href: "/ajustes/verifactu",
@@ -1113,7 +1133,7 @@ export default function DashboardHomeClient({
         },
         metrics: [
           {
-            label: language === "es" ? "Registros locales" : "Local records",
+            label: language === "es" ? "Facturas" : "Invoices",
             value: padCount(verifactuRecords.length),
           },
           {
@@ -1121,7 +1141,7 @@ export default function DashboardHomeClient({
             value: padCount(preparedVerifactuRecords.length),
           },
           {
-            label: language === "es" ? "En cola" : "Queued",
+            label: language === "es" ? "En proceso" : "In progress",
             value: padCount(queuedVerifactuRecords.length),
           },
           {
@@ -1207,15 +1227,16 @@ export default function DashboardHomeClient({
 
   const totalResults =
     clientResults.length + historyResults.length + draftResults.length;
-  const firstName = getUserFirstName(userProfile);
-  const hasRegisteredUser = firstName.length > 0;
   const hasBusinessActivity =
     clientes.length > 0 ||
     historial.length > 0 ||
     borradores.length > 0 ||
     verifactuRecords.length > 0;
+  const showRegisteredDashboard = hasLoadedDashboardData && hasRegisteredUser;
   const heroTitle =
-    language === "es"
+    !showRegisteredDashboard
+      ? publicUi.title
+      : language === "es"
       ? hasBusinessActivity
         ? "Tu negocio en marcha"
         : copy.home.emptyTitle
@@ -1223,7 +1244,9 @@ export default function DashboardHomeClient({
         ? "Your business in motion"
         : copy.home.emptyTitle;
   const heroDescription =
-    language === "es"
+    !showRegisteredDashboard
+      ? publicUi.description
+      : language === "es"
       ? hasBusinessActivity
         ? "Consulta la actividad y crea nuevos documentos desde un solo lugar."
         : copy.home.emptyDescription
@@ -1283,11 +1306,15 @@ export default function DashboardHomeClient({
 
       <main
         className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-5 pt-6 font-sans"
-        style={{ paddingBottom: "calc(7.5rem + env(safe-area-inset-bottom))" }}
+        style={{
+          paddingBottom: showRegisteredDashboard
+            ? "calc(7.5rem + env(safe-area-inset-bottom))"
+            : "calc(2.5rem + env(safe-area-inset-bottom))",
+        }}
       >
         <header className="flex items-start justify-between gap-4">
           <div>
-            {hasLoadedDashboardData && hasRegisteredUser ? (
+            {showRegisteredDashboard ? (
               <p className="text-sm font-medium tracking-[-0.02em] text-slate-500">
                 {registrationUi.greeting(firstName)}
               </p>
@@ -1300,57 +1327,34 @@ export default function DashboardHomeClient({
             </h1>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/70 text-slate-700 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)] backdrop-blur-xl transition hover:bg-white"
-            >
-              <Bell className="h-[18px] w-[18px]" strokeWidth={2.1} />
-            </button>
-            <button
-              type="button"
-              aria-label="Filters"
-              onClick={openFilterSheet}
-              className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/70 text-slate-700 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)] backdrop-blur-xl transition hover:bg-white"
-            >
-              <SlidersHorizontal
-                className="h-[18px] w-[18px]"
-                strokeWidth={2.1}
-              />
-              {hasHiddenSections ? (
-                <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-slate-950" />
-              ) : null}
-            </button>
-          </div>
+          {showRegisteredDashboard ? (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                aria-label="Notifications"
+                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/70 text-slate-700 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)] backdrop-blur-xl transition hover:bg-white"
+              >
+                <Bell className="h-[18px] w-[18px]" strokeWidth={2.1} />
+              </button>
+              <button
+                type="button"
+                aria-label="Filters"
+                onClick={openFilterSheet}
+                className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/70 text-slate-700 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)] backdrop-blur-xl transition hover:bg-white"
+              >
+                <SlidersHorizontal
+                  className="h-[18px] w-[18px]"
+                  strokeWidth={2.1}
+                />
+                {hasHiddenSections ? (
+                  <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-slate-950" />
+                ) : null}
+              </button>
+            </div>
+          ) : null}
         </header>
 
-        {hasLoadedDashboardData && !hasRegisteredUser ? (
-          <section className="mt-6 rounded-[28px] border border-white/70 bg-white/82 p-5 shadow-[0_18px_45px_-26px_rgba(15,23,42,0.32)] backdrop-blur-xl">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                  {registrationUi.promptEyebrow}
-                </p>
-                <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
-                  {registrationUi.promptTitle}
-                </h2>
-                <p className="mt-2 text-[14px] leading-6 text-slate-500">
-                  {registrationUi.promptDescription}
-                </p>
-              </div>
-
-              <Link
-                href="/registro"
-                className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_18px_32px_-22px_rgba(15,23,42,0.88)] transition hover:bg-slate-800"
-              >
-                {registrationUi.promptAction}
-              </Link>
-            </div>
-          </section>
-        ) : null}
-
-        {homeVisibility.search ? (
+        {showRegisteredDashboard && homeVisibility.search ? (
           <div className="mt-6 rounded-[26px] border border-white/70 bg-white/80 p-4 shadow-[0_18px_45px_-26px_rgba(15,23,42,0.32)] backdrop-blur-xl">
             <label className="flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.8)]">
@@ -1374,7 +1378,7 @@ export default function DashboardHomeClient({
           </div>
         ) : null}
 
-        {normalizedQuery ? (
+        {showRegisteredDashboard && normalizedQuery ? (
           <section className="flex-1 py-6">
             <div className="rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
               <div className="flex items-start justify-between gap-3">
@@ -1520,7 +1524,7 @@ export default function DashboardHomeClient({
             </div>
           </section>
         ) : (
-          <>
+          showRegisteredDashboard ? (
             <section className="mt-5 rounded-[36px] border border-white/70 bg-white/76 p-8 text-center shadow-[0_30px_70px_-40px_rgba(15,23,42,0.45)] backdrop-blur-xl">
               {homeVisibility.heroVisual ? (
                 <div
@@ -1624,27 +1628,93 @@ export default function DashboardHomeClient({
                 </div>
               ) : null}
             </section>
-          </>
+          ) : (
+            <section className="mt-5 rounded-[36px] border border-white/70 bg-white/76 p-8 text-center shadow-[0_30px_70px_-40px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+              <div className="mx-auto max-w-sm">
+                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                  {registrationUi.promptEyebrow}
+                </p>
+                <h2 className="mt-3 text-[1.85rem] font-semibold tracking-[-0.05em] text-slate-950">
+                  {heroTitle}
+                </h2>
+                <p className="mt-3 text-[15px] leading-6 text-slate-500">
+                  {heroDescription}
+                </p>
+              </div>
+
+              <div className="mt-8 grid grid-cols-[1.35fr_1fr] gap-3">
+                <Link
+                  href="/crear-factura"
+                  className="inline-flex min-h-14 items-center justify-center gap-2 rounded-[28px] bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_22px_38px_-24px_rgba(15,23,42,0.95)] transition hover:bg-slate-800"
+                >
+                  <Plus className="h-4 w-4" strokeWidth={2.2} />
+                  {newInvoiceLabel}
+                </Link>
+                <Link
+                  href="/crear-factura?tipo=presupuesto"
+                  className="inline-flex min-h-14 items-center justify-center gap-2 rounded-[28px] border border-slate-200 bg-white/82 px-5 text-sm font-semibold text-slate-700 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.32)] transition hover:bg-white"
+                >
+                  <ReceiptText className="h-4 w-4" strokeWidth={2.2} />
+                  {newBudgetLabel}
+                </Link>
+              </div>
+
+              <p className="mt-6 text-sm leading-6 text-slate-500">
+                {publicUi.accessDescription}
+              </p>
+
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+                <Link
+                  href="/registro"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_18px_32px_-22px_rgba(15,23,42,0.88)] transition hover:bg-slate-800"
+                >
+                  {registrationUi.promptAction}
+                </Link>
+                <Link
+                  href="/login"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  {publicUi.loginAction}
+                </Link>
+              </div>
+            </section>
+          )
         )}
       </main>
 
-      <nav
-        className="fixed bottom-0 left-1/2 z-20 w-full max-w-[430px] -translate-x-1/2 px-4"
-        style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
-      >
-        <div className="grid grid-cols-5 rounded-[30px] border border-white/10 bg-slate-950/95 px-2 py-3 text-white shadow-[0_24px_60px_-26px_rgba(15,23,42,0.78)] backdrop-blur-xl">
-          {navItems.map(({ label, icon: Icon, active, href }) => {
-            const className = `flex flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center transition ${
-              active
-                ? "bg-white text-slate-950 shadow-[0_16px_30px_-24px_rgba(255,255,255,1)]"
-                : "text-white/58 hover:text-white/78"
-            }`;
+      {showRegisteredDashboard ? (
+        <nav
+          className="fixed bottom-0 left-1/2 z-20 w-full max-w-[430px] -translate-x-1/2 px-4"
+          style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
+        >
+          <div className="grid grid-cols-5 rounded-[30px] border border-white/10 bg-slate-950/95 px-2 py-3 text-white shadow-[0_24px_60px_-26px_rgba(15,23,42,0.78)] backdrop-blur-xl">
+            {navItems.map(({ label, icon: Icon, active, href }) => {
+              const className = `flex flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center transition ${
+                active
+                  ? "bg-white text-slate-950 shadow-[0_16px_30px_-24px_rgba(255,255,255,1)]"
+                  : "text-white/58 hover:text-white/78"
+              }`;
 
-            if (href) {
+              if (href) {
+                return (
+                  <Link
+                    key={label}
+                    href={href}
+                    aria-current={active ? "page" : undefined}
+                    className={className}
+                  >
+                    <Icon className="h-[18px] w-[18px]" strokeWidth={2.1} />
+                    <span className="text-[11px] font-medium tracking-[-0.01em]">
+                      {label}
+                    </span>
+                  </Link>
+                );
+              }
+
               return (
-                <Link
+                <button
                   key={label}
-                  href={href}
+                  type="button"
                   aria-current={active ? "page" : undefined}
                   className={className}
                 >
@@ -1652,28 +1722,14 @@ export default function DashboardHomeClient({
                   <span className="text-[11px] font-medium tracking-[-0.01em]">
                     {label}
                   </span>
-                </Link>
+                </button>
               );
-            }
+            })}
+          </div>
+        </nav>
+      ) : null}
 
-            return (
-              <button
-                key={label}
-                type="button"
-                aria-current={active ? "page" : undefined}
-                className={className}
-              >
-                <Icon className="h-[18px] w-[18px]" strokeWidth={2.1} />
-                <span className="text-[11px] font-medium tracking-[-0.01em]">
-                  {label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-
-      {selectedInsight ? (
+      {showRegisteredDashboard && selectedInsight ? (
         <>
           <button
             type="button"
@@ -1783,7 +1839,7 @@ export default function DashboardHomeClient({
         </>
       ) : null}
 
-      {isFilterSheetOpen ? (
+      {showRegisteredDashboard && isFilterSheetOpen ? (
         <>
           <button
             type="button"

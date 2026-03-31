@@ -68,7 +68,7 @@ const accountActionsCopy: Record<AppLanguage, AccountActionsCopy> = {
   es: {
     exportData: "Exportar datos",
     exportDataDescription:
-      "Descarga una copia JSON con empresa, clientes, historial, borradores y ajustes guardados en este dispositivo.",
+      "Descarga una copia de tu informacion de empresa, clientes, historial, borradores y ajustes.",
     helpCenter: "Centro de ayuda",
     helpCenterDescription:
       "Guia rapida con dudas frecuentes sobre facturas, PDF y uso basico.",
@@ -82,13 +82,13 @@ const accountActionsCopy: Record<AppLanguage, AccountActionsCopy> = {
     deleteAccountDescription:
       "Gestiona la solicitud de eliminacion y revisa el proceso antes de confirmarlo.",
     exportSuccess: "Datos exportados correctamente",
-    exportEmpty: "No hay datos locales para exportar todavia",
+    exportEmpty: "Todavia no hay informacion para exportar",
     exportError: "No se pudieron exportar los datos",
   },
   en: {
     exportData: "Export data",
     exportDataDescription:
-      "Download a JSON copy of company, clients, history, drafts, and settings stored on this device.",
+      "Download a copy of your company, clients, history, drafts, and settings.",
     helpCenter: "Help center",
     helpCenterDescription:
       "Quick guidance for invoices, PDFs, and everyday usage questions.",
@@ -102,13 +102,13 @@ const accountActionsCopy: Record<AppLanguage, AccountActionsCopy> = {
     deleteAccountDescription:
       "Review the deletion flow and manage the request before confirming it.",
     exportSuccess: "Data exported successfully",
-    exportEmpty: "There is no local data to export yet",
+    exportEmpty: "There is no information to export yet",
     exportError: "Unable to export data",
   },
   ar: {
     exportData: "تصدير البيانات",
     exportDataDescription:
-      "نزّل نسخة JSON من بيانات الشركة والعملاء والسجل والمسودات والإعدادات المحفوظة على هذا الجهاز.",
+      "نزّل نسخة من بيانات الشركة والعملاء والسجل والمسودات والإعدادات.",
     helpCenter: "مركز المساعدة",
     helpCenterDescription:
       "دليل سريع للأسئلة الشائعة حول الفواتير وملفات PDF والاستخدام اليومي.",
@@ -122,13 +122,13 @@ const accountActionsCopy: Record<AppLanguage, AccountActionsCopy> = {
     deleteAccountDescription:
       "راجع مسار حذف الحساب وأدر الطلب قبل تأكيده.",
     exportSuccess: "تم تصدير البيانات بنجاح",
-    exportEmpty: "لا توجد بيانات محلية لتصديرها بعد",
+    exportEmpty: "لا توجد بيانات جاهزة للتصدير بعد",
     exportError: "تعذر تصدير البيانات",
   },
   fr: {
     exportData: "Exporter les donnees",
     exportDataDescription:
-      "Telechargez une copie JSON de l'entreprise, des clients, de l'historique, des brouillons et des reglages enregistres sur cet appareil.",
+      "Telechargez une copie des donnees de l'entreprise, des clients, de l'historique, des brouillons et des reglages.",
     helpCenter: "Centre d'aide",
     helpCenterDescription:
       "Guide rapide pour les questions frequentes sur les factures, les PDF et l'usage quotidien.",
@@ -142,13 +142,13 @@ const accountActionsCopy: Record<AppLanguage, AccountActionsCopy> = {
     deleteAccountDescription:
       "Consultez le processus de suppression avant de confirmer la demande.",
     exportSuccess: "Donnees exportees avec succes",
-    exportEmpty: "Aucune donnee locale a exporter pour le moment",
+    exportEmpty: "Aucune information a exporter pour le moment",
     exportError: "Impossible d'exporter les donnees",
   },
   it: {
     exportData: "Esporta dati",
     exportDataDescription:
-      "Scarica una copia JSON con azienda, clienti, storico, bozze e impostazioni salvate su questo dispositivo.",
+      "Scarica una copia di azienda, clienti, storico, bozze e impostazioni.",
     helpCenter: "Centro assistenza",
     helpCenterDescription:
       "Guida rapida per dubbi comuni su fatture, PDF e utilizzo quotidiano.",
@@ -162,13 +162,13 @@ const accountActionsCopy: Record<AppLanguage, AccountActionsCopy> = {
     deleteAccountDescription:
       "Consulta il flusso di eliminazione e gestisci la richiesta prima di confermarla.",
     exportSuccess: "Dati esportati correttamente",
-    exportEmpty: "Non ci sono ancora dati locali da esportare",
+    exportEmpty: "Non ci sono ancora informazioni da esportare",
     exportError: "Impossibile esportare i dati",
   },
   nl: {
     exportData: "Gegevens exporteren",
     exportDataDescription:
-      "Download een JSON-kopie van bedrijf, klanten, geschiedenis, concepten en instellingen die op dit apparaat zijn opgeslagen.",
+      "Download een kopie van bedrijf, klanten, geschiedenis, concepten en instellingen.",
     helpCenter: "Helpcentrum",
     helpCenterDescription:
       "Snelle gids voor veelgestelde vragen over facturen, pdf's en dagelijks gebruik.",
@@ -182,13 +182,13 @@ const accountActionsCopy: Record<AppLanguage, AccountActionsCopy> = {
     deleteAccountDescription:
       "Bekijk het verwijderproces en beheer het verzoek voordat je bevestigt.",
     exportSuccess: "Gegevens succesvol geexporteerd",
-    exportEmpty: "Er zijn nog geen lokale gegevens om te exporteren",
+    exportEmpty: "Er is nog geen informatie om te exporteren",
     exportError: "Gegevens konden niet worden geexporteerd",
   },
   pt: {
     exportData: "Exportar dados",
     exportDataDescription:
-      "Transfere uma copia JSON com empresa, clientes, historico, rascunhos e definicoes guardadas neste dispositivo.",
+      "Transfere uma copia da empresa, clientes, historico, rascunhos e definicoes.",
     helpCenter: "Centro de ajuda",
     helpCenterDescription:
       "Guia rapido para duvidas frequentes sobre faturas, PDF e uso diario.",
@@ -202,7 +202,7 @@ const accountActionsCopy: Record<AppLanguage, AccountActionsCopy> = {
     deleteAccountDescription:
       "Reve o processo de eliminacao e gere o pedido antes de o confirmares.",
     exportSuccess: "Dados exportados com sucesso",
-    exportEmpty: "Ainda nao ha dados locais para exportar",
+    exportEmpty: "Ainda nao ha informacao para exportar",
     exportError: "Nao foi possivel exportar os dados",
   },
 };
@@ -214,37 +214,37 @@ const verifactuSettingsCopy: Record<
   es: {
     title: "Preparacion VeriFactu",
     description:
-      "Revisa registros locales, huellas y cola antes de conectar la base de datos y AEAT.",
+      "Consulta el estado de tus facturas y el seguimiento de VeriFactu.",
   },
   en: {
     title: "VeriFactu setup",
     description:
-      "Review local records, fingerprints, and queue before connecting the database and AEAT.",
+      "Review your invoice status and VeriFactu follow-up.",
   },
   ar: {
     title: "VeriFactu",
     description:
-      "Review local records, fingerprints, and queue before connecting the database and AEAT.",
+      "راجع حالة الفواتير ومتابعة VeriFactu.",
   },
   fr: {
     title: "Preparation VeriFactu",
     description:
-      "Consultez les enregistrements locaux, empreintes et file avant la connexion a la base et a l'AEAT.",
+      "Consultez l'etat de vos factures et le suivi VeriFactu.",
   },
   it: {
     title: "Preparazione VeriFactu",
     description:
-      "Controlla record locali, impronte e coda prima di collegare database e AEAT.",
+      "Controlla lo stato delle fatture e il monitoraggio VeriFactu.",
   },
   nl: {
     title: "VeriFactu voorbereiding",
     description:
-      "Controleer lokale records, fingerprints en wachtrij voordat je database en AEAT koppelt.",
+      "Bekijk de status van je facturen en de VeriFactu-opvolging.",
   },
   pt: {
     title: "Preparacao VeriFactu",
     description:
-      "Reve registos locais, impressao digital e fila antes de ligar a base de dados e a AEAT.",
+      "Reve o estado das faturas e o acompanhamento VeriFactu.",
   },
 };
 

@@ -20,7 +20,10 @@ import {
   readUserProfile,
   writeUserProfile,
 } from "@/features/account/profile";
-import { showWarningToast } from "@/features/notifications/toast";
+import {
+  showSuccessToast,
+  showWarningToast,
+} from "@/features/notifications/toast";
 
 const DEFAULT_TEMPLATE = "InvoicePDF";
 const inputClass =
@@ -31,6 +34,7 @@ export default function RegistroPage() {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const passwordIsValid = password.trim().length >= 8;
   const canRegister =
@@ -51,6 +55,10 @@ export default function RegistroPage() {
   }, []);
 
   async function handleSave() {
+    if (isSubmitting) {
+      return;
+    }
+
     if (!displayName.trim() || !email.trim()) {
       showWarningToast("Completa tu nombre y el correo para continuar");
       return;
@@ -62,6 +70,8 @@ export default function RegistroPage() {
     }
 
     try {
+      setIsSubmitting(true);
+
       const normalizedEmail = email.trim().toLowerCase();
       const passwordHash = await hashLocalAccountPassword(password.trim());
       const existingCompany =
@@ -121,9 +131,13 @@ export default function RegistroPage() {
       window.localStorage.setItem("plantillaUsuario", existingTemplate);
       window.localStorage.setItem("plantillaElegida", existingTemplate);
 
-      router.push("/");
+      showSuccessToast("Cuenta creada correctamente");
+      router.replace("/");
+      router.refresh();
     } catch {
-      showWarningToast("No se pudo crear el acceso en este dispositivo");
+      showWarningToast("No se pudo crear la cuenta");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -163,18 +177,24 @@ export default function RegistroPage() {
           </div>
         </header>
 
-        <section className="mt-6 rounded-[32px] border border-white/70 bg-white/82 p-5 shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)] backdrop-blur-xl">
+        <form
+          className="mt-6 rounded-[32px] border border-white/70 bg-white/82 p-5 shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)] backdrop-blur-xl"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleSave();
+          }}
+        >
           <div className="flex items-start gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
               <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={2.1} />
             </span>
             <div>
               <p className="text-sm font-semibold text-slate-950">
-                Alta minima
+                Paso inicial
               </p>
               <p className="mt-1 text-[13px] leading-5 text-slate-500">
-                Esto solo crea el acceso del usuario en este dispositivo.
-                Empresa, cobros y datos fiscales van despues.
+                Crea tu cuenta con lo esencial y completa el resto cuando te
+                venga bien.
               </p>
             </div>
           </div>
@@ -186,6 +206,9 @@ export default function RegistroPage() {
                 Nombre
               </span>
               <input
+                name="displayName"
+                autoComplete="name"
+                required
                 value={displayName}
                 onChange={(event) => setDisplayName(event.target.value)}
                 placeholder="Nombre personal o del gerente"
@@ -199,7 +222,10 @@ export default function RegistroPage() {
                 Correo
               </span>
               <input
+                name="email"
                 type="email"
+                autoComplete="email"
+                required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="tu@negocio.com"
@@ -213,7 +239,11 @@ export default function RegistroPage() {
                 Contrasena
               </span>
               <input
+                name="password"
                 type="password"
+                autoComplete="new-password"
+                minLength={8}
+                required
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="Minimo 8 caracteres"
@@ -223,15 +253,14 @@ export default function RegistroPage() {
           </div>
 
           <button
-            type="button"
-            onClick={handleSave}
-            disabled={!canRegister}
+            type="submit"
+            disabled={!canRegister || isSubmitting}
             className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition enabled:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-55"
           >
-            Crear cuenta y entrar
+            {isSubmitting ? "Creando cuenta..." : "Crear cuenta y entrar"}
             <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
           </button>
-        </section>
+        </form>
 
         <section className="mt-4 rounded-[28px] border border-white/70 bg-white/76 p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.2)] backdrop-blur-xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">

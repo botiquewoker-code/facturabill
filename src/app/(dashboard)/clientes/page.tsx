@@ -137,7 +137,7 @@ export default function ClientesPage() {
 
     if (hasDuplicateTaxId(clientes, nuevoCliente.nif)) {
       showNotice(
-        "Advertencia: ya existe un cliente con ese NIF. Te recomendamos revisarlo antes de duplicarlo.",
+        "Ya existe un cliente con ese NIF. Revisalo antes de guardar otro parecido.",
         "warning",
       );
       sonidoError();
@@ -154,7 +154,7 @@ export default function ClientesPage() {
 
     if (shouldSuggestIdentity) {
       showNotice(
-        "Recomendacion: anade nombre y NIF para identificar mejor la ficha cuando la completes.",
+        "Puedes completar nombre y NIF mas adelante para identificar mejor esta ficha.",
         "warning",
       );
     }
@@ -173,20 +173,20 @@ export default function ClientesPage() {
         <header className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
-              Database
+              Clientes
             </p>
             <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
-              Clients
+              Agenda de clientes
             </h1>
             <p className="mt-3 max-w-xs text-[15px] leading-6 text-slate-500">
-              Keep your saved contacts organized and ready for the next invoice.
+              Organiza tus contactos y tenlos listos para la proxima factura.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
-              aria-label="New client"
+              aria-label="Nuevo cliente"
               onClick={openModal}
               className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)] transition hover:bg-slate-800"
             >
@@ -194,7 +194,7 @@ export default function ClientesPage() {
             </button>
             <button
               type="button"
-              aria-label="Refresh clients"
+              aria-label="Actualizar lista de clientes"
               onClick={refreshClients}
               className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/70 text-slate-700 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)] backdrop-blur-xl transition hover:bg-white"
             >
@@ -215,7 +215,7 @@ export default function ClientesPage() {
               type="search"
               value={busqueda}
               onChange={(event) => setBusqueda(event.target.value)}
-              placeholder="Search by name, tax ID, or email"
+              placeholder="Buscar por nombre, NIF o email"
               className="h-11 w-full border-0 bg-transparent text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400"
             />
           </label>
@@ -224,10 +224,10 @@ export default function ClientesPage() {
         <section className="mt-6 flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
-              Saved records
+              Tus contactos
             </p>
             <h2 className="mt-2 text-[1.65rem] font-semibold tracking-[-0.04em] text-slate-950">
-              Client database
+              Clientes guardados
             </h2>
           </div>
 
@@ -261,34 +261,34 @@ export default function ClientesPage() {
                 <UsersRound className="h-8 w-8" strokeWidth={2.1} />
               </div>
               <h3 className="text-[1.6rem] font-semibold tracking-[-0.04em] text-slate-950">
-                No clients yet
+                Todavia no hay clientes
               </h3>
               <p className="mt-3 text-[15px] leading-6 text-slate-500">
-                Add your first client to build a clean contact base for future
-                invoices and drafts.
+                Anade tu primer cliente para tener sus datos a mano en
+                facturas y presupuestos.
               </p>
               <button
                 type="button"
                 onClick={openModal}
                 className="mt-7 inline-flex min-h-14 items-center justify-center rounded-full bg-slate-950 px-7 text-[15px] font-semibold text-white shadow-[0_22px_38px_-24px_rgba(15,23,42,0.95)] transition hover:bg-slate-800"
               >
-                Add first client
+                Anadir primer cliente
               </button>
             </div>
           ) : clientesFiltrados.length === 0 ? (
             <div className="rounded-[32px] border border-white/70 bg-white/72 p-7 text-center shadow-[0_28px_60px_-40px_rgba(15,23,42,0.4)] backdrop-blur-xl">
               <h3 className="text-xl font-semibold tracking-[-0.03em] text-slate-950">
-                No matches found
+                No hay coincidencias
               </h3>
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                Try another search term or clear the current filter.
+                Prueba con otra busqueda o limpia el filtro actual.
               </p>
               <button
                 type="button"
                 onClick={() => setBusqueda("")}
                 className="mt-5 inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
-                Clear search
+                Limpiar busqueda
               </button>
             </div>
           ) : (
@@ -307,15 +307,15 @@ export default function ClientesPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <h3 className="truncate text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-950">
-                          {cliente.nombre || "Unnamed client"}
+                          {cliente.nombre || "Cliente sin nombre"}
                         </h3>
                         <p className="mt-1 text-sm font-medium text-slate-500">
-                          {cliente.nif || "No tax ID"}
+                          {cliente.nif || "Sin NIF"}
                         </p>
                       </div>
 
                       <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-[0_12px_22px_-18px_rgba(15,23,42,0.35)]">
-                        <span>Open</span>
+                        <span>Abrir</span>
                         <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
                       </div>
                     </div>
@@ -324,7 +324,7 @@ export default function ClientesPage() {
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-slate-400" strokeWidth={2} />
                         <span className="truncate">
-                          {cliente.email || "No email added"}
+                          {cliente.email || "Sin email"}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -332,7 +332,7 @@ export default function ClientesPage() {
                           className="h-4 w-4 text-slate-400"
                           strokeWidth={2}
                         />
-                        <span>{cliente.telefono || "No phone added"}</span>
+                        <span>{cliente.telefono || "Sin telefono"}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin
@@ -342,7 +342,7 @@ export default function ClientesPage() {
                         <span className="truncate">
                           {[cliente.direccion, cliente.codigoPostal, cliente.ciudad]
                             .filter(Boolean)
-                            .join(", ") || "No address added"}
+                            .join(", ") || "Sin direccion"}
                         </span>
                       </div>
                     </div>
@@ -366,16 +366,16 @@ export default function ClientesPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
-                    New entry
+                    Nuevo cliente
                   </p>
                   <h2 className="mt-2 text-[1.7rem] font-semibold tracking-[-0.04em] text-slate-950">
-                    Add client
+                    Crear ficha
                   </h2>
                 </div>
 
                 <button
                   type="button"
-                  aria-label="Close"
+                  aria-label="Cerrar"
                   onClick={closeModal}
                   className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/70 text-slate-700 shadow-[0_12px_24px_-18px_rgba(15,23,42,0.42)] backdrop-blur-xl transition hover:bg-white"
                 >
@@ -385,11 +385,11 @@ export default function ClientesPage() {
 
               <div className="mt-6 space-y-3">
                 <p className="text-sm leading-6 text-slate-500">
-                  Puedes guardar la ficha con datos parciales. Recomendacion:
-                  anade nombre y NIF para reconocerla mas facilmente despues.
+                  Puedes guardar la ficha con datos parciales y completarla
+                  cuando lo necesites.
                 </p>
                 <input
-                  placeholder="Full name"
+                  placeholder="Nombre o razon social"
                   value={nuevoCliente.nombre}
                   onChange={(event) =>
                     updateNuevoCliente("nombre", event.target.value)
@@ -397,7 +397,7 @@ export default function ClientesPage() {
                   className="h-14 w-full rounded-[22px] border border-white/70 bg-white/80 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.4)]"
                 />
                 <input
-                  placeholder="Tax ID"
+                  placeholder="NIF / DNI"
                   value={nuevoCliente.nif}
                   onChange={(event) =>
                     updateNuevoCliente("nif", event.target.value)
@@ -405,7 +405,7 @@ export default function ClientesPage() {
                   className="h-14 w-full rounded-[22px] border border-white/70 bg-white/80 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.4)]"
                 />
                 <input
-                  placeholder="Address"
+                  placeholder="Direccion"
                   value={nuevoCliente.direccion}
                   onChange={(event) =>
                     updateNuevoCliente("direccion", event.target.value)
@@ -414,7 +414,7 @@ export default function ClientesPage() {
                 />
                 <div className="grid grid-cols-2 gap-3">
                   <input
-                    placeholder="Postal code"
+                    placeholder="Codigo postal"
                     value={nuevoCliente.codigoPostal}
                     onChange={(event) =>
                       updateNuevoCliente("codigoPostal", event.target.value)
@@ -422,7 +422,7 @@ export default function ClientesPage() {
                     className="h-14 w-full rounded-[22px] border border-white/70 bg-white/80 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.4)]"
                   />
                   <input
-                    placeholder="City"
+                    placeholder="Ciudad"
                     value={nuevoCliente.ciudad}
                     onChange={(event) =>
                       updateNuevoCliente("ciudad", event.target.value)
@@ -439,7 +439,7 @@ export default function ClientesPage() {
                   className="h-14 w-full rounded-[22px] border border-white/70 bg-white/80 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.4)]"
                 />
                 <input
-                  placeholder="Phone"
+                  placeholder="Telefono"
                   value={nuevoCliente.telefono}
                   onChange={(event) =>
                     updateNuevoCliente("telefono", event.target.value)
@@ -454,14 +454,14 @@ export default function ClientesPage() {
                   onClick={closeModal}
                   className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
-                  Cancel
+                  Cancelar
                 </button>
                 <button
                   type="button"
                   onClick={guardarCliente}
                   className="inline-flex min-h-12 items-center justify-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition hover:bg-slate-800"
                 >
-                  Save client
+                  Guardar cliente
                 </button>
               </div>
             </div>

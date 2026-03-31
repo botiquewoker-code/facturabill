@@ -47,14 +47,14 @@ export default function TerminosPage() {
               3. Privacidad y datos
             </h2>
             <p>
-              Gran parte de la informacion se gestiona directamente en el
-              navegador del usuario mediante almacenamiento local. Facturabill
-              no garantiza sincronizacion entre dispositivos mientras no exista
-              una capa de almacenamiento remoto asociada a la cuenta.
+              La informacion necesaria para prestar el servicio se gestiona de
+              acuerdo con la configuracion de la cuenta, el navegador y el
+              entorno de uso de cada usuario.
             </p>
             <p className="mt-4">
-              Las funciones de envio por email y soporte pueden procesar los
-              datos necesarios para completar ese servicio concreto.
+              Algunas funciones, como el envio por correo o las solicitudes de
+              soporte, pueden requerir el tratamiento de los datos necesarios
+              para completar ese servicio concreto.
             </p>
           </section>
 

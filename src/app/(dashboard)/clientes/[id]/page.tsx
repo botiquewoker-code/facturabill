@@ -123,7 +123,7 @@ export default function ClienteDetallePage() {
 
     if (hasDuplicateTaxId(storedClients, draft.nif, cliente.id)) {
       showNotice(
-        "Advertencia: ya existe un cliente con ese NIF. Te recomendamos revisarlo antes de guardar cambios.",
+        "Ya existe un cliente con ese NIF. Revisalo antes de guardar los cambios.",
         "warning",
       );
       return;
@@ -142,7 +142,7 @@ export default function ClienteDetallePage() {
 
     if (shouldSuggestIdentity) {
       showNotice(
-        "Recomendacion: completa nombre y NIF cuando puedas para identificar mejor esta ficha.",
+        "Puedes completar nombre y NIF cuando quieras para identificar mejor esta ficha.",
         "warning",
       );
     }
@@ -173,21 +173,20 @@ export default function ClienteDetallePage() {
         <header className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
-              Client profile
+              Cliente
             </p>
             <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
-              {cliente?.nombre || "Client"}
+              {cliente?.nombre || "Cliente"}
             </h1>
             <p className="mt-3 max-w-xs text-[15px] leading-6 text-slate-500">
-              Review, update, or remove this client record without leaving the
-              dashboard flow.
+              Revisa, actualiza o elimina esta ficha cuando lo necesites.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
-              aria-label="Back to clients"
+              aria-label="Volver a clientes"
               onClick={() => router.push("/clientes")}
               className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/70 text-slate-700 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)] backdrop-blur-xl transition hover:bg-white"
             >
@@ -195,7 +194,7 @@ export default function ClienteDetallePage() {
             </button>
             <button
               type="button"
-              aria-label={isEditing ? "Save client" : "Edit client"}
+              aria-label={isEditing ? "Guardar cliente" : "Editar cliente"}
               onClick={isEditing ? saveChanges : () => setIsEditing(true)}
               className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)] transition hover:bg-slate-800"
             >
@@ -232,17 +231,17 @@ export default function ClienteDetallePage() {
               <UsersRound className="h-8 w-8" strokeWidth={2.1} />
             </div>
             <h2 className="text-[1.6rem] font-semibold tracking-[-0.04em] text-slate-950">
-              Client not found
+              Cliente no disponible
             </h2>
             <p className="mt-3 text-[15px] leading-6 text-slate-500">
-              This record is no longer available in your saved client database.
+              Esta ficha ya no esta disponible en tu lista de clientes.
             </p>
             <button
               type="button"
               onClick={() => router.push("/clientes")}
               className="mt-7 inline-flex min-h-14 items-center justify-center rounded-full bg-slate-950 px-7 text-[15px] font-semibold text-white shadow-[0_22px_38px_-24px_rgba(15,23,42,0.95)] transition hover:bg-slate-800"
             >
-              Back to clients
+              Volver a clientes
             </button>
           </section>
         ) : (
@@ -265,7 +264,7 @@ export default function ClienteDetallePage() {
                     </div>
 
                     <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-                      Active
+                      Disponible
                     </div>
                   </div>
 
@@ -273,19 +272,19 @@ export default function ClienteDetallePage() {
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4 text-slate-400" strokeWidth={2} />
                       <span className="truncate">
-                        {cliente.email || "No email added"}
+                        {cliente.email || "Sin email"}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Phone className="h-4 w-4 text-slate-400" strokeWidth={2} />
-                      <span>{cliente.telefono || "No phone added"}</span>
+                      <span>{cliente.telefono || "Sin telefono"}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-slate-400" strokeWidth={2} />
                       <span className="truncate">
                         {[cliente.direccion, cliente.codigoPostal, cliente.ciudad]
                           .filter(Boolean)
-                          .join(", ") || "No address added"}
+                          .join(", ") || "Sin direccion"}
                       </span>
                     </div>
                   </div>
@@ -297,10 +296,10 @@ export default function ClienteDetallePage() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
-                    Client details
+                    Datos del cliente
                   </p>
                   <h3 className="mt-2 text-[1.4rem] font-semibold tracking-[-0.04em] text-slate-950">
-                    {isEditing ? "Editing mode" : "Stored information"}
+                    {isEditing ? "Modo edicion" : "Informacion guardada"}
                   </h3>
                 </div>
 
@@ -310,7 +309,7 @@ export default function ClienteDetallePage() {
                     onClick={cancelEdit}
                     className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                   >
-                    Cancel
+                    Cancelar
                   </button>
                 ) : (
                   <button
@@ -318,28 +317,28 @@ export default function ClienteDetallePage() {
                     onClick={refreshClient}
                     className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                   >
-                    Refresh
+                    Actualizar
                   </button>
                 )}
               </div>
 
               <div className="mt-6 space-y-3">
                 <input
-                  placeholder="Full name"
+                  placeholder="Nombre o razon social"
                   value={draft.nombre}
                   disabled={!isEditing}
                   onChange={(event) => updateDraft("nombre", event.target.value)}
                   className="h-14 w-full rounded-[22px] border border-white/70 bg-white/80 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.4)] disabled:cursor-default disabled:bg-slate-50/80"
                 />
                 <input
-                  placeholder="Tax ID"
+                  placeholder="NIF / DNI"
                   value={draft.nif}
                   disabled={!isEditing}
                   onChange={(event) => updateDraft("nif", event.target.value)}
                   className="h-14 w-full rounded-[22px] border border-white/70 bg-white/80 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.4)] disabled:cursor-default disabled:bg-slate-50/80"
                 />
                 <input
-                  placeholder="Address"
+                  placeholder="Direccion"
                   value={draft.direccion}
                   disabled={!isEditing}
                   onChange={(event) =>
@@ -349,7 +348,7 @@ export default function ClienteDetallePage() {
                 />
                 <div className="grid grid-cols-2 gap-3">
                   <input
-                    placeholder="Postal code"
+                    placeholder="Codigo postal"
                     value={draft.codigoPostal}
                     disabled={!isEditing}
                     onChange={(event) =>
@@ -358,7 +357,7 @@ export default function ClienteDetallePage() {
                     className="h-14 w-full rounded-[22px] border border-white/70 bg-white/80 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.4)] disabled:cursor-default disabled:bg-slate-50/80"
                   />
                   <input
-                    placeholder="City"
+                    placeholder="Ciudad"
                     value={draft.ciudad}
                     disabled={!isEditing}
                     onChange={(event) => updateDraft("ciudad", event.target.value)}
@@ -373,7 +372,7 @@ export default function ClienteDetallePage() {
                   className="h-14 w-full rounded-[22px] border border-white/70 bg-white/80 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.4)] disabled:cursor-default disabled:bg-slate-50/80"
                 />
                 <input
-                  placeholder="Phone"
+                  placeholder="Telefono"
                   value={draft.telefono}
                   disabled={!isEditing}
                   onChange={(event) =>
@@ -386,8 +385,8 @@ export default function ClienteDetallePage() {
               {isEditing ? (
                 <>
                   <p className="mt-6 text-sm leading-6 text-slate-500">
-                    Puedes guardar cambios aunque falten datos. Recomendacion:
-                    deja nombre y NIF para reconocer el cliente con rapidez.
+                    Puedes guardar cambios aunque falten datos y completar la
+                    ficha mas adelante.
                   </p>
                   <button
                     type="button"
@@ -395,7 +394,7 @@ export default function ClienteDetallePage() {
                     className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition hover:bg-slate-800"
                   >
                     <CircleCheckBig className="h-4 w-4" strokeWidth={2.2} />
-                    Save changes
+                    Guardar cambios
                   </button>
                 </>
               ) : null}
@@ -403,10 +402,10 @@ export default function ClienteDetallePage() {
 
             <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
               <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
-                Actions
+                Acciones
               </p>
               <h3 className="mt-2 text-[1.4rem] font-semibold tracking-[-0.04em] text-slate-950">
-                Next steps
+                Siguientes pasos
               </h3>
 
               <div className="mt-6 grid gap-3">
@@ -416,7 +415,7 @@ export default function ClienteDetallePage() {
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition hover:bg-slate-800"
                 >
                   <ReceiptText className="h-4 w-4" strokeWidth={2.2} />
-                  Create invoice
+                  Crear factura
                 </button>
                 <button
                   type="button"
@@ -429,7 +428,7 @@ export default function ClienteDetallePage() {
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
                   <CirclePlus className="h-4 w-4" strokeWidth={2.2} />
-                  Create budget
+                  Crear presupuesto
                 </button>
 
                 {!confirmDelete ? (
@@ -439,12 +438,12 @@ export default function ClienteDetallePage() {
                     className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-red-200 bg-red-50 px-5 text-sm font-semibold text-red-700 transition hover:bg-red-100"
                   >
                     <Trash2 className="h-4 w-4" strokeWidth={2.2} />
-                    Delete client
+                    Eliminar cliente
                   </button>
                 ) : (
                   <div className="rounded-[26px] border border-red-200 bg-red-50/90 p-4 text-center">
                     <p className="text-sm font-medium text-red-700">
-                      Delete this client permanently from your saved database?
+                      Quieres eliminar este cliente de forma definitiva?
                     </p>
                     <div className="mt-4 flex items-center justify-center gap-3">
                       <button
@@ -452,14 +451,14 @@ export default function ClienteDetallePage() {
                         onClick={() => setConfirmDelete(false)}
                         className="inline-flex min-h-11 items-center justify-center rounded-full border border-red-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                       >
-                        Cancel
+                        Cancelar
                       </button>
                       <button
                         type="button"
                         onClick={deleteClient}
                         className="inline-flex min-h-11 items-center justify-center rounded-full bg-red-600 px-4 text-sm font-semibold text-white transition hover:bg-red-700"
                       >
-                        Confirm delete
+                        Confirmar eliminacion
                       </button>
                     </div>
                   </div>

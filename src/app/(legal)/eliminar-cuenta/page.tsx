@@ -99,7 +99,7 @@ export default function EliminarCuenta() {
               Antes de eliminar
             </h2>
             <p className="mt-2 text-[14px] leading-6 text-slate-600">
-              Te recomendamos volver a ajustes y exportar tus datos locales antes
+              Te recomendamos volver a ajustes y exportar tu informacion antes
               de iniciar la solicitud.
             </p>
             <Link

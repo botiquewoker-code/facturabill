@@ -137,7 +137,7 @@ export async function prepareVerifactuInvoiceRecord(
     type: "record_prepared",
     recordId: record.id,
     occurredAt: now,
-    detail: `Registro local preparado para la factura ${record.invoiceNumber} tras ${record.sourceAction}.`,
+    detail: `Factura ${record.invoiceNumber} lista para su seguimiento.`,
   });
 
   return record;
