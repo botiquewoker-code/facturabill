@@ -137,7 +137,7 @@ function SectionCard({
   icon: typeof Landmark;
 }) {
   return (
-    <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+    <section className="mt-5 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
       <div className="flex items-start gap-3">
         <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
           <Icon className="h-[18px] w-[18px]" strokeWidth={2.1} />
@@ -146,7 +146,7 @@ function SectionCard({
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
             {eyebrow}
           </p>
-          <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+          <h3 className="mt-2 text-[1.18rem] sm:text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
             {title}
           </h3>
         </div>
@@ -352,7 +352,7 @@ export default function MetodosCobroPage() {
       <div className="pointer-events-none absolute -right-12 top-64 h-52 w-52 rounded-full bg-[#dce8ff]/80 blur-3xl" />
 
       <main
-        className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-5 pt-6 font-sans"
+        className="relative mx-auto flex min-h-screen w-full max-w-[410px] flex-col px-4 pt-4 font-sans sm:max-w-[430px] sm:px-5 sm:pt-6"
         style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
       >
         <header className="flex items-start justify-between gap-4">
@@ -374,10 +374,10 @@ export default function MetodosCobroPage() {
             <p className="mt-6 text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
               {copy.settings.eyebrow}
             </p>
-            <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
+            <h1 className="mt-2 text-[1.78rem] sm:text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
               {copy.settings.paymentMethods}
             </h1>
-            <p className="mt-3 max-w-xs text-[15px] leading-6 text-slate-500">
+            <p className="mt-3 max-w-xs text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
               {pageUi.intro}
             </p>
           </div>
@@ -412,7 +412,7 @@ export default function MetodosCobroPage() {
           </section>
         ) : (
           <>
-            <section className="mt-6 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <section className="mt-6 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
               <div className="flex items-start gap-4">
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[24px] bg-slate-950 text-white shadow-[0_18px_30px_-18px_rgba(15,23,42,0.78)]">
                   <Landmark className="h-7 w-7" strokeWidth={2.1} />
@@ -424,7 +424,7 @@ export default function MetodosCobroPage() {
                       <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                         Configuracion de cobro
                       </p>
-                      <h2 className="mt-2 truncate text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
+                      <h2 className="mt-2 truncate text-[1.25rem] sm:text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
                         Metodos y datos de pago
                       </h2>
                     </div>
@@ -620,7 +620,7 @@ export default function MetodosCobroPage() {
               </div>
             </SectionCard>
 
-            <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <section className="mt-5 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
               <div className="flex items-start gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
                   <CircleCheckBig className="h-[18px] w-[18px]" strokeWidth={2.1} />
@@ -629,7 +629,7 @@ export default function MetodosCobroPage() {
                   <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                     {companyCopy.actions}
                   </p>
-                  <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+                  <h3 className="mt-2 text-[1.18rem] sm:text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
                     Guardar y continuar
                   </h3>
                 </div>

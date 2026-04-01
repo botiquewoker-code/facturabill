@@ -250,7 +250,7 @@ export default function ConfiguracionEmpresaPage() {
       <div className="pointer-events-none absolute -right-12 top-64 h-52 w-52 rounded-full bg-[#dce8ff]/80 blur-3xl" />
 
       <main
-        className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-5 pt-6 font-sans"
+        className="relative mx-auto flex min-h-screen w-full max-w-[410px] flex-col px-4 pt-4 font-sans sm:max-w-[430px] sm:px-5 sm:pt-6"
         style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
       >
         <header className="flex items-start justify-between gap-4">
@@ -258,10 +258,10 @@ export default function ConfiguracionEmpresaPage() {
             <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
               {copy.workspace}
             </p>
-            <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
+            <h1 className="mt-2 text-[1.78rem] sm:text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
               {copy.title}
             </h1>
-            <p className="mt-3 max-w-xs text-[15px] leading-6 text-slate-500">
+            <p className="mt-3 max-w-xs text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
               {copy.subtitle}
             </p>
           </div>
@@ -296,7 +296,7 @@ export default function ConfiguracionEmpresaPage() {
           </section>
         ) : (
           <>
-            <section className="mt-6 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <section className="mt-6 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
               <div className="flex items-start gap-4">
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[24px] bg-slate-950 text-lg font-semibold tracking-[0.12em] text-white shadow-[0_18px_30px_-18px_rgba(15,23,42,0.78)]">
                   {getInitials(profileName)}
@@ -308,7 +308,7 @@ export default function ConfiguracionEmpresaPage() {
                       <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                         {copy.businessProfile}
                       </p>
-                      <h2 className="mt-2 truncate text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
+                      <h2 className="mt-2 truncate text-[1.25rem] sm:text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
                         {profileName}
                       </h2>
                     </div>
@@ -348,7 +348,7 @@ export default function ConfiguracionEmpresaPage() {
               </div>
             </section>
 
-            <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <section className="mt-5 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
               <div className="flex items-start gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
                   <Palette className="h-[18px] w-[18px]" strokeWidth={2.1} />
@@ -357,7 +357,7 @@ export default function ConfiguracionEmpresaPage() {
                   <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                     {copy.invoiceStyle}
                   </p>
-                  <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+                  <h3 className="mt-2 text-[1.18rem] sm:text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
                     {copy.pickTemplate}
                   </h3>
                   <p className="mt-2 max-w-[18rem] text-sm leading-6 text-slate-500">
@@ -434,7 +434,7 @@ export default function ConfiguracionEmpresaPage() {
               </div>
             </section>
 
-            <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <section className="mt-5 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
               <div className="flex items-start gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
                   <ImagePlus className="h-[18px] w-[18px]" strokeWidth={2.1} />
@@ -443,7 +443,7 @@ export default function ConfiguracionEmpresaPage() {
                   <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                     {copy.brandAssets}
                   </p>
-                  <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+                  <h3 className="mt-2 text-[1.18rem] sm:text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
                     {copy.uploadLogo}
                   </h3>
                 </div>
@@ -496,7 +496,7 @@ export default function ConfiguracionEmpresaPage() {
               </div>
             </section>
 
-            <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <section className="mt-5 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
               <div className="flex items-start gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
                   <Building2 className="h-[18px] w-[18px]" strokeWidth={2.1} />
@@ -505,7 +505,7 @@ export default function ConfiguracionEmpresaPage() {
                   <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                     {copy.businessDetails}
                   </p>
-                  <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+                  <h3 className="mt-2 text-[1.18rem] sm:text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
                     {copy.companyInformation}
                   </h3>
                 </div>
@@ -579,7 +579,7 @@ export default function ConfiguracionEmpresaPage() {
               </div>
             </section>
 
-            <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <section className="mt-5 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
               <div className="flex items-start gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
                   <FileText className="h-[18px] w-[18px]" strokeWidth={2.1} />
@@ -588,7 +588,7 @@ export default function ConfiguracionEmpresaPage() {
                   <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                     {copy.invoiceNotes}
                   </p>
-                  <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+                  <h3 className="mt-2 text-[1.18rem] sm:text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
                     {copy.footerDetails}
                   </h3>
                 </div>
@@ -603,7 +603,7 @@ export default function ConfiguracionEmpresaPage() {
               />
             </section>
 
-            <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <section className="mt-5 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
               <div className="flex items-start gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
                   <Sparkles className="h-[18px] w-[18px]" strokeWidth={2.1} />
@@ -612,7 +612,7 @@ export default function ConfiguracionEmpresaPage() {
                   <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                     {copy.actions}
                   </p>
-                  <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+                  <h3 className="mt-2 text-[1.18rem] sm:text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
                     {copy.saveAndContinue}
                   </h3>
                 </div>

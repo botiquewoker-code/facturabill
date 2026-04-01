@@ -271,7 +271,7 @@ export default function AjustesVerifactuPage() {
       <div className="pointer-events-none absolute -left-8 top-16 h-24 w-24 rounded-full bg-[#efe2d3]/42 blur-3xl" />
       <div className="pointer-events-none absolute -right-8 top-24 h-24 w-24 rounded-full bg-[#dde6f1]/65 blur-3xl" />
 
-      <main className="relative mx-auto min-h-screen w-full max-w-[430px] px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]">
+      <main className="relative mx-auto min-h-screen w-full max-w-[410px] px-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-[calc(0.875rem+env(safe-area-inset-top))] sm:max-w-[430px] sm:pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pt-[calc(1rem+env(safe-area-inset-top))]">
         <header className="px-1">
           <div className="flex items-center justify-between gap-4">
             <Link
@@ -291,7 +291,7 @@ export default function AjustesVerifactuPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
               {copy.eyebrow}
             </p>
-            <h1 className="mt-2 text-[2.05rem] font-semibold tracking-[-0.055em] text-slate-950">
+            <h1 className="mt-2 text-[1.85rem] sm:text-[2.05rem] font-semibold tracking-[-0.055em] text-slate-950">
               {copy.title}
             </h1>
             <p className="mt-3 max-w-[19rem] text-[14px] leading-6 text-slate-500">
@@ -300,7 +300,7 @@ export default function AjustesVerifactuPage() {
           </div>
         </header>
 
-        <section className="mt-6 rounded-[32px] border border-white/70 bg-white/82 p-5 shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)] backdrop-blur-xl">
+        <section className="mt-6 rounded-[26px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_38px_-26px_rgba(15,23,42,0.22)] backdrop-blur-xl sm:rounded-[32px] sm:p-5 sm:shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)]">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-slate-950">
@@ -366,7 +366,7 @@ export default function AjustesVerifactuPage() {
           </div>
         </section>
 
-        <section className="mt-6 rounded-[32px] border border-white/70 bg-white/82 p-5 shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)] backdrop-blur-xl">
+        <section className="mt-6 rounded-[26px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_38px_-26px_rgba(15,23,42,0.22)] backdrop-blur-xl sm:rounded-[32px] sm:p-5 sm:shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)]">
           <div className="flex items-start gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
               <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={2.1} />
@@ -386,7 +386,7 @@ export default function AjustesVerifactuPage() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                 {copy.invoices}
               </p>
-              <p className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
+              <p className="mt-2 text-[1.25rem] sm:text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {records.length}
               </p>
             </article>
@@ -394,7 +394,7 @@ export default function AjustesVerifactuPage() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                 {copy.ready}
               </p>
-              <p className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
+              <p className="mt-2 text-[1.25rem] sm:text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {readyCount}
               </p>
             </article>
@@ -402,7 +402,7 @@ export default function AjustesVerifactuPage() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                 {copy.inQueue}
               </p>
-              <p className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
+              <p className="mt-2 text-[1.25rem] sm:text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {queuedCount}
               </p>
             </article>
@@ -410,7 +410,7 @@ export default function AjustesVerifactuPage() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                 {copy.issues}
               </p>
-              <p className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
+              <p className="mt-2 text-[1.25rem] sm:text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {issueCount}
               </p>
             </article>
@@ -433,7 +433,7 @@ export default function AjustesVerifactuPage() {
           </div>
         </section>
 
-        <section className="mt-6 rounded-[32px] border border-white/70 bg-white/82 p-5 shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)] backdrop-blur-xl">
+        <section className="mt-6 rounded-[26px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_38px_-26px_rgba(15,23,42,0.22)] backdrop-blur-xl sm:rounded-[32px] sm:p-5 sm:shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)]">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eef4ff] text-slate-700">
               <ListChecks className="h-[17px] w-[17px]" strokeWidth={2.1} />
@@ -518,7 +518,7 @@ export default function AjustesVerifactuPage() {
           )}
         </section>
 
-        <section className="mt-6 rounded-[32px] border border-white/70 bg-white/82 p-5 shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)] backdrop-blur-xl">
+        <section className="mt-6 rounded-[26px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_38px_-26px_rgba(15,23,42,0.22)] backdrop-blur-xl sm:rounded-[32px] sm:p-5 sm:shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)]">
           <p className="text-sm font-semibold text-slate-950">{copy.recentActivity}</p>
           <p className="mt-1 text-[13px] leading-5 text-slate-500">
             {copy.recentActivityDescription}

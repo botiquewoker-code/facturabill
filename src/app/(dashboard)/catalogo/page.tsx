@@ -442,10 +442,10 @@ export default function CatalogoPage() {
                 <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
                   {copy.catalog}
                 </p>
-                <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
+                <h1 className="mt-2 text-[1.78rem] sm:text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
                   {copy.reusableReferences}
                 </h1>
-                <p className="mt-3 max-w-xs text-[15px] leading-6 text-slate-500">
+                <p className="mt-3 max-w-xs text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
                   {copy.reusableDescription}
                 </p>
               </div>
@@ -462,7 +462,7 @@ export default function CatalogoPage() {
               <h2 className="mt-5 text-[1.55rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {copy.activateProfessionalCatalog}
               </h2>
-              <p className="mt-3 text-[15px] leading-6 text-slate-500">
+              <p className="mt-3 text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
                 {copy.advancedFeatureDescription}
               </p>
 
@@ -523,10 +523,10 @@ export default function CatalogoPage() {
                 <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
                   {copy.yourCatalog}
                 </p>
-                <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
+                <h1 className="mt-2 text-[1.78rem] sm:text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
                   {copy.title}
                 </h1>
-                <p className="mt-3 max-w-xs text-[15px] leading-6 text-slate-500">
+                <p className="mt-3 max-w-xs text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
                   {copy.titleDescription}
                 </p>
               </div>
@@ -667,10 +667,10 @@ export default function CatalogoPage() {
                   <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[28px] bg-[linear-gradient(145deg,rgba(255,255,255,0.95),rgba(229,238,250,0.92),rgba(249,234,216,0.95))] text-slate-950">
                     <ReceiptText className="h-9 w-9" strokeWidth={1.9} />
                   </div>
-                  <h2 className="text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
+                  <h2 className="text-[1.25rem] sm:text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
                     {copy.createFirstReference}
                   </h2>
-                  <p className="mt-3 text-[15px] leading-6 text-slate-500">
+                  <p className="mt-3 text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
                     {copy.createFirstReferenceDescription}
                   </p>
                   <button
@@ -690,7 +690,7 @@ export default function CatalogoPage() {
                   <h2 className="mt-5 text-[1.3rem] font-semibold tracking-[-0.04em] text-slate-950">
                     {copy.noResults}
                   </h2>
-                  <p className="mt-3 text-[15px] leading-6 text-slate-500">
+                  <p className="mt-3 text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
                     {copy.noResultsDescription}
                   </p>
                   <button
@@ -751,7 +751,7 @@ export default function CatalogoPage() {
                       </div>
 
                       {item.description ? (
-                        <p className="mt-4 text-[15px] leading-6 text-slate-500">
+                        <p className="mt-4 text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
                           {item.description}
                         </p>
                       ) : null}
@@ -858,7 +858,7 @@ export default function CatalogoPage() {
               <h2 className="mt-2 text-[1.55rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {editingItemId ? copy.editReference : copy.newReference}
               </h2>
-              <p className="mt-3 text-[15px] leading-6 text-slate-500">
+              <p className="mt-3 text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
                 {copy.defineBaseData}
               </p>
             </div>

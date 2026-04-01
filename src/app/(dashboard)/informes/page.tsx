@@ -726,7 +726,7 @@ export default function InformesPage() {
       <div className="pointer-events-none absolute -right-12 top-64 h-52 w-52 rounded-full bg-[#dce8ff]/80 blur-3xl" />
 
       <main
-        className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-5 pt-6 font-sans"
+        className="relative mx-auto flex min-h-screen w-full max-w-[410px] flex-col px-4 pt-4 font-sans sm:max-w-[430px] sm:px-5 sm:pt-6"
         style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
       >
         <header className="flex items-start gap-3">
@@ -757,7 +757,7 @@ export default function InformesPage() {
                 <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/65">
                   {isSpanish ? "Resumen del negocio" : "Business overview"}
                 </p>
-                <h2 className="mt-2 text-[1.85rem] font-semibold tracking-[-0.05em] text-white">
+                <h2 className="mt-2 text-[1.6rem] sm:text-[1.85rem] font-semibold tracking-[-0.05em] text-white">
                   {money(summary.totalFacturado, locale)}
                 </h2>
                 <p className="mt-2 text-[13px] leading-6 text-white/72">
@@ -827,7 +827,7 @@ export default function InformesPage() {
               <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                 {isSpanish ? "Rendimiento" : "Performance"}
               </p>
-              <h2 className="mt-2 text-[1.2rem] font-semibold tracking-[-0.04em] text-slate-950">
+              <h2 className="mt-2 text-[1.08rem] sm:text-[1.2rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {isSpanish
                   ? "Facturacion de los ultimos seis meses"
                   : "Billing across the last six months"}
@@ -899,15 +899,15 @@ export default function InformesPage() {
 
         <section className={`mt-5 ${SECTION_CLASS}`}>
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">{isSpanish ? "Clientes clave" : "Key clients"}</p>
-          <h2 className="mt-2 text-[1.2rem] font-semibold tracking-[-0.04em] text-slate-950">{isSpanish ? "Clientes con mayor facturacion" : "Highest-billing clients"}</h2>
+          <h2 className="mt-2 text-[1.08rem] sm:text-[1.2rem] font-semibold tracking-[-0.04em] text-slate-950">{isSpanish ? "Clientes con mayor facturacion" : "Highest-billing clients"}</h2>
           <div className="mt-4 space-y-2.5">
             {summary.topClients.length > 0 ? (
               summary.topClients.map((client, index) => (
                 <div key={client.key} className="rounded-[24px] border border-white/70 bg-white/85 p-3.5 shadow-[0_14px_26px_-24px_rgba(15,23,42,0.32)]">
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-950">{String(index + 1).padStart(2, "0")} · {client.name}</p>
-                      <p className="mt-1 text-[13px] leading-5 text-slate-500">{isSpanish ? `${client.invoices} facturas · Ultima actividad ${formatShortDate(client.lastDate, locale, "Sin fecha")}` : `${client.invoices} invoices · Latest activity ${formatShortDate(client.lastDate, locale, "No date")}`}</p>
+                      <p className="text-sm font-semibold text-slate-950">{String(index + 1).padStart(2, "0")} {"\u00b7"} {client.name}</p>
+                      <p className="mt-1 text-[13px] leading-5 text-slate-500">{isSpanish ? `${client.invoices} facturas \u00b7 Ultima actividad ${formatShortDate(client.lastDate, locale, "Sin fecha")}` : `${client.invoices} invoices \u00b7 Latest activity ${formatShortDate(client.lastDate, locale, "No date")}`}</p>
                     </div>
                     <p className="shrink-0 text-sm font-semibold text-slate-950">{money(client.total, locale)}</p>
                   </div>
@@ -930,7 +930,7 @@ export default function InformesPage() {
           <div className="flex items-start gap-3">
             <div>
               <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">{isSpanish ? "Alertas y control" : "Alerts and control"}</p>
-              <h2 className="mt-2 text-[1.2rem] font-semibold tracking-[-0.04em] text-slate-950">{isSpanish ? "Prioridades de seguimiento" : "Follow-up priorities"}</h2>
+              <h2 className="mt-2 text-[1.08rem] sm:text-[1.2rem] font-semibold tracking-[-0.04em] text-slate-950">{isSpanish ? "Prioridades de seguimiento" : "Follow-up priorities"}</h2>
             </div>
           </div>
 

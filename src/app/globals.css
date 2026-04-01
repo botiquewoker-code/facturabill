@@ -48,3 +48,43 @@ body {
   height: 100vh;
   height: 100dvh;
 }
+
+@media (max-width: 640px) {
+  :root {
+    --mobile-page-bottom-space: 4.5rem;
+  }
+
+  [class*="max-w-[430px]"] {
+    max-width: 25.625rem !important;
+  }
+
+  [class*="max-w-[430px]"][class*="px-5"] {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  [class*="max-w-[430px]"][class*="pt-6"] {
+    padding-top: 1rem !important;
+  }
+
+  main :is(input:not([type="checkbox"]):not([type="radio"]), select)[class*="h-14"] {
+    height: 3rem !important;
+    border-radius: 1.125rem !important;
+    padding-left: 0.875rem !important;
+    padding-right: 0.875rem !important;
+    font-size: 0.9375rem !important;
+  }
+
+  main :is(input:not([type="checkbox"]):not([type="radio"]), select)[class*="pl-11"] {
+    padding-left: 2.625rem !important;
+  }
+
+  main textarea {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+
+  main textarea:is([class*="p-4"], [class*="py-4"], [class*="py-3"]) {
+    border-radius: 1.125rem !important;
+  }
+}

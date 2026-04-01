@@ -218,7 +218,7 @@ export default function ClientesPage() {
       <div className="pointer-events-none absolute -right-12 top-64 h-52 w-52 rounded-full bg-[#dce8ff]/80 blur-3xl" />
 
       <main
-        className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-5 pt-6 font-sans"
+        className="relative mx-auto flex min-h-screen w-full max-w-[410px] flex-col px-4 pt-4 font-sans sm:max-w-[430px] sm:px-5 sm:pt-6"
         style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
       >
         <header className="flex items-start justify-between gap-4">
@@ -226,10 +226,10 @@ export default function ClientesPage() {
             <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
               {copy.eyebrow}
             </p>
-            <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
+            <h1 className="mt-2 text-[1.78rem] sm:text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
               {copy.title}
             </h1>
-            <p className="mt-3 max-w-xs text-[15px] leading-6 text-slate-500">
+            <p className="mt-3 max-w-xs text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
               {copy.description}
             </p>
           </div>
@@ -314,13 +314,13 @@ export default function ClientesPage() {
               <h3 className="text-[1.6rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {copy.noClientsTitle}
               </h3>
-              <p className="mt-3 text-[15px] leading-6 text-slate-500">
+              <p className="mt-3 text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
                 {copy.noClientsDescription}
               </p>
               <button
                 type="button"
                 onClick={openModal}
-                className="mt-7 inline-flex min-h-14 items-center justify-center rounded-full bg-slate-950 px-7 text-[15px] font-semibold text-white shadow-[0_22px_38px_-24px_rgba(15,23,42,0.95)] transition hover:bg-slate-800"
+                className="mt-7 inline-flex min-h-12 sm:min-h-14 items-center justify-center rounded-full bg-slate-950 px-7 text-[15px] font-semibold text-white shadow-[0_22px_38px_-24px_rgba(15,23,42,0.95)] transition hover:bg-slate-800"
               >
                 {copy.addFirstClient}
               </button>

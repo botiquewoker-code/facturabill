@@ -20,17 +20,17 @@ export default function AppScreenLoader({
       <div className="pointer-events-none absolute -right-12 top-64 h-52 w-52 rounded-full bg-[#dce8ff]/80 blur-3xl" />
 
       <main
-        className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-5 pt-6 font-sans"
+        className="relative mx-auto flex min-h-screen w-full max-w-[410px] flex-col px-4 pt-4 font-sans sm:max-w-[430px] sm:px-5 sm:pt-6"
         style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
       >
         <header>
           <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
             {eyebrow}
           </p>
-          <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
+          <h1 className="mt-2 text-[1.78rem] sm:text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
             {title}
           </h1>
-          <p className="mt-3 max-w-xs text-[15px] leading-6 text-slate-500">
+          <p className="mt-3 max-w-xs text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
             {description}
           </p>
         </header>

@@ -28,7 +28,7 @@ import { useAppI18n } from "@/features/i18n/runtime";
 import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
 const inputClass =
-  "h-14 w-full rounded-[22px] border border-white/70 bg-white/82 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.35)]";
+  "h-12 w-full rounded-[18px] border border-white/70 bg-white/82 px-3.5 text-[14px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_12px_24px_-22px_rgba(15,23,42,0.24)] sm:h-14 sm:rounded-[22px] sm:px-4 sm:text-[15px] sm:shadow-[0_14px_32px_-24px_rgba(15,23,42,0.35)]";
 
 export default function DatosAccesoPage() {
   const { t } = useAppI18n();
@@ -157,7 +157,7 @@ export default function DatosAccesoPage() {
       <div className="pointer-events-none absolute -left-8 top-16 h-24 w-24 rounded-full bg-[#efe2d3]/42 blur-3xl" />
       <div className="pointer-events-none absolute -right-8 top-24 h-24 w-24 rounded-full bg-[#dde6f1]/65 blur-3xl" />
 
-      <main className="relative mx-auto min-h-screen w-full max-w-[430px] px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]">
+      <main className="relative mx-auto min-h-screen w-full max-w-[410px] px-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-[calc(0.875rem+env(safe-area-inset-top))] sm:max-w-[430px] sm:pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pt-[calc(1rem+env(safe-area-inset-top))]">
         <header className="px-1">
           <div className="flex items-center justify-between gap-4">
             <Link
@@ -177,7 +177,7 @@ export default function DatosAccesoPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
               {copy.eyebrow}
             </p>
-            <h1 className="mt-2 text-[2.05rem] font-semibold tracking-[-0.055em] text-slate-950">
+            <h1 className="mt-2 text-[1.85rem] sm:text-[2.05rem] font-semibold tracking-[-0.055em] text-slate-950">
               {copy.title}
             </h1>
             <p className="mt-3 max-w-[18rem] text-[14px] leading-6 text-slate-500">
@@ -186,7 +186,7 @@ export default function DatosAccesoPage() {
           </div>
         </header>
 
-        <section className="mt-6 rounded-[32px] border border-white/70 bg-white/82 p-5 shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)] backdrop-blur-xl">
+        <section className="mt-6 rounded-[26px] border border-white/70 bg-white/82 p-4 shadow-[0_18px_38px_-26px_rgba(15,23,42,0.22)] backdrop-blur-xl sm:rounded-[32px] sm:p-5 sm:shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)]">
           <div className="flex items-start gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
               <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={2.1} />

@@ -40,7 +40,7 @@ export function LegalDocumentPage({
         {sections.map((section, index) => (
           <article
             key={section.title}
-            className="rounded-[30px] border border-white/70 bg-white/80 p-5 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl"
+            className="rounded-[24px] border border-white/70 bg-white/80 p-4 shadow-[0_16px_32px_-24px_rgba(15,23,42,0.24)] backdrop-blur-xl sm:rounded-[30px] sm:p-5 sm:shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)]"
           >
             <div className="flex items-start gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-sm font-semibold text-white shadow-[0_16px_26px_-18px_rgba(15,23,42,0.82)]">
@@ -76,11 +76,11 @@ export function LegalDocumentPage({
         ))}
       </section>
 
-      <section className="mt-6 rounded-[30px] border border-white/70 bg-white/80 p-5 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+      <section className="mt-6 rounded-[24px] border border-white/70 bg-white/80 p-4 shadow-[0_16px_32px_-24px_rgba(15,23,42,0.24)] backdrop-blur-xl sm:rounded-[30px] sm:p-5 sm:shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)]">
         <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
           Revision
         </p>
-        <h2 className="mt-2 text-[1.2rem] font-semibold tracking-[-0.03em] text-slate-950">
+        <h2 className="mt-2 text-[1.08rem] sm:text-[1.2rem] font-semibold tracking-[-0.03em] text-slate-950">
           Documento actualizado
         </h2>
         <p className="mt-3 text-[14px] leading-6 text-slate-500">

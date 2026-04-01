@@ -2,7 +2,8 @@
 
 export const DRAFTS_STORAGE_KEY = "borradores";
 export const ACTIVE_DRAFT_STORAGE_KEY = "borradorActivo";
-export const DRAFT_RETENTION_DAYS = 7;
+export const DRAFT_RETENTION_DAYS = 15;
+export const MAX_DRAFTS = 2;
 export const DRAFTS_UPDATED_EVENT = "facturabill:drafts-updated";
 
 const DRAFT_RETENTION_MS = DRAFT_RETENTION_DAYS * 24 * 60 * 60 * 1000;
@@ -24,6 +25,25 @@ function parseUpdatedAt(value: unknown): number {
   return Date.parse(value);
 }
 
+function compareDraftsByUpdatedAt(
+  left: DraftRecord,
+  right: DraftRecord,
+): number {
+  const leftUpdatedAt = parseUpdatedAt(left.updatedAt);
+  const rightUpdatedAt = parseUpdatedAt(right.updatedAt);
+
+  return rightUpdatedAt - leftUpdatedAt;
+}
+
+function sanitizeDrafts<T extends DraftRecord>(drafts: unknown[]): T[] {
+  return drafts
+    .filter((item) => !isDraftExpired(item))
+    .sort((left, right) =>
+      compareDraftsByUpdatedAt(left as DraftRecord, right as DraftRecord),
+    )
+    .slice(0, MAX_DRAFTS) as T[];
+}
+
 export function isDraftExpired(value: unknown): boolean {
   if (!isRecord(value)) {
     return true;
@@ -43,7 +63,9 @@ export function writeDrafts<T extends DraftRecord>(drafts: T[]) {
     return;
   }
 
-  window.localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify(drafts));
+  const sanitized = sanitizeDrafts<T>(drafts);
+
+  window.localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify(sanitized));
   window.dispatchEvent(new CustomEvent(DRAFTS_UPDATED_EVENT));
 }
 
@@ -65,9 +87,9 @@ export function readDrafts<T extends DraftRecord>(): T[] {
       return [];
     }
 
-    const filtered = parsed.filter((item) => !isDraftExpired(item)) as T[];
+    const filtered = sanitizeDrafts<T>(parsed);
 
-    if (filtered.length !== parsed.length) {
+    if (JSON.stringify(filtered) !== JSON.stringify(parsed)) {
       writeDrafts(filtered);
     }
 
@@ -79,7 +101,7 @@ export function readDrafts<T extends DraftRecord>(): T[] {
 
 export function upsertDraft<T extends DraftRecord>(draft: T, drafts: T[]): T[] {
   const rest = drafts.filter((item) => item.id !== draft.id);
-  return [draft, ...rest];
+  return sanitizeDrafts<T>([draft, ...rest]);
 }
 
 export function writeActiveDraft<T extends DraftRecord>(draft: T) {

@@ -110,24 +110,24 @@ const accountActionsCopy: Record<AppLanguage, AccountActionsCopy> = {
     exportError: "Unable to export data",
   },
   ar: {
-    exportData: "تصدير البيانات",
+    exportData: "\u062a\u0635\u062f\u064a\u0631 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a",
     exportDataDescription:
-      "نزّل نسخة من بيانات الشركة والعملاء والسجل والمسودات والإعدادات.",
-    helpCenter: "مركز المساعدة",
+      "\u0646\u0632\u0651\u0644 \u0646\u0633\u062e\u0629 \u0645\u0646 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0634\u0631\u0643\u0629 \u0648\u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0648\u0627\u0644\u0633\u062c\u0644 \u0648\u0627\u0644\u0645\u0633\u0648\u062f\u0627\u062a \u0648\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a.",
+    helpCenter: "\u0645\u0631\u0643\u0632 \u0627\u0644\u0645\u0633\u0627\u0639\u062f\u0629",
     helpCenterDescription:
-      "دليل سريع للأسئلة الشائعة حول الفواتير وملفات PDF والاستخدام اليومي.",
-    support: "التواصل مع الدعم",
+      "\u062f\u0644\u064a\u0644 \u0633\u0631\u064a\u0639 \u0644\u0644\u0623\u0633\u0626\u0644\u0629 \u0627\u0644\u0634\u0627\u0626\u0639\u0629 \u062d\u0648\u0644 \u0627\u0644\u0641\u0648\u0627\u062a\u064a\u0631 \u0648\u0645\u0644\u0641\u0627\u062a PDF \u0648\u0627\u0644\u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0627\u0644\u064a\u0648\u0645\u064a.",
+    support: "\u0627\u0644\u062a\u0648\u0627\u0635\u0644 \u0645\u0639 \u0627\u0644\u062f\u0639\u0645",
     supportDescription:
-      "افتح طلب دعم عندما تواجه عائقاً حقيقياً أو تحتاج إلى مساعدة مباشرة.",
-    feedback: "إرسال ملاحظات",
+      "\u0627\u0641\u062a\u062d \u0637\u0644\u0628 \u062f\u0639\u0645 \u0639\u0646\u062f\u0645\u0627 \u062a\u0648\u0627\u062c\u0647 \u0639\u0627\u0626\u0642\u0627\u064b \u062d\u0642\u064a\u0642\u064a\u0627\u064b \u0623\u0648 \u062a\u062d\u062a\u0627\u062c \u0625\u0644\u0649 \u0645\u0633\u0627\u0639\u062f\u0629 \u0645\u0628\u0627\u0634\u0631\u0629.",
+    feedback: "\u0625\u0631\u0633\u0627\u0644 \u0645\u0644\u0627\u062d\u0638\u0627\u062a",
     feedbackDescription:
-      "شارك الأخطاء أو التحسينات أو أفكار المنتج للإصدارات القادمة.",
-    deleteAccount: "حذف الحساب",
+      "\u0634\u0627\u0631\u0643 \u0627\u0644\u0623\u062e\u0637\u0627\u0621 \u0623\u0648 \u0627\u0644\u062a\u062d\u0633\u064a\u0646\u0627\u062a \u0623\u0648 \u0623\u0641\u0643\u0627\u0631 \u0627\u0644\u0645\u0646\u062a\u062c \u0644\u0644\u0625\u0635\u062f\u0627\u0631\u0627\u062a \u0627\u0644\u0642\u0627\u062f\u0645\u0629.",
+    deleteAccount: "\u062d\u0630\u0641 \u0627\u0644\u062d\u0633\u0627\u0628",
     deleteAccountDescription:
-      "راجع مسار حذف الحساب وأدر الطلب قبل تأكيده.",
-    exportSuccess: "تم تصدير البيانات بنجاح",
-    exportEmpty: "لا توجد بيانات جاهزة للتصدير بعد",
-    exportError: "تعذر تصدير البيانات",
+      "\u0631\u0627\u062c\u0639 \u0645\u0633\u0627\u0631 \u062d\u0630\u0641 \u0627\u0644\u062d\u0633\u0627\u0628 \u0648\u0623\u062f\u0631 \u0627\u0644\u0637\u0644\u0628 \u0642\u0628\u0644 \u062a\u0623\u0643\u064a\u062f\u0647.",
+    exportSuccess: "\u062a\u0645 \u062a\u0635\u062f\u064a\u0631 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0628\u0646\u062c\u0627\u062d",
+    exportEmpty: "\u0644\u0627 \u062a\u0648\u062c\u062f \u0628\u064a\u0627\u0646\u0627\u062a \u062c\u0627\u0647\u0632\u0629 \u0644\u0644\u062a\u0635\u062f\u064a\u0631 \u0628\u0639\u062f",
+    exportError: "\u062a\u0639\u0630\u0631 \u062a\u0635\u062f\u064a\u0631 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a",
   },
   fr: {
     exportData: "Exporter les donnees",
@@ -181,7 +181,7 @@ const accountActionsCopy: Record<AppLanguage, AccountActionsCopy> = {
       "Open een supportverzoek wanneer je vastloopt of directe hulp nodig hebt.",
     feedback: "Feedback sturen",
     feedbackDescription:
-      "Deel bugs, verbeteringen of productideeën voor volgende versies.",
+      "Deel bugs, verbeteringen of productidee\u00ebn voor volgende versies.",
     deleteAccount: "Account verwijderen",
     deleteAccountDescription:
       "Bekijk het verwijderproces en beheer het verzoek voordat je bevestigt.",
@@ -228,7 +228,7 @@ const verifactuSettingsCopy: Record<
   ar: {
     title: "VeriFactu",
     description:
-      "راجع حالة الفواتير ومتابعة VeriFactu.",
+      "\u0631\u0627\u062c\u0639 \u062d\u0627\u0644\u0629 \u0627\u0644\u0641\u0648\u0627\u062a\u064a\u0631 \u0648\u0645\u062a\u0627\u0628\u0639\u0629 VeriFactu.",
   },
   fr: {
     title: "VeriFactu et envoi",
@@ -795,7 +795,7 @@ export default function AjustesPage() {
       <div className="pointer-events-none absolute -left-8 top-16 h-24 w-24 rounded-full bg-[#efe2d3]/42 blur-3xl" />
       <div className="pointer-events-none absolute -right-8 top-24 h-24 w-24 rounded-full bg-[#dde6f1]/65 blur-3xl" />
 
-      <main className="relative mx-auto min-h-screen w-full max-w-[430px] px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]">
+      <main className="relative mx-auto min-h-screen w-full max-w-[410px] px-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-[calc(0.875rem+env(safe-area-inset-top))] sm:max-w-[430px] sm:pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pt-[calc(1rem+env(safe-area-inset-top))]">
         <header className="px-1">
           <div className="flex items-center justify-between gap-4">
             <Link
@@ -815,7 +815,7 @@ export default function AjustesPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
               {copy.settings.eyebrow}
             </p>
-            <h1 className="mt-2 text-[2.05rem] font-semibold tracking-[-0.055em] text-slate-950">
+            <h1 className="mt-2 text-[1.85rem] sm:text-[2.05rem] font-semibold tracking-[-0.055em] text-slate-950">
               {copy.settings.title}
             </h1>
             <p className="mt-3 max-w-[17rem] text-[14px] leading-6 text-slate-500">

@@ -82,9 +82,10 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   const copy = dashboardCopy[language];
   const [hasRegisteredUser, setHasRegisteredUser] = useState(false);
   const [hasHydratedShell, setHasHydratedShell] = useState(false);
-  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [moreMenuPath, setMoreMenuPath] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<DraftItem[]>([]);
   const hydrateFrameRef = useRef<number | null>(null);
+  const isMoreMenuOpen = moreMenuPath === pathname;
 
   const moreNavLabel = language === "es" ? "Mas" : "More";
   const moreMenuUi =
@@ -208,10 +209,6 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   }, [router]);
 
   useEffect(() => {
-    setIsMoreMenuOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
     if (!isMoreMenuOpen) {
       return;
     }
@@ -219,7 +216,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
     const previousOverflow = document.body.style.overflow;
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsMoreMenuOpen(false);
+        setMoreMenuPath(null);
       }
     };
 
@@ -293,7 +290,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
       label: moreNavLabel,
       icon: Plus,
       active: activeSection === "more",
-      onClick: () => setIsMoreMenuOpen(true),
+      onClick: () => setMoreMenuPath(pathname),
       expanded: isMoreMenuOpen,
     },
     {
@@ -320,14 +317,14 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   ];
 
   function openMoreMenuItem(href: string) {
-    setIsMoreMenuOpen(false);
+    setMoreMenuPath(null);
     startTransition(() => {
       router.push(href);
     });
   }
 
   function restoreDraft(draft: DraftItem) {
-    setIsMoreMenuOpen(false);
+    setMoreMenuPath(null);
     writeActiveDraft(draft);
     startTransition(() => {
       router.push("/crear-factura");
@@ -340,21 +337,21 @@ export default function DashboardShell({ children }: DashboardShellProps) {
       <div className="pointer-events-none fixed -left-16 top-20 h-44 w-44 rounded-full bg-[#f4d7bc]/45 blur-3xl" />
       <div className="pointer-events-none fixed -right-12 top-64 h-52 w-52 rounded-full bg-[#dce8ff]/80 blur-3xl" />
 
-      <div className="relative z-0">{children}</div>
+      <div className="relative">{children}</div>
 
       {showBottomNav ? (
         <nav
-          className="fixed bottom-0 left-1/2 z-20 w-full max-w-[430px] -translate-x-1/2 px-4"
-          style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
+          className="fixed bottom-0 left-1/2 z-20 w-full max-w-[410px] -translate-x-1/2 px-3 sm:max-w-[430px] sm:px-4"
+          style={{ paddingBottom: "max(0.2rem, env(safe-area-inset-bottom))" }}
         >
           <div
-            className="grid rounded-[30px] border border-white/10 bg-slate-950/95 px-2 py-3 text-white shadow-[0_24px_60px_-26px_rgba(15,23,42,0.78)] backdrop-blur-xl"
+            className="grid rounded-[20px] border border-white/10 bg-slate-950/96 px-1 py-1.5 text-white shadow-[0_14px_28px_-18px_rgba(15,23,42,0.48)] backdrop-blur-xl sm:rounded-[30px] sm:px-2 sm:py-3 sm:shadow-[0_24px_60px_-26px_rgba(15,23,42,0.78)]"
             style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
           >
             {navItems.map(({ key, label, icon: Icon, active, href, onClick, expanded }) => {
-              const className = `flex flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center transition ${
+              const className = `flex flex-col items-center justify-center gap-px rounded-[15px] px-0.5 py-1 text-center transition sm:gap-1 sm:rounded-2xl sm:px-1 sm:py-2 ${
                 active
-                  ? "bg-white text-slate-950 shadow-[0_16px_30px_-24px_rgba(255,255,255,1)]"
+                  ? "bg-white text-slate-950 shadow-[0_12px_20px_-18px_rgba(255,255,255,0.95)] sm:shadow-[0_16px_30px_-24px_rgba(255,255,255,1)]"
                   : "text-white/58 hover:text-white/78"
               }`;
 
@@ -366,8 +363,8 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                     aria-current={active ? "page" : undefined}
                     className={className}
                   >
-                    <Icon className="h-[18px] w-[18px]" strokeWidth={2.1} />
-                    <span className="text-[11px] font-medium tracking-[-0.01em]">
+                    <Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2.1} />
+                    <span className="text-[9px] font-medium tracking-[-0.01em] sm:text-[11px]">
                       {label}
                     </span>
                   </Link>
@@ -384,8 +381,8 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                   onClick={onClick}
                   className={className}
                 >
-                  <Icon className="h-[18px] w-[18px]" strokeWidth={2.1} />
-                  <span className="text-[11px] font-medium tracking-[-0.01em]">
+                  <Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2.1} />
+                  <span className="text-[9px] font-medium tracking-[-0.01em] sm:text-[11px]">
                     {label}
                   </span>
                 </button>
@@ -400,43 +397,43 @@ export default function DashboardShell({ children }: DashboardShellProps) {
           <button
             type="button"
             aria-label={moreMenuUi.close}
-            onClick={() => setIsMoreMenuOpen(false)}
+            onClick={() => setMoreMenuPath(null)}
             className="fixed inset-0 z-30 bg-slate-950/18 backdrop-blur-[2px]"
           />
 
-          <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[430px] px-4 pb-4">
+          <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[410px] px-3 pb-2.5 sm:max-w-[430px] sm:px-4 sm:pb-4">
             <section
               role="dialog"
               aria-modal="true"
               aria-label={moreMenuUi.title}
-              className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto rounded-[34px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,247,252,0.96))] p-5 shadow-[0_34px_80px_-38px_rgba(15,23,42,0.55)] backdrop-blur-xl"
+              className="max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,247,252,0.96))] p-4 shadow-[0_26px_52px_-30px_rgba(15,23,42,0.34)] backdrop-blur-xl sm:max-h-[calc(100dvh-1.5rem)] sm:rounded-[34px] sm:p-5 sm:shadow-[0_34px_80px_-38px_rgba(15,23,42,0.55)]"
             >
-              <div className="mx-auto mb-4 h-1.5 w-14 rounded-full bg-slate-200" />
+              <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-slate-200 sm:mb-4 sm:h-1.5 sm:w-14" />
 
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
                     {moreNavLabel}
                   </p>
-                  <h3 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
+                  <h3 className="mt-2 text-[1.25rem] sm:text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
                     {moreMenuUi.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                  <p className="mt-2 text-[13px] leading-5 text-slate-500 sm:text-sm sm:leading-6">
                     {moreMenuUi.description}
                   </p>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => setIsMoreMenuOpen(false)}
+                  onClick={() => setMoreMenuPath(null)}
                   aria-label={moreMenuUi.close}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:text-slate-700"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[18px] border border-slate-200 bg-white text-slate-500 transition hover:text-slate-700 sm:h-10 sm:w-10 sm:rounded-2xl"
                 >
                   <X className="h-4 w-4" strokeWidth={2.3} />
                 </button>
               </div>
 
-              <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="mt-4 grid grid-cols-2 gap-2.5 sm:mt-5 sm:gap-3">
                 {moreMenuItems.map((item) => {
                   const ItemIcon = item.icon;
 
@@ -445,15 +442,15 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                       key={item.href}
                       type="button"
                       onClick={() => openMoreMenuItem(item.href)}
-                      className="flex min-h-[148px] flex-col items-start rounded-[26px] border border-white/70 bg-white/86 px-4 py-4 text-left shadow-[0_16px_30px_-24px_rgba(15,23,42,0.24)] transition hover:bg-white"
+                      className="flex min-h-[124px] flex-col items-start rounded-[22px] border border-white/70 bg-white/86 px-3.5 py-3.5 text-left shadow-[0_12px_24px_-20px_rgba(15,23,42,0.18)] transition hover:bg-white sm:min-h-[148px] sm:rounded-[26px] sm:px-4 sm:py-4 sm:shadow-[0_16px_30px_-24px_rgba(15,23,42,0.24)]"
                     >
-                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
-                        <ItemIcon className="h-[18px] w-[18px]" strokeWidth={2.1} />
+                      <span className="flex h-10 w-10 items-center justify-center rounded-[18px] bg-slate-950 text-white shadow-[0_14px_22px_-16px_rgba(15,23,42,0.72)] sm:h-11 sm:w-11 sm:rounded-2xl sm:shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
+                        <ItemIcon className="h-[17px] w-[17px] sm:h-[18px] sm:w-[18px]" strokeWidth={2.1} />
                       </span>
-                      <p className="mt-4 text-sm font-semibold text-slate-950">
+                      <p className="mt-3 text-[13px] font-semibold text-slate-950 sm:mt-4 sm:text-sm">
                         {item.label}
                       </p>
-                      <p className="mt-2 text-[13px] leading-5 text-slate-500">
+                      <p className="mt-1.5 text-[12px] leading-5 text-slate-500 sm:mt-2 sm:text-[13px]">
                         {item.description}
                       </p>
                     </button>
@@ -461,26 +458,26 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                 })}
               </div>
 
-              <div className="mt-6 rounded-[28px] border border-white/80 bg-white/78 p-4 shadow-[0_18px_36px_-28px_rgba(15,23,42,0.22)]">
+              <div className="mt-5 rounded-[24px] border border-white/80 bg-white/78 p-3.5 shadow-[0_14px_28px_-22px_rgba(15,23,42,0.18)] sm:mt-6 sm:rounded-[28px] sm:p-4 sm:shadow-[0_18px_36px_-28px_rgba(15,23,42,0.22)]">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
                       {moreMenuUi.draftsEyebrow}
                     </p>
-                    <h4 className="mt-2 text-[1.1rem] font-semibold tracking-[-0.03em] text-slate-950">
+                    <h4 className="mt-2 text-[1.02rem] font-semibold tracking-[-0.03em] text-slate-950 sm:text-[1.1rem]">
                       {moreMenuUi.draftsTitle}
                     </h4>
                     <p className="mt-2 text-[13px] leading-5 text-slate-500">
                       {moreMenuUi.draftsDescription}
                     </p>
                   </div>
-                  <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600">
+                  <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 sm:px-3 sm:py-1.5 sm:text-xs">
                     {String(recentPrimaryDrafts.length).padStart(2, "0")}
                   </span>
                 </div>
 
                 {recentPrimaryDrafts.length > 0 ? (
-                  <div className="mt-4 space-y-3">
+                  <div className="mt-4 space-y-2.5 sm:space-y-3">
                     {recentPrimaryDrafts.map((item, index) => {
                       const documentType = normalizeInvoiceDocumentType(item.tipo);
                       const documentLabel = getInvoiceDocumentMeta(
@@ -493,7 +490,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                           key={`${item.id || item.numero || "more-draft"}-${index}`}
                           type="button"
                           onClick={() => restoreDraft(item)}
-                          className="flex w-full items-start justify-between gap-3 rounded-[24px] border border-white/80 bg-white/88 px-4 py-4 text-left shadow-[0_16px_30px_-24px_rgba(15,23,42,0.22)] transition hover:bg-white"
+                          className="flex w-full items-start justify-between gap-3 rounded-[20px] border border-white/80 bg-white/88 px-3.5 py-3 text-left shadow-[0_12px_24px_-20px_rgba(15,23,42,0.18)] transition hover:bg-white sm:rounded-[24px] sm:px-4 sm:py-4 sm:shadow-[0_16px_30px_-24px_rgba(15,23,42,0.22)]"
                         >
                           <div className="min-w-0">
                             <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
@@ -514,7 +511,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                               )}
                             </p>
                           </div>
-                          <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
+                          <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 sm:px-3 sm:py-1.5 sm:text-xs">
                             {moreMenuUi.restoreDraft}
                           </span>
                         </button>
@@ -522,7 +519,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                     })}
                   </div>
                 ) : (
-                  <div className="mt-4 rounded-[22px] border border-dashed border-slate-200 bg-white/70 px-4 py-4 text-sm leading-6 text-slate-500">
+                  <div className="mt-4 rounded-[18px] border border-dashed border-slate-200 bg-white/70 px-3.5 py-3 text-[13px] leading-5 text-slate-500 sm:rounded-[22px] sm:px-4 sm:py-4 sm:text-sm sm:leading-6">
                     {moreMenuUi.draftsEmpty}
                   </div>
                 )}

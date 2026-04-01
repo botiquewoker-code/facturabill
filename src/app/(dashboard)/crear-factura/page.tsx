@@ -1464,7 +1464,7 @@ export default function CrearFacturaPage() {
       <div className="pointer-events-none absolute -right-12 top-64 h-52 w-52 rounded-full bg-[#dce8ff]/80 blur-3xl" />
 
       <main
-        className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-5 pt-6 font-sans"
+        className="relative mx-auto flex min-h-screen w-full max-w-[410px] flex-col px-4 pt-4 font-sans sm:max-w-[430px] sm:px-5 sm:pt-6"
         style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
       >
         <header className="flex items-start justify-between gap-4">
@@ -1472,10 +1472,10 @@ export default function CrearFacturaPage() {
             <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
               {modeCopy.workspace}
             </p>
-            <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
+            <h1 className="mt-2 text-[1.78rem] sm:text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
               {modeCopy.title}
             </h1>
-            <p className="mt-3 max-w-xs text-[15px] leading-6 text-slate-500">
+            <p className="mt-3 max-w-xs text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
               {modeCopy.subtitle}
             </p>
           </div>
@@ -1490,7 +1490,7 @@ export default function CrearFacturaPage() {
           ) : null}
         </header>
 
-        <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+        <section className="mt-5 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
           <div className="flex items-start gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
               <CalendarDays className="h-[18px] w-[18px]" strokeWidth={2.1} />
@@ -1499,7 +1499,7 @@ export default function CrearFacturaPage() {
               <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                 {uiCopy.document}
               </p>
-              <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+              <h3 className="mt-2 text-[1.18rem] sm:text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {modeCopy.dateSectionTitle}
               </h3>
               <p className="mt-2 max-w-xs text-[14px] leading-6 text-slate-500">
@@ -1583,7 +1583,7 @@ export default function CrearFacturaPage() {
             <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
               {guestModeCopy.eyebrow}
             </p>
-            <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+            <h2 className="mt-2 text-[1.18rem] sm:text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
               {guestModeCopy.title}
             </h2>
             <p className="mt-2 text-[14px] leading-6 text-slate-500">
@@ -1609,7 +1609,7 @@ export default function CrearFacturaPage() {
           </section>
         ) : null}
 
-        <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+        <section className="mt-5 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
 
           <div className="flex items-start gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
@@ -1619,7 +1619,7 @@ export default function CrearFacturaPage() {
               <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                 {uiCopy.client}
               </p>
-              <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+              <h3 className="mt-2 text-[1.18rem] sm:text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {uiCopy.clientData}
               </h3>
             </div>
@@ -1652,7 +1652,7 @@ export default function CrearFacturaPage() {
                   </div>
                   <Link
                     href="/clientes"
-                    className="inline-flex min-h-14 items-center justify-center rounded-[22px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    className="inline-flex min-h-12 sm:min-h-14 items-center justify-center rounded-[22px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                   >
                     {uiCopy.clients}
                   </Link>
@@ -1737,7 +1737,7 @@ export default function CrearFacturaPage() {
           </div>
         </section>
 
-        <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+        <section className="mt-5 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
           <div className="flex items-start gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
               <Palette className="h-[18px] w-[18px]" strokeWidth={2.1} />
@@ -1746,7 +1746,7 @@ export default function CrearFacturaPage() {
               <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                 {uiCopy.concepts}
               </p>
-              <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+              <h3 className="mt-2 text-[1.18rem] sm:text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {modeCopy.conceptsTitle}
               </h3>
             </div>
@@ -1907,7 +1907,7 @@ export default function CrearFacturaPage() {
         </section>
 
         {isDeliveryNoteDocument ? (
-          <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+          <section className="mt-5 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
             <div className="flex items-start gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0f766e] text-white shadow-[0_18px_28px_-18px_rgba(15,118,110,0.82)]">
                 <Send className="h-[18px] w-[18px]" strokeWidth={2.1} />
@@ -1916,7 +1916,7 @@ export default function CrearFacturaPage() {
                 <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                   {uiCopy.delivery}
                 </p>
-                <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+                <h3 className="mt-2 text-[1.18rem] sm:text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
                   {uiCopy.deliveryTitle}
                 </h3>
                 <p className="mt-2 max-w-sm text-[14px] leading-6 text-slate-500">
@@ -2005,7 +2005,7 @@ export default function CrearFacturaPage() {
           </section>
         ) : null}
 
-        <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+        <section className="mt-5 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
           <div className="flex items-start gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
               <Wallet className="h-[18px] w-[18px]" strokeWidth={2.1} />
@@ -2014,7 +2014,7 @@ export default function CrearFacturaPage() {
               <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                 {modeCopy.summaryEyebrow}
               </p>
-              <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+              <h3 className="mt-2 text-[1.18rem] sm:text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {modeCopy.summaryTitle}
               </h3>
             </div>

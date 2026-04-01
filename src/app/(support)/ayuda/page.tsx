@@ -95,7 +95,7 @@ export default function AyudaPage() {
         {faqItems.map(({ title, icon: Icon, content }) => (
           <article
             key={title}
-            className="rounded-[30px] border border-white/70 bg-white/80 p-5 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl"
+            className="rounded-[24px] border border-white/70 bg-white/80 p-4 shadow-[0_16px_32px_-24px_rgba(15,23,42,0.24)] backdrop-blur-xl sm:rounded-[30px] sm:p-5 sm:shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)]"
           >
             <div className="flex items-start gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_16px_26px_-18px_rgba(15,23,42,0.82)]">
@@ -119,7 +119,7 @@ export default function AyudaPage() {
         ))}
       </section>
 
-      <section className="mt-6 rounded-[30px] border border-white/70 bg-white/80 p-5 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+      <section className="mt-6 rounded-[24px] border border-white/70 bg-white/80 p-4 shadow-[0_16px_32px_-24px_rgba(15,23,42,0.24)] backdrop-blur-xl sm:rounded-[30px] sm:p-5 sm:shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)]">
         <div className="flex items-start gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#8a5a33] text-white shadow-[0_16px_26px_-18px_rgba(138,90,51,0.78)]">
             <Mail className="h-[18px] w-[18px]" strokeWidth={2.1} />
@@ -128,7 +128,7 @@ export default function AyudaPage() {
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
               {copy.contact}
             </p>
-            <h2 className="mt-2 text-[1.2rem] font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="mt-2 text-[1.08rem] sm:text-[1.2rem] font-semibold tracking-[-0.03em] text-slate-950">
               {copy.needMoreHelp}
             </h2>
             <p className="mt-3 text-[14px] leading-6 text-slate-500">

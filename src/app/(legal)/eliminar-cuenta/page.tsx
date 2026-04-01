@@ -28,7 +28,7 @@ export default function EliminarCuenta() {
         </ul>
       </section>
 
-      <section className="mt-6 rounded-[30px] border border-white/70 bg-white/80 p-5 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+      <section className="mt-6 rounded-[24px] border border-white/70 bg-white/80 p-4 shadow-[0_16px_32px_-24px_rgba(15,23,42,0.24)] backdrop-blur-xl sm:rounded-[30px] sm:p-5 sm:shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)]">
         {!requestReady ? (
           <>
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
@@ -89,7 +89,7 @@ export default function EliminarCuenta() {
         )}
       </section>
 
-      <section className="mt-6 rounded-[30px] border border-white/70 bg-white/80 p-5 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+      <section className="mt-6 rounded-[24px] border border-white/70 bg-white/80 p-4 shadow-[0_16px_32px_-24px_rgba(15,23,42,0.24)] backdrop-blur-xl sm:rounded-[30px] sm:p-5 sm:shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)]">
         <div className="flex items-start gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white">
             <Download className="h-[18px] w-[18px]" strokeWidth={2.1} />
@@ -135,7 +135,7 @@ export default function EliminarCuenta() {
                     <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
                       Confirmacion
                     </p>
-                    <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+                    <h3 className="mt-2 text-[1.18rem] sm:text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
                       Confirmar solicitud
                     </h3>
                     <p className="mt-2 text-sm leading-6 text-slate-500">

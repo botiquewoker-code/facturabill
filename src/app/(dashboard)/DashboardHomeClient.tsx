@@ -199,18 +199,18 @@ const searchUi: Record<
     untitledDraft: "Untitled draft",
   },
   ar: {
-    results: "النتائج",
-    noResults: "لم يتم العثور على شيء",
-    noResultsDescription: "جرّب اسم العميل أو رقم المستند أو جزءاً من البريد الإلكتروني.",
-    drafts: "المسودات",
-    viewHistory: "عرض السجل",
-    openClient: "فتح العميل",
-    restoreDraft: "استعادة",
-    invoice: "فاتورة",
-    budget: "عرض سعر",
-    untitledClient: "عميل بدون اسم",
-    untitledDocument: "مستند بدون رقم",
-    untitledDraft: "مسودة بدون رقم",
+    results: "\u0627\u0644\u0646\u062a\u0627\u0626\u062c",
+    noResults: "\u0644\u0645 \u064a\u062a\u0645 \u0627\u0644\u0639\u062b\u0648\u0631 \u0639\u0644\u0649 \u0634\u064a\u0621",
+    noResultsDescription: "\u062c\u0631\u0651\u0628 \u0627\u0633\u0645 \u0627\u0644\u0639\u0645\u064a\u0644 \u0623\u0648 \u0631\u0642\u0645 \u0627\u0644\u0645\u0633\u062a\u0646\u062f \u0623\u0648 \u062c\u0632\u0621\u0627\u064b \u0645\u0646 \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a.",
+    drafts: "\u0627\u0644\u0645\u0633\u0648\u062f\u0627\u062a",
+    viewHistory: "\u0639\u0631\u0636 \u0627\u0644\u0633\u062c\u0644",
+    openClient: "\u0641\u062a\u062d \u0627\u0644\u0639\u0645\u064a\u0644",
+    restoreDraft: "\u0627\u0633\u062a\u0639\u0627\u062f\u0629",
+    invoice: "\u0641\u0627\u062a\u0648\u0631\u0629",
+    budget: "\u0639\u0631\u0636 \u0633\u0639\u0631",
+    untitledClient: "\u0639\u0645\u064a\u0644 \u0628\u062f\u0648\u0646 \u0627\u0633\u0645",
+    untitledDocument: "\u0645\u0633\u062a\u0646\u062f \u0628\u062f\u0648\u0646 \u0631\u0642\u0645",
+    untitledDraft: "\u0645\u0633\u0648\u062f\u0629 \u0628\u062f\u0648\u0646 \u0631\u0642\u0645",
   },
   fr: {
     results: "Resultats",
@@ -793,16 +793,6 @@ export default function DashboardHomeClient({
   const noDocumentsLabel =
     language === "es" ? "Sin documentos" : "No documents";
   const noDraftsLabel = language === "es" ? "Sin borradores" : "No drafts";
-  const recentPrimaryDrafts = useMemo(
-    () =>
-      borradores
-        .filter((item) => {
-          const documentType = normalizeInvoiceDocumentType(item.tipo);
-          return documentType === "factura" || documentType === "presupuesto";
-        })
-        .slice(0, 3),
-    [borradores],
-  );
 
   const insightCards = useMemo<InsightCard[]>(() => {
     const now = new Date();
@@ -912,7 +902,7 @@ export default function DashboardHomeClient({
         formatShortDate(item.fecha, language, noDateLabel),
       ]
         .filter(Boolean)
-        .join(" / "),
+        .join(" \u00b7 "),
     });
     const buildDraftHighlight = (
       item: DraftItem,
@@ -926,7 +916,7 @@ export default function DashboardHomeClient({
         formatShortDate(item.updatedAt, language, noDateLabel),
       ]
         .filter(Boolean)
-        .join(" / "),
+        .join(" \u00b7 "),
     });
     const buildClientHighlight = (
       item: ClientRecord,
@@ -1375,9 +1365,7 @@ export default function DashboardHomeClient({
     borradores,
     clientes,
     historial,
-    labels.budget,
     labels.drafts,
-    labels.invoice,
     labels.untitledClient,
     labels.untitledDocument,
     labels.untitledDraft,
@@ -1697,10 +1685,10 @@ export default function DashboardHomeClient({
       <div className="pointer-events-none absolute -right-12 top-64 h-52 w-52 rounded-full bg-[#dce8ff]/80 blur-3xl" />
 
       <main
-        className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-5 pt-6 font-sans"
+        className="relative mx-auto flex min-h-screen w-full max-w-[410px] flex-col px-4 pt-4 font-sans sm:max-w-[430px] sm:px-5 sm:pt-6"
         style={{
           paddingBottom: showRegisteredDashboard
-            ? "calc(7.5rem + env(safe-area-inset-bottom))"
+            ? "calc(5.5rem + env(safe-area-inset-bottom))"
             : "calc(5rem + env(safe-area-inset-bottom))",
         }}
       >
@@ -1714,7 +1702,7 @@ export default function DashboardHomeClient({
             <p className="mt-1 text-sm font-medium tracking-[0.2em] text-slate-500 uppercase">
               {copy.home.workspace}
             </p>
-            <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
+            <h1 className="mt-2 text-[1.78rem] sm:text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
               {copy.home.title}
             </h1>
           </div>
@@ -1747,10 +1735,10 @@ export default function DashboardHomeClient({
         </header>
 
         {showRegisteredDashboard && homeVisibility.search ? (
-          <div className="mt-6 rounded-[26px] border border-white/70 bg-white/80 p-4 shadow-[0_18px_45px_-26px_rgba(15,23,42,0.32)] backdrop-blur-xl">
+          <div className="mt-5 rounded-[22px] border border-white/70 bg-white/80 p-3.5 shadow-[0_16px_36px_-24px_rgba(15,23,42,0.26)] backdrop-blur-xl sm:mt-6 sm:rounded-[26px] sm:p-4 sm:shadow-[0_18px_45px_-26px_rgba(15,23,42,0.32)]">
             <label className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.8)]">
-                <Search className="h-[18px] w-[18px]" strokeWidth={2.2} />
+              <span className="flex h-10 w-10 items-center justify-center rounded-[18px] bg-slate-950 text-white shadow-[0_16px_24px_-18px_rgba(15,23,42,0.72)] sm:h-11 sm:w-11 sm:rounded-2xl sm:shadow-[0_18px_28px_-18px_rgba(15,23,42,0.8)]">
+                <Search className="h-[17px] w-[17px] sm:h-[18px] sm:w-[18px]" strokeWidth={2.2} />
               </span>
               <input
                 type="search"
@@ -1764,21 +1752,21 @@ export default function DashboardHomeClient({
                 }}
                 placeholder={copy.home.searchPlaceholder}
                 autoComplete="off"
-                className="h-11 w-full border-0 bg-transparent text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400"
+                className="h-10 w-full border-0 bg-transparent text-[14px] font-medium text-slate-700 outline-none placeholder:text-slate-400 sm:h-11 sm:text-[15px]"
               />
             </label>
           </div>
         ) : null}
 
         {showRegisteredDashboard && normalizedQuery ? (
-          <section className="flex-1 py-6">
-            <div className="rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+          <section className="flex-1 py-5 sm:py-6">
+            <div className="rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                     {labels.results}
                   </p>
-                  <h2 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
+                  <h2 className="mt-2 text-[1.25rem] sm:text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
                     {totalResults}
                   </h2>
                 </div>
@@ -1786,7 +1774,7 @@ export default function DashboardHomeClient({
                   <button
                     type="button"
                     onClick={openFirstResult}
-                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    className="rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-[13px] font-semibold text-slate-700 transition hover:bg-slate-50 sm:px-4 sm:py-2 sm:text-sm"
                   >
                     Enter
                   </button>
@@ -1804,7 +1792,7 @@ export default function DashboardHomeClient({
                         key={cliente.id}
                         type="button"
                         onClick={() => router.push(`/clientes/${cliente.id}`)}
-                        className="flex w-full items-start justify-between gap-3 rounded-[24px] border border-white/70 bg-white/85 px-4 py-4 text-left shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)] transition hover:border-slate-200 hover:bg-white"
+                        className="flex w-full items-start justify-between gap-3 rounded-[20px] border border-white/70 bg-white/85 px-3.5 py-3 text-left shadow-[0_14px_24px_-22px_rgba(15,23,42,0.24)] transition hover:border-slate-200 hover:bg-white sm:rounded-[24px] sm:px-4 sm:py-4 sm:shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)]"
                       >
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-slate-950">
@@ -1813,7 +1801,7 @@ export default function DashboardHomeClient({
                           <p className="mt-1 text-[13px] leading-5 text-slate-500">
                             {[cliente.nif, cliente.email, cliente.telefono]
                               .filter((value) => value.trim())
-                              .join(" · ") || cliente.direccion}
+                              .join(" \u00b7 ") || cliente.direccion}
                           </p>
                         </div>
                         <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600">
@@ -1836,7 +1824,7 @@ export default function DashboardHomeClient({
                         key={`${item.numero || item.id || "history"}-${index}`}
                         type="button"
                         onClick={() => router.push("/historial")}
-                        className="flex w-full items-start justify-between gap-3 rounded-[24px] border border-white/70 bg-white/85 px-4 py-4 text-left shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)] transition hover:border-slate-200 hover:bg-white"
+                        className="flex w-full items-start justify-between gap-3 rounded-[20px] border border-white/70 bg-white/85 px-3.5 py-3 text-left shadow-[0_14px_24px_-22px_rgba(15,23,42,0.24)] transition hover:border-slate-200 hover:bg-white sm:rounded-[24px] sm:px-4 sm:py-4 sm:shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)]"
                       >
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-slate-950">
@@ -1850,7 +1838,7 @@ export default function DashboardHomeClient({
                               item.fecha,
                             ]
                               .filter(Boolean)
-                              .join(" · ")}
+                              .join(" \u00b7 ")}
                           </p>
                         </div>
                         <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600">
@@ -1876,7 +1864,7 @@ export default function DashboardHomeClient({
                           writeActiveDraft(item);
                           router.push("/crear-factura");
                         }}
-                        className="flex w-full items-start justify-between gap-3 rounded-[24px] border border-white/70 bg-white/85 px-4 py-4 text-left shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)] transition hover:border-slate-200 hover:bg-white"
+                        className="flex w-full items-start justify-between gap-3 rounded-[20px] border border-white/70 bg-white/85 px-3.5 py-3 text-left shadow-[0_14px_24px_-22px_rgba(15,23,42,0.24)] transition hover:border-slate-200 hover:bg-white sm:rounded-[24px] sm:px-4 sm:py-4 sm:shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)]"
                       >
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-slate-950">
@@ -1891,7 +1879,7 @@ export default function DashboardHomeClient({
                                 : "",
                             ]
                               .filter(Boolean)
-                              .join(" · ")}
+                              .join(" \u00b7 ")}
                           </p>
                         </div>
                         <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600">
@@ -1904,11 +1892,11 @@ export default function DashboardHomeClient({
               ) : null}
 
               {totalResults === 0 ? (
-                <div className="mt-6 rounded-[28px] border border-dashed border-slate-200 bg-white/70 p-6 text-center">
-                  <h3 className="text-[1.2rem] font-semibold tracking-[-0.03em] text-slate-950">
+                <div className="mt-5 rounded-[22px] border border-dashed border-slate-200 bg-white/70 p-4 text-center sm:mt-6 sm:rounded-[28px] sm:p-6">
+                  <h3 className="text-[1.08rem] sm:text-[1.2rem] font-semibold tracking-[-0.03em] text-slate-950">
                     {labels.noResults}
                   </h3>
-                  <p className="mt-3 text-[15px] leading-6 text-slate-500">
+                  <p className="mt-3 text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
                     {labels.noResultsDescription}
                   </p>
                 </div>
@@ -1917,32 +1905,32 @@ export default function DashboardHomeClient({
           </section>
         ) : (
           showRegisteredDashboard ? (
-            <section className="mt-5 rounded-[36px] border border-white/70 bg-white/76 p-8 text-center shadow-[0_30px_70px_-40px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <section className="mt-4 rounded-[28px] border border-white/70 bg-white/76 p-5 text-center shadow-[0_22px_44px_-28px_rgba(15,23,42,0.26)] backdrop-blur-xl sm:mt-5 sm:rounded-[36px] sm:p-8 sm:shadow-[0_30px_70px_-40px_rgba(15,23,42,0.45)]">
               {homeVisibility.heroVisual ? (
                 <div
                   aria-hidden="true"
-                  className="relative mx-auto mb-8 h-44 w-44 select-none"
+                  className="relative mx-auto mb-6 h-36 w-36 select-none sm:mb-8 sm:h-44 sm:w-44"
                 >
                   <div className="absolute inset-0 rounded-full bg-[linear-gradient(145deg,rgba(255,255,255,0.95),rgba(229,238,250,0.92),rgba(249,234,216,0.95))] shadow-[0_28px_60px_-36px_rgba(15,23,42,0.38)]" />
-                  <div className="absolute left-1/2 top-1/2 h-[106px] w-[88px] -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_18px_45px_-24px_rgba(15,23,42,0.35)]" />
-                  <div className="absolute left-1/2 top-[52px] h-2 w-10 -translate-x-1/2 rounded-full bg-slate-200" />
-                  <div className="absolute left-1/2 top-[68px] h-2 w-14 -translate-x-1/2 rounded-full bg-slate-200/90" />
-                  <div className="absolute left-1/2 top-[84px] h-2 w-12 -translate-x-1/2 rounded-full bg-slate-100" />
-                  <div className="absolute left-[18px] top-[46px] h-3 w-3 rounded-full bg-[#f2b07a]" />
-                  <div className="absolute bottom-[22px] right-[20px] flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-16px_rgba(15,23,42,0.82)]">
-                    <Plus className="h-[18px] w-[18px]" strokeWidth={2.4} />
+                  <div className="absolute left-1/2 top-1/2 h-[88px] w-[74px] -translate-x-1/2 -translate-y-1/2 rounded-[22px] border border-slate-200/80 bg-white/95 shadow-[0_16px_36px_-24px_rgba(15,23,42,0.28)] sm:h-[106px] sm:w-[88px] sm:rounded-[28px] sm:shadow-[0_18px_45px_-24px_rgba(15,23,42,0.35)]" />
+                  <div className="absolute left-1/2 top-[42px] h-1.5 w-8 -translate-x-1/2 rounded-full bg-slate-200 sm:top-[52px] sm:h-2 sm:w-10" />
+                  <div className="absolute left-1/2 top-[55px] h-1.5 w-11 -translate-x-1/2 rounded-full bg-slate-200/90 sm:top-[68px] sm:h-2 sm:w-14" />
+                  <div className="absolute left-1/2 top-[68px] h-1.5 w-10 -translate-x-1/2 rounded-full bg-slate-100 sm:top-[84px] sm:h-2 sm:w-12" />
+                  <div className="absolute left-[16px] top-[38px] h-2.5 w-2.5 rounded-full bg-[#f2b07a] sm:left-[18px] sm:top-[46px] sm:h-3 sm:w-3" />
+                  <div className="absolute bottom-[18px] right-[16px] flex h-9 w-9 items-center justify-center rounded-[18px] bg-slate-950 text-white shadow-[0_14px_22px_-14px_rgba(15,23,42,0.72)] sm:bottom-[22px] sm:right-[20px] sm:h-11 sm:w-11 sm:rounded-2xl sm:shadow-[0_18px_28px_-16px_rgba(15,23,42,0.82)]">
+                    <Plus className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2.4} />
                   </div>
-                  <div className="absolute bottom-[28px] left-[18px] flex h-9 w-9 items-center justify-center rounded-full border border-white/80 bg-white/90 text-amber-500 shadow-[0_12px_24px_-18px_rgba(15,23,42,0.42)]">
-                    <Sparkles className="h-[15px] w-[15px]" strokeWidth={2.2} />
+                  <div className="absolute bottom-[22px] left-[16px] flex h-8 w-8 items-center justify-center rounded-full border border-white/80 bg-white/90 text-amber-500 shadow-[0_10px_18px_-16px_rgba(15,23,42,0.38)] sm:bottom-[28px] sm:left-[18px] sm:h-9 sm:w-9 sm:shadow-[0_12px_24px_-18px_rgba(15,23,42,0.42)]">
+                    <Sparkles className="h-[13px] w-[13px] sm:h-[15px] sm:w-[15px]" strokeWidth={2.2} />
                   </div>
                 </div>
               ) : null}
 
               <div className="mx-auto max-w-sm">
-                <h2 className="text-[1.85rem] font-semibold tracking-[-0.05em] text-slate-950">
+                <h2 className="text-[1.6rem] sm:text-[1.85rem] font-semibold tracking-[-0.05em] text-slate-950">
                   {heroTitle}
                 </h2>
-                <p className="mt-3 text-[15px] leading-6 text-slate-500">
+                <p className="mt-3 text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
                   {heroDescription}
                 </p>
               </div>
@@ -1951,7 +1939,7 @@ export default function DashboardHomeClient({
                 <button
                   type="button"
                   onClick={() => router.push(homeStatus.href!)}
-                  className={`mx-auto mt-6 flex w-full max-w-sm items-start justify-between gap-4 rounded-[28px] border px-5 py-4 text-left shadow-[0_20px_44px_-28px_rgba(15,23,42,0.28)] transition hover:-translate-y-0.5 hover:bg-white ${homeStatus.accentClassName}`}
+                  className={`mx-auto mt-5 flex w-full max-w-sm items-start justify-between gap-3 rounded-[22px] border px-4 py-3.5 text-left shadow-[0_16px_30px_-24px_rgba(15,23,42,0.22)] transition hover:-translate-y-0.5 hover:bg-white sm:mt-6 sm:gap-4 sm:rounded-[28px] sm:px-5 sm:py-4 sm:shadow-[0_20px_44px_-28px_rgba(15,23,42,0.28)] ${homeStatus.accentClassName}`}
                 >
                   <div className="min-w-0">
                     <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-500">
@@ -1968,15 +1956,15 @@ export default function DashboardHomeClient({
                       <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.3} />
                     </span>
                   </div>
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.72)]">
-                    <TriangleAlert className="h-[18px] w-[18px]" strokeWidth={2.2} />
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[18px] bg-slate-950 text-white shadow-[0_14px_22px_-16px_rgba(15,23,42,0.62)] sm:h-11 sm:w-11 sm:rounded-2xl sm:shadow-[0_18px_28px_-18px_rgba(15,23,42,0.72)]">
+                    <TriangleAlert className="h-[17px] w-[17px] sm:h-[18px] sm:w-[18px]" strokeWidth={2.2} />
                   </span>
                 </button>
               ) : null}
 
               {homeVisibility.insights && hasLoadedDashboardData ? (
                 <>
-                  <div className="mt-6 -mx-3 flex snap-x gap-3 overflow-x-auto px-3 pb-2 text-left [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <div className="mt-5 -mx-2 flex snap-x gap-2.5 overflow-x-auto px-2 pb-1.5 text-left [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mt-6 sm:-mx-3 sm:gap-3 sm:px-3 sm:pb-2">
                     {insightCards.map(
                       ({
                         id,
@@ -1991,14 +1979,14 @@ export default function DashboardHomeClient({
                           key={id}
                           type="button"
                           onClick={() => setSelectedInsightId(id)}
-                          className="min-w-[196px] snap-start rounded-[28px] border border-white/80 bg-white/90 p-4 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.3)] transition hover:bg-white"
+                          className="min-w-[174px] snap-start rounded-[22px] border border-white/80 bg-white/90 p-3.5 shadow-[0_14px_28px_-22px_rgba(15,23,42,0.22)] transition hover:bg-white sm:min-w-[196px] sm:rounded-[28px] sm:p-4 sm:shadow-[0_18px_40px_-28px_rgba(15,23,42,0.3)]"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <span
                               className={`flex h-10 w-10 items-center justify-center rounded-2xl ${accentClassName}`}
                             >
                               <Icon
-                                className="h-[18px] w-[18px]"
+                                className="h-[17px] w-[17px] sm:h-[18px] sm:w-[18px]"
                                 strokeWidth={2.1}
                               />
                             </span>
@@ -2029,17 +2017,17 @@ export default function DashboardHomeClient({
               ) : null}
 
               {homeVisibility.quickActions ? (
-                <div className="mt-8 grid grid-cols-[1.35fr_1fr] gap-3">
+                <div className="mt-6 grid grid-cols-[1.2fr_1fr] gap-2.5 sm:mt-8 sm:grid-cols-[1.35fr_1fr] sm:gap-3">
                   <Link
                     href="/crear-factura"
-                    className="inline-flex min-h-14 items-center justify-center gap-2 rounded-[28px] bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_22px_38px_-24px_rgba(15,23,42,0.95)] transition hover:bg-slate-800"
+                    className="inline-flex min-h-12 sm:min-h-14 items-center justify-center gap-2 rounded-[22px] bg-slate-950 px-4 text-sm font-semibold text-white shadow-[0_18px_28px_-22px_rgba(15,23,42,0.72)] transition hover:bg-slate-800 sm:rounded-[28px] sm:px-5 sm:shadow-[0_22px_38px_-24px_rgba(15,23,42,0.95)]"
                   >
                     <Plus className="h-4 w-4" strokeWidth={2.2} />
                     {newInvoiceLabel}
                   </Link>
                   <Link
                     href="/crear-factura?tipo=presupuesto"
-                    className="inline-flex min-h-14 items-center justify-center gap-2 rounded-[28px] border border-slate-200 bg-white/82 px-5 text-sm font-semibold text-slate-700 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.32)] transition hover:bg-white"
+                    className="inline-flex min-h-12 sm:min-h-14 items-center justify-center gap-2 rounded-[22px] border border-slate-200 bg-white/82 px-4 text-sm font-semibold text-slate-700 shadow-[0_14px_24px_-20px_rgba(15,23,42,0.18)] transition hover:bg-white sm:rounded-[28px] sm:px-5 sm:shadow-[0_18px_35px_-28px_rgba(15,23,42,0.32)]"
                   >
                     <ReceiptText className="h-4 w-4" strokeWidth={2.2} />
                     {newBudgetLabel}
@@ -2048,30 +2036,30 @@ export default function DashboardHomeClient({
               ) : null}
             </section>
           ) : (
-            <section className="mt-5 rounded-[36px] border border-white/70 bg-white/76 p-8 text-center shadow-[0_30px_70px_-40px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <section className="mt-4 rounded-[28px] border border-white/70 bg-white/76 p-5 text-center shadow-[0_22px_44px_-28px_rgba(15,23,42,0.26)] backdrop-blur-xl sm:mt-5 sm:rounded-[36px] sm:p-8 sm:shadow-[0_30px_70px_-40px_rgba(15,23,42,0.45)]">
               <div className="mx-auto max-w-sm">
                 <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
                   {registrationUi.promptEyebrow}
                 </p>
-                <h2 className="mt-3 text-[1.85rem] font-semibold tracking-[-0.05em] text-slate-950">
+                <h2 className="mt-3 text-[1.6rem] sm:text-[1.85rem] font-semibold tracking-[-0.05em] text-slate-950">
                   {heroTitle}
                 </h2>
-                <p className="mt-3 text-[15px] leading-6 text-slate-500">
+                <p className="mt-3 text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
                   {heroDescription}
                 </p>
               </div>
 
-              <div className="mt-8 grid grid-cols-[1.35fr_1fr] gap-3">
+              <div className="mt-6 grid grid-cols-[1.2fr_1fr] gap-2.5 sm:mt-8 sm:grid-cols-[1.35fr_1fr] sm:gap-3">
                 <Link
                   href="/crear-factura"
-                  className="inline-flex min-h-14 items-center justify-center gap-2 rounded-[28px] bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_22px_38px_-24px_rgba(15,23,42,0.95)] transition hover:bg-slate-800"
+                  className="inline-flex min-h-12 sm:min-h-14 items-center justify-center gap-2 rounded-[22px] bg-slate-950 px-4 text-sm font-semibold text-white shadow-[0_18px_28px_-22px_rgba(15,23,42,0.72)] transition hover:bg-slate-800 sm:rounded-[28px] sm:px-5 sm:shadow-[0_22px_38px_-24px_rgba(15,23,42,0.95)]"
                 >
                   <Plus className="h-4 w-4" strokeWidth={2.2} />
                   {newInvoiceLabel}
                 </Link>
                 <Link
                   href="/crear-factura?tipo=presupuesto"
-                  className="inline-flex min-h-14 items-center justify-center gap-2 rounded-[28px] border border-slate-200 bg-white/82 px-5 text-sm font-semibold text-slate-700 shadow-[0_18px_35px_-28px_rgba(15,23,42,0.32)] transition hover:bg-white"
+                  className="inline-flex min-h-12 sm:min-h-14 items-center justify-center gap-2 rounded-[22px] border border-slate-200 bg-white/82 px-4 text-sm font-semibold text-slate-700 shadow-[0_14px_24px_-20px_rgba(15,23,42,0.18)] transition hover:bg-white sm:rounded-[28px] sm:px-5 sm:shadow-[0_18px_35px_-28px_rgba(15,23,42,0.32)]"
                 >
                   <ReceiptText className="h-4 w-4" strokeWidth={2.2} />
                   {newBudgetLabel}
@@ -2110,12 +2098,12 @@ export default function DashboardHomeClient({
             className="fixed inset-0 z-30 bg-slate-950/18 backdrop-blur-[2px]"
           />
 
-          <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[430px] px-4 pb-4">
+          <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[410px] px-3.5 pb-3.5 sm:max-w-[430px] sm:px-4 sm:pb-4">
             <section
               role="dialog"
               aria-modal="true"
               aria-label={selectedInsight.title}
-              className="rounded-[34px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,247,252,0.96))] p-5 shadow-[0_34px_80px_-38px_rgba(15,23,42,0.55)] backdrop-blur-xl"
+              className="rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,247,252,0.96))] p-4 shadow-[0_26px_52px_-30px_rgba(15,23,42,0.34)] backdrop-blur-xl sm:rounded-[34px] sm:p-5 sm:shadow-[0_34px_80px_-38px_rgba(15,23,42,0.55)]"
             >
               <div className="mx-auto mb-4 h-1.5 w-14 rounded-full bg-slate-200" />
 
@@ -2135,7 +2123,7 @@ export default function DashboardHomeClient({
                     <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
                       {selectedInsight.eyebrow}
                     </p>
-                    <h3 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
+                    <h3 className="mt-2 text-[1.25rem] sm:text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
                       {selectedInsight.title}
                     </h3>
                     <p className="mt-2 text-sm leading-6 text-slate-500">
@@ -2148,24 +2136,24 @@ export default function DashboardHomeClient({
                   type="button"
                   onClick={() => setSelectedInsightId(null)}
                   aria-label={language === "es" ? "Cerrar" : "Close"}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:text-slate-700"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[18px] border border-slate-200 bg-white text-slate-500 transition hover:text-slate-700 sm:h-10 sm:w-10 sm:rounded-2xl"
                 >
                   <X className="h-4 w-4" strokeWidth={2.3} />
                 </button>
               </div>
 
-              <div className="mt-5 rounded-[28px] bg-slate-950 px-5 py-5 text-white shadow-[0_24px_48px_-30px_rgba(15,23,42,0.92)]">
+              <div className="mt-4 rounded-[22px] bg-slate-950 px-4 py-4 text-white shadow-[0_20px_36px_-26px_rgba(15,23,42,0.78)] sm:mt-5 sm:rounded-[28px] sm:px-5 sm:py-5 sm:shadow-[0_24px_48px_-30px_rgba(15,23,42,0.92)]">
                 <p className="text-sm text-white/65">{selectedInsight.caption}</p>
-                <p className="mt-2 text-[2rem] font-semibold tracking-[-0.05em]">
+                <p className="mt-2 text-[1.78rem] sm:text-[2rem] font-semibold tracking-[-0.05em]">
                   {selectedInsight.value}
                 </p>
               </div>
 
-              <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="mt-4 grid grid-cols-2 gap-2.5 sm:mt-5 sm:gap-3">
                 {selectedInsight.metrics.map((metric, index) => (
                   <div
                     key={`${selectedInsight.id}-${metric.label}-${index}`}
-                    className="rounded-[24px] border border-white/70 bg-white/86 p-4 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.24)]"
+                    className="rounded-[18px] border border-white/70 bg-white/86 p-3 shadow-[0_12px_24px_-20px_rgba(15,23,42,0.18)] sm:rounded-[24px] sm:p-4 sm:shadow-[0_16px_30px_-24px_rgba(15,23,42,0.24)]"
                   >
                     <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">
                       {metric.label}
@@ -2185,7 +2173,7 @@ export default function DashboardHomeClient({
                   {selectedInsight.highlights.map((item) => (
                     <div
                       key={item.key}
-                      className="rounded-[22px] border border-white/70 bg-white/84 px-4 py-3 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.22)]"
+                      className="rounded-[18px] border border-white/70 bg-white/84 px-3.5 py-3 shadow-[0_12px_24px_-20px_rgba(15,23,42,0.18)] sm:rounded-[22px] sm:px-4 sm:shadow-[0_16px_30px_-24px_rgba(15,23,42,0.22)]"
                     >
                       <p className="text-sm font-semibold text-slate-950">
                         {item.title}
@@ -2201,7 +2189,7 @@ export default function DashboardHomeClient({
               <button
                 type="button"
                 onClick={() => runInsightAction(selectedInsight.action)}
-                className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition hover:bg-slate-800"
+                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-4 text-sm font-semibold text-white shadow-[0_18px_28px_-22px_rgba(15,23,42,0.76)] transition hover:bg-slate-800 sm:mt-5 sm:min-h-12 sm:px-5 sm:shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)]"
               >
                 {selectedInsight.actionLabel}
                 <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
@@ -2220,12 +2208,12 @@ export default function DashboardHomeClient({
             className="fixed inset-0 z-30 bg-slate-950/18 backdrop-blur-[2px]"
           />
 
-          <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[430px] px-4 pb-4">
+          <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[410px] px-3.5 pb-3.5 sm:max-w-[430px] sm:px-4 sm:pb-4">
             <section
               role="dialog"
               aria-modal="true"
               aria-label={filterUi.title}
-              className="rounded-[34px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,247,252,0.96))] p-5 shadow-[0_34px_80px_-38px_rgba(15,23,42,0.55)] backdrop-blur-xl"
+              className="rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,247,252,0.96))] p-4 shadow-[0_26px_52px_-30px_rgba(15,23,42,0.34)] backdrop-blur-xl sm:rounded-[34px] sm:p-5 sm:shadow-[0_34px_80px_-38px_rgba(15,23,42,0.55)]"
             >
               <div className="mx-auto mb-4 h-1.5 w-14 rounded-full bg-slate-200" />
 
@@ -2234,7 +2222,7 @@ export default function DashboardHomeClient({
                   <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
                     {language === "es" ? "Filtro del inicio" : "Home filter"}
                   </p>
-                  <h3 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
+                  <h3 className="mt-2 text-[1.25rem] sm:text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
                     {filterUi.title}
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-slate-500">
@@ -2246,13 +2234,13 @@ export default function DashboardHomeClient({
                   type="button"
                   onClick={closeFilterSheet}
                   aria-label={filterUi.close}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:text-slate-700"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[18px] border border-slate-200 bg-white text-slate-500 transition hover:text-slate-700 sm:h-10 sm:w-10 sm:rounded-2xl"
                 >
                   <X className="h-4 w-4" strokeWidth={2.3} />
                 </button>
               </div>
 
-              <div className="mt-5 space-y-3">
+              <div className="mt-4 space-y-2.5 sm:mt-5 sm:space-y-3">
                 {filterSections.map((section) => {
                   const isVisible = draftHomeVisibility[section.key];
 
@@ -2262,7 +2250,7 @@ export default function DashboardHomeClient({
                       type="button"
                       aria-pressed={isVisible}
                       onClick={() => toggleHomeSection(section.key)}
-                      className="flex w-full items-center justify-between gap-4 rounded-[24px] border border-white/70 bg-white/86 px-4 py-4 text-left shadow-[0_16px_30px_-24px_rgba(15,23,42,0.24)] transition hover:bg-white"
+                      className="flex w-full items-center justify-between gap-3 rounded-[20px] border border-white/70 bg-white/86 px-3.5 py-3 text-left shadow-[0_12px_24px_-20px_rgba(15,23,42,0.18)] transition hover:bg-white sm:gap-4 sm:rounded-[24px] sm:px-4 sm:py-4 sm:shadow-[0_16px_30px_-24px_rgba(15,23,42,0.24)]"
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
@@ -2303,7 +2291,7 @@ export default function DashboardHomeClient({
               <button
                 type="button"
                 onClick={saveHomeVisibilityPreferences}
-                className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition hover:bg-slate-800"
+                className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-slate-950 px-4 text-sm font-semibold text-white shadow-[0_18px_28px_-22px_rgba(15,23,42,0.76)] transition hover:bg-slate-800 sm:mt-5 sm:min-h-12 sm:px-5 sm:shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)]"
               >
                 {filterUi.save}
               </button>

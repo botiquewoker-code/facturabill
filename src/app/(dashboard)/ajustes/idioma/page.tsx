@@ -25,7 +25,7 @@ export default function AjustesIdiomaPage() {
       <div className="pointer-events-none absolute -left-8 top-16 h-24 w-24 rounded-full bg-[#efe2d3]/42 blur-3xl" />
       <div className="pointer-events-none absolute -right-8 top-24 h-24 w-24 rounded-full bg-[#dde6f1]/65 blur-3xl" />
 
-      <main className="relative mx-auto min-h-screen w-full max-w-[430px] px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]">
+      <main className="relative mx-auto min-h-screen w-full max-w-[410px] px-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-[calc(0.875rem+env(safe-area-inset-top))] sm:max-w-[430px] sm:pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pt-[calc(1rem+env(safe-area-inset-top))]">
         <header className="px-1">
           <div className="flex items-center justify-between gap-4">
             <Link
@@ -45,7 +45,7 @@ export default function AjustesIdiomaPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
               {copy.settings.badge}
             </p>
-            <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.055em] text-slate-950">
+            <h1 className="mt-2 text-[1.78rem] sm:text-[2rem] font-semibold tracking-[-0.055em] text-slate-950">
               {copy.settings.languageSheetTitle}
             </h1>
             <p className="mt-3 max-w-[18rem] text-[14px] leading-6 text-slate-500">

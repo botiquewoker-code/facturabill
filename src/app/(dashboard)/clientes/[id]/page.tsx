@@ -304,7 +304,7 @@ export default function ClienteDetallePage() {
       <div className="pointer-events-none absolute -right-12 top-64 h-52 w-52 rounded-full bg-[#dce8ff]/80 blur-3xl" />
 
       <main
-        className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-5 pt-6 font-sans"
+        className="relative mx-auto flex min-h-screen w-full max-w-[410px] flex-col px-4 pt-4 font-sans sm:max-w-[430px] sm:px-5 sm:pt-6"
         style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
       >
         <header className="flex items-start justify-between gap-4">
@@ -312,10 +312,10 @@ export default function ClienteDetallePage() {
             <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
               {copy.eyebrow}
             </p>
-            <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
+            <h1 className="mt-2 text-[1.78rem] sm:text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
               {cliente?.nombre || copy.fallbackTitle}
             </h1>
-            <p className="mt-3 max-w-xs text-[15px] leading-6 text-slate-500">
+            <p className="mt-3 max-w-xs text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
               {copy.description}
             </p>
           </div>
@@ -370,20 +370,20 @@ export default function ClienteDetallePage() {
             <h2 className="text-[1.6rem] font-semibold tracking-[-0.04em] text-slate-950">
               {copy.unavailableTitle}
             </h2>
-            <p className="mt-3 text-[15px] leading-6 text-slate-500">
+            <p className="mt-3 text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
               {copy.unavailableDescription}
             </p>
             <button
               type="button"
               onClick={() => router.push("/clientes")}
-              className="mt-7 inline-flex min-h-14 items-center justify-center rounded-full bg-slate-950 px-7 text-[15px] font-semibold text-white shadow-[0_22px_38px_-24px_rgba(15,23,42,0.95)] transition hover:bg-slate-800"
+              className="mt-7 inline-flex min-h-12 sm:min-h-14 items-center justify-center rounded-full bg-slate-950 px-7 text-[15px] font-semibold text-white shadow-[0_22px_38px_-24px_rgba(15,23,42,0.95)] transition hover:bg-slate-800"
             >
               {copy.backToClients}
             </button>
           </section>
         ) : (
           <>
-            <section className="mt-6 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <section className="mt-6 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
               <div className="flex items-start gap-4">
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[24px] bg-slate-950 text-lg font-semibold tracking-[0.12em] text-white shadow-[0_18px_30px_-18px_rgba(15,23,42,0.78)]">
                   {getInitials(cliente.nombre)}
@@ -429,7 +429,7 @@ export default function ClienteDetallePage() {
               </div>
             </section>
 
-            <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <section className="mt-5 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
@@ -536,7 +536,7 @@ export default function ClienteDetallePage() {
               ) : null}
             </section>
 
-            <section className="mt-5 rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <section className="mt-5 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
               <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                 {copy.actions}
               </p>
