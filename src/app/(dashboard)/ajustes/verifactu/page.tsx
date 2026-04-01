@@ -2,20 +2,28 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ListChecks, ShieldCheck } from "lucide-react";
 import {
   readVerifactuEvents,
   readVerifactuRecords,
+  readVerifactuSettings,
+  writeVerifactuSettings,
 } from "@/features/verifactu/storage";
 import {
   formatCurrencyByLanguage,
   formatDateTimeByLanguage,
 } from "@/features/i18n/core";
 import { useAppI18n } from "@/features/i18n/runtime";
+import {
+  showSuccessToast,
+  showWarningToast,
+} from "@/features/notifications/toast";
 import type {
   VerifactuEvent,
   VerifactuRecord,
   VerifactuRecordStatus,
+  VerifactuSettings,
 } from "@/features/verifactu/types";
 
 const statusClass: Record<VerifactuRecordStatus, string> = {
@@ -36,9 +44,14 @@ function readVerifactuSnapshot() {
 
 
 export default function AjustesVerifactuPage() {
+  const searchParams = useSearchParams();
   const { language, t } = useAppI18n();
   const [records, setRecords] = useState<VerifactuRecord[]>([]);
   const [events, setEvents] = useState<VerifactuEvent[]>([]);
+  const [settings, setSettings] = useState<VerifactuSettings>(() =>
+    readVerifactuSettings(),
+  );
+  const focusedRecordId = searchParams.get("focus") || "";
 
   const statusLabel: Record<VerifactuRecordStatus, string> = {
     prepared: t({ es: "Lista", en: "Ready" }),
@@ -66,6 +79,41 @@ export default function AjustesVerifactuPage() {
       es: "Consulta el estado de tus facturas y revisa rapidamente cualquier incidencia pendiente.",
       en: "Check the status of your invoices and quickly review any pending issue.",
     }),
+    submissionTitle: t({
+      es: "Envio a Hacienda",
+      en: "Submission to the tax agency",
+    }),
+    submissionDescription: t({
+      es: "Activa el envio automatico para que las nuevas facturas se tramiten directamente.",
+      en: "Enable automatic submission so new invoices are processed directly.",
+    }),
+    submissionEnabled: t({ es: "Activo", en: "Enabled" }),
+    submissionDisabled: t({ es: "Desactivado", en: "Disabled" }),
+    submissionToggle: t({
+      es: "Activar envio a Hacienda",
+      en: "Enable submission to the tax agency",
+    }),
+    submissionHint: t({
+      es: "Las nuevas facturas VeriFactu pasaran automaticamente a envio en proceso.",
+      en: "New VeriFactu invoices will automatically move into sending in progress.",
+    }),
+    submissionComplianceNote: t({
+      es: "Podras revisar aqui el estado de envio de cada factura en todo momento.",
+      en: "You will be able to review the submission status of each invoice here at any time.",
+    }),
+    submissionSavedOn: t({ es: "Ultima actualizacion", en: "Last update" }),
+    submissionEnabledToast: t({
+      es: "Envio a Hacienda activado",
+      en: "Submission to the tax agency enabled",
+    }),
+    submissionDisabledToast: t({
+      es: "Envio a Hacienda desactivado",
+      en: "Submission to the tax agency disabled",
+    }),
+    submissionSaveError: t({
+      es: "No se pudo actualizar la configuracion de envio VeriFactu",
+      en: "Unable to update the VeriFactu submission settings",
+    }),
     summaryTitle: t({ es: "Resumen de seguimiento", en: "Tracking summary" }),
     summaryDescription: t({
       es: "Mira de un vistazo cuantas facturas estan listas y cuales necesitan atencion.",
@@ -73,6 +121,7 @@ export default function AjustesVerifactuPage() {
     }),
     invoices: t({ es: "Facturas", en: "Invoices" }),
     ready: t({ es: "Listas", en: "Ready" }),
+    inQueue: t({ es: "En proceso", en: "In progress" }),
     issues: t({ es: "Incidencias", en: "Issues" }),
     latestInvoiceUpdated: t({ es: "Ultima factura actualizada:", en: "Last updated invoice:" }),
     onDate: t({ es: "el", en: "on" }),
@@ -137,6 +186,18 @@ export default function AjustesVerifactuPage() {
         : copy.activityStatusChangedGeneric;
     }
 
+    if (event.type === "queue_exported") {
+      return invoiceNumber
+        ? `${copy.invoice} ${invoiceNumber} ${t({
+            es: "programada para su envio a Hacienda.",
+            en: "scheduled for submission to the tax agency.",
+          })}`
+        : t({
+            es: "Se ha programado una factura para su envio a Hacienda.",
+            en: "An invoice has been scheduled for submission to the tax agency.",
+          });
+    }
+
     return copy.activityGeneric;
   }
 
@@ -145,6 +206,7 @@ export default function AjustesVerifactuPage() {
       const snapshot = readVerifactuSnapshot();
       setRecords(snapshot.records);
       setEvents(snapshot.events);
+      setSettings(readVerifactuSettings());
     };
 
     refresh();
@@ -155,11 +217,53 @@ export default function AjustesVerifactuPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!focusedRecordId) {
+      return;
+    }
+
+    const element = document.getElementById(
+      `verifactu-focus-${encodeURIComponent(focusedRecordId)}`,
+    );
+
+    if (!element) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      element.scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+  }, [focusedRecordId, records]);
+
   const readyCount = records.filter((record) => record.status === "prepared").length;
+  const queuedCount = records.filter((record) =>
+    ["queued", "sent"].includes(record.status),
+  ).length;
   const issueCount = records.filter(
     (record) => record.status === "error" || Boolean(record.lastError),
   ).length;
   const lastRecord = records[0];
+
+  function handleToggleSubmission() {
+    try {
+      const nextSettings: VerifactuSettings = {
+        taxAgencyAutoSubmissionEnabled:
+          !settings.taxAgencyAutoSubmissionEnabled,
+        updatedAt: new Date().toISOString(),
+      };
+
+      writeVerifactuSettings(nextSettings);
+      setSettings(nextSettings);
+      showSuccessToast(
+        nextSettings.taxAgencyAutoSubmissionEnabled
+          ? copy.submissionEnabledToast
+          : copy.submissionDisabledToast,
+      );
+    } catch (error) {
+      console.error("Error saving VeriFactu submission settings", error);
+      showWarningToast(copy.submissionSaveError);
+    }
+  }
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f7f5f1_0%,#f2f4f6_52%,#eef1f4_100%)] text-slate-950">
@@ -197,6 +301,72 @@ export default function AjustesVerifactuPage() {
         </header>
 
         <section className="mt-6 rounded-[32px] border border-white/70 bg-white/82 p-5 shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)] backdrop-blur-xl">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-slate-950">
+                {copy.submissionTitle}
+              </p>
+              <p className="mt-1 text-[13px] leading-5 text-slate-500">
+                {copy.submissionDescription}
+              </p>
+            </div>
+            <span
+              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+                settings.taxAgencyAutoSubmissionEnabled
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-slate-200 bg-slate-50 text-slate-600"
+              }`}
+            >
+              {settings.taxAgencyAutoSubmissionEnabled
+                ? copy.submissionEnabled
+                : copy.submissionDisabled}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            aria-pressed={settings.taxAgencyAutoSubmissionEnabled}
+            onClick={handleToggleSubmission}
+            className="mt-5 flex w-full items-center justify-between gap-4 rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,rgba(248,250,252,0.92),rgba(255,255,255,0.96))] px-4 py-4 text-left transition hover:bg-white"
+          >
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-slate-950">
+                {copy.submissionToggle}
+              </p>
+              <p className="mt-1 text-[13px] leading-5 text-slate-500">
+                {copy.submissionHint}
+              </p>
+            </div>
+            <span
+              className={`relative flex h-8 w-14 shrink-0 items-center rounded-full border transition ${
+                settings.taxAgencyAutoSubmissionEnabled
+                  ? "border-slate-950 bg-slate-950"
+                  : "border-slate-200 bg-slate-100"
+              }`}
+            >
+              <span
+                className={`absolute h-6 w-6 rounded-full bg-white shadow-[0_10px_24px_-16px_rgba(15,23,42,0.5)] transition ${
+                  settings.taxAgencyAutoSubmissionEnabled
+                    ? "left-[1.4rem]"
+                    : "left-1"
+                }`}
+              />
+            </span>
+          </button>
+
+          <div className="mt-4 rounded-[24px] border border-slate-200 bg-slate-50/80 px-4 py-4">
+            <p className="text-[13px] leading-6 text-slate-500">
+              {copy.submissionComplianceNote}
+            </p>
+            {settings.updatedAt ? (
+              <p className="mt-2 text-[12px] leading-5 text-slate-400">
+                {copy.submissionSavedOn}: {formatDate(settings.updatedAt)}
+              </p>
+            ) : null}
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-[32px] border border-white/70 bg-white/82 p-5 shadow-[0_24px_54px_-36px_rgba(15,23,42,0.28)] backdrop-blur-xl">
           <div className="flex items-start gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
               <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={2.1} />
@@ -211,7 +381,7 @@ export default function AjustesVerifactuPage() {
             </div>
           </div>
 
-          <div className="mt-5 grid grid-cols-3 gap-3">
+          <div className="mt-5 grid grid-cols-2 gap-3">
             <article className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                 {copy.invoices}
@@ -226,6 +396,14 @@ export default function AjustesVerifactuPage() {
               </p>
               <p className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {readyCount}
+              </p>
+            </article>
+            <article className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                {copy.inQueue}
+              </p>
+              <p className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
+                {queuedCount}
               </p>
             </article>
             <article className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-4">
@@ -279,7 +457,12 @@ export default function AjustesVerifactuPage() {
               {records.map((record) => (
                 <article
                   key={record.id}
-                  className="rounded-[24px] border border-slate-200 bg-slate-50/75 p-4"
+                  id={`verifactu-focus-${encodeURIComponent(record.id)}`}
+                  className={`rounded-[24px] border bg-slate-50/75 p-4 transition ${
+                    focusedRecordId && focusedRecordId === record.id
+                      ? "border-rose-300 ring-2 ring-rose-200/80"
+                      : "border-slate-200"
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>

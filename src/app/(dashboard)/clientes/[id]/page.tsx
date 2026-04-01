@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   CircleCheckBig,
@@ -78,8 +78,10 @@ function draftId() {
 export default function ClienteDetallePage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useAppI18n();
   const routeClientId = normalizeRouteParam(params.id);
+  const shouldOpenEditMode = searchParams.get("edit") === "1";
 
   const [cliente, setCliente] = useState<ClientRecord | null>(null);
   const [draft, setDraft] = useState<ClientDraft>(createEmptyClientDraft);
@@ -152,14 +154,14 @@ export default function ClienteDetallePage() {
 
     setCliente(match.client);
     setDraft(match.client ? toClientDraft(match.client) : createEmptyClientDraft());
-    setIsEditing(false);
+    setIsEditing(Boolean(match.client && shouldOpenEditMode));
     setConfirmDelete(false);
     setIsReady(true);
 
     if (match.client && routeClientId !== match.client.id && /^\d+$/.test(routeClientId)) {
       router.replace(`/clientes/${match.client.id}`);
     }
-  }, [routeClientId, router]);
+  }, [routeClientId, router, shouldOpenEditMode]);
 
   function showNotice(message: string, tone: "warning" | "success") {
     if (tone === "success") {

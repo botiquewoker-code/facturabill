@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Clock3, FileText, ReceiptText } from "lucide-react";
+import { getHistoryDocumentFocusKey } from "@/features/history/focus";
 import {
   getInvoiceDocumentMeta,
   normalizeInvoiceDocumentType,
@@ -58,10 +59,12 @@ function readHistory(): HistoryDocument[] {
 
 export default function HistorialPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { language, t } = useAppI18n();
   const [documentos, setDocumentos] = useState<HistoryDocument[]>(() =>
     readHistory(),
   );
+  const focusedDocumentKey = searchParams.get("focus") || "";
 
   useEffect(() => {
     const refreshHistory = () => setDocumentos(readHistory());
@@ -72,6 +75,24 @@ export default function HistorialPage() {
       window.removeEventListener("focus", refreshHistory);
     };
   }, []);
+
+  useEffect(() => {
+    if (!focusedDocumentKey) {
+      return;
+    }
+
+    const element = document.getElementById(
+      `history-focus-${encodeURIComponent(focusedDocumentKey)}`,
+    );
+
+    if (!element) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      element.scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+  }, [focusedDocumentKey, documentos]);
 
   const copy = {
     eyebrow: t({ es: "Historial", en: "History" }),
@@ -93,6 +114,10 @@ export default function HistorialPage() {
     total: t({ es: "Total", en: "Total" }),
     verifactu: t({ es: "VeriFactu", en: "VeriFactu" }),
     prepared: t({ es: "Preparado", en: "Prepared" }),
+    queued: t({ es: "En proceso", en: "In progress" }),
+    sent: t({ es: "Enviado", en: "Sent" }),
+    accepted: t({ es: "Aceptado", en: "Accepted" }),
+    rejected: t({ es: "Por revisar", en: "Needs review" }),
     pending: t({ es: "Pendiente", en: "Pending" }),
     notPrepared: t({ es: "Sin preparar", en: "Not prepared" }),
     verifactuUpdated: t({
@@ -106,6 +131,14 @@ export default function HistorialPage() {
     verifactuPendingActivation: t({
       es: "El seguimiento se activara cuando emitas la factura.",
       en: "Tracking will activate when you issue the invoice.",
+    }),
+    verifactuQueued: t({
+      es: "Esta factura ya esta en proceso de envio a Hacienda.",
+      en: "This invoice is already being submitted to the tax agency.",
+    }),
+    verifactuSent: t({
+      es: "Esta factura ya ha salido al flujo de remision.",
+      en: "This invoice has already entered the remittance flow.",
     }),
     convertToInvoice: t({ es: "Convertir en factura", en: "Convert to invoice" }),
     createAnother: t({ es: "Crear otra", en: "Create another" }),
@@ -155,11 +188,20 @@ export default function HistorialPage() {
               const documentMeta = getInvoiceDocumentMeta(documentType, language);
               const displayNumber =
                 doc.numero || doc.id || `DOC-${String(index + 1).padStart(3, "0")}`;
+              const documentFocusKey = getHistoryDocumentFocusKey(doc);
+              const isFocusedDocument =
+                focusedDocumentKey.length > 0 &&
+                documentFocusKey === focusedDocumentKey;
 
               return (
                 <article
                   key={`${displayNumber}-${index}`}
-                  className="rounded-[34px] border border-white/70 bg-white/80 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl"
+                  id={`history-focus-${encodeURIComponent(documentFocusKey)}`}
+                  className={`rounded-[34px] border bg-white/80 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl transition ${
+                    isFocusedDocument
+                      ? "border-amber-300 ring-2 ring-amber-200/80"
+                      : "border-white/70"
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -222,6 +264,14 @@ export default function HistorialPage() {
                             className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                               doc.verifactu?.status === "prepared"
                                 ? "border border-sky-200 bg-sky-50 text-sky-700"
+                                : doc.verifactu?.status === "queued"
+                                  ? "border border-amber-200 bg-amber-50 text-amber-700"
+                                  : doc.verifactu?.status === "sent"
+                                    ? "border border-indigo-200 bg-indigo-50 text-indigo-700"
+                                    : doc.verifactu?.status === "accepted"
+                                      ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                                      : doc.verifactu?.status === "rejected"
+                                        ? "border border-red-200 bg-red-50 text-red-700"
                                 : doc.verifactu?.status === "error"
                                   ? "border border-red-200 bg-red-50 text-red-700"
                                   : "border border-slate-200 bg-white text-slate-500"
@@ -229,6 +279,14 @@ export default function HistorialPage() {
                           >
                             {doc.verifactu?.status === "prepared"
                               ? copy.prepared
+                              : doc.verifactu?.status === "queued"
+                                ? copy.queued
+                                : doc.verifactu?.status === "sent"
+                                  ? copy.sent
+                                  : doc.verifactu?.status === "accepted"
+                                    ? copy.accepted
+                                    : doc.verifactu?.status === "rejected"
+                                      ? copy.rejected
                               : doc.verifactu?.status === "error"
                                 ? copy.pending
                                 : copy.notPrepared}
@@ -236,7 +294,12 @@ export default function HistorialPage() {
                         </div>
                         {doc.verifactu?.fingerprint ? (
                           <p className="mt-2 text-[12px] leading-5 text-slate-500">
-                            {copy.verifactuUpdated}
+                            {doc.verifactu?.status === "queued"
+                              ? copy.verifactuQueued
+                              : doc.verifactu?.status === "sent" ||
+                                  doc.verifactu?.status === "accepted"
+                                ? copy.verifactuSent
+                                : copy.verifactuUpdated}
                           </p>
                         ) : doc.verifactu?.lastError ? (
                           <p className="mt-2 text-[12px] leading-5 text-red-600">

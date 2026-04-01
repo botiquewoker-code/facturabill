@@ -1,9 +1,14 @@
-import type { VerifactuEvent, VerifactuRecord } from "./types";
+import type {
+  VerifactuEvent,
+  VerifactuRecord,
+  VerifactuSettings,
+} from "./types";
 
 export const VERIFACTU_RECORDS_STORAGE_KEY = "facturabill-verifactu-records";
 export const VERIFACTU_EVENTS_STORAGE_KEY = "facturabill-verifactu-events";
 export const VERIFACTU_INSTALLATION_ID_STORAGE_KEY =
   "facturabill-verifactu-installation-id";
+export const VERIFACTU_SETTINGS_STORAGE_KEY = "facturabill-verifactu-settings";
 
 const isBrowser = () => typeof window !== "undefined";
 
@@ -48,8 +53,66 @@ function readArrayFromStorage<T>(key: string): T[] {
   }
 }
 
+function normalizeVerifactuSettings(
+  value: unknown,
+): VerifactuSettings {
+  const record =
+    value && typeof value === "object"
+      ? (value as Record<string, unknown>)
+      : {};
+
+  return {
+    taxAgencyAutoSubmissionEnabled:
+      record.taxAgencyAutoSubmissionEnabled === true,
+    updatedAt:
+      typeof record.updatedAt === "string" && record.updatedAt.trim()
+        ? record.updatedAt
+        : "",
+  };
+}
+
 export function createVerifactuLocalId(prefix: string) {
   return createLocalId(prefix);
+}
+
+export function readVerifactuSettings(): VerifactuSettings {
+  if (!isBrowser()) {
+    return {
+      taxAgencyAutoSubmissionEnabled: false,
+      updatedAt: "",
+    };
+  }
+
+  try {
+    const raw = window.localStorage.getItem(VERIFACTU_SETTINGS_STORAGE_KEY);
+
+    if (!raw) {
+      return {
+        taxAgencyAutoSubmissionEnabled: false,
+        updatedAt: "",
+      };
+    }
+
+    return normalizeVerifactuSettings(JSON.parse(raw));
+  } catch {
+    return {
+      taxAgencyAutoSubmissionEnabled: false,
+      updatedAt: "",
+    };
+  }
+}
+
+export function writeVerifactuSettings(
+  settings: VerifactuSettings,
+) {
+  if (!isBrowser()) {
+    return;
+  }
+
+  window.localStorage.setItem(
+    VERIFACTU_SETTINGS_STORAGE_KEY,
+    JSON.stringify(normalizeVerifactuSettings(settings)),
+  );
 }
 
 export function readVerifactuRecords() {

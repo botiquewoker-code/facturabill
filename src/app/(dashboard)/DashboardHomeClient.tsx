@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import {
+  startTransition,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ArrowRight,
   Bell,
@@ -14,6 +21,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
+  TriangleAlert,
   UsersRound,
   X,
   type LucideIcon,
@@ -50,6 +58,7 @@ import { readVerifactuRecords } from "@/features/verifactu/storage";
 import type { VerifactuRecord } from "@/features/verifactu/types";
 import AppScreenLoader from "@/features/ui/AppScreenLoader";
 import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
+import { getHistoryDocumentFocusKey } from "@/features/history/focus";
 
 type DraftItem = {
   id: string;
@@ -130,6 +139,16 @@ type InsightCard = {
   metrics: InsightMetric[];
   highlights: InsightHighlight[];
   action: InsightAction;
+};
+
+type HomeStatus = {
+  kind: "healthy" | "issue";
+  title: string;
+  description: string;
+  badge: string;
+  actionLabel?: string;
+  href?: string;
+  accentClassName: string;
 };
 
 const searchUi: Record<
@@ -401,6 +420,53 @@ function isPaidStatus(status?: string) {
   );
 }
 
+function isInvoiceHistoryItem(item: HistoryItem) {
+  return normalizeInvoiceDocumentType(item.tipo) === "factura";
+}
+
+function isProposalHistoryItem(item: HistoryItem) {
+  const documentType = normalizeInvoiceDocumentType(item.tipo);
+  return documentType === "presupuesto" || documentType === "proforma";
+}
+
+function hasRequiredClientField(value?: string) {
+  return Boolean(value?.trim());
+}
+
+function isIncompleteClient(client: ClientRecord) {
+  return (
+    !hasRequiredClientField(client.nombre) ||
+    !hasRequiredClientField(client.nif) ||
+    !hasRequiredClientField(client.email)
+  );
+}
+
+function isVerifactuIssueRecord(record: VerifactuRecord) {
+  return (
+    record.status === "error" ||
+    record.status === "rejected" ||
+    Boolean(record.lastError)
+  );
+}
+
+function isOverdueInvoice(item: HistoryItem, startOfToday: Date) {
+  if (!isInvoiceHistoryItem(item) || isPaidStatus(item.estado)) {
+    return false;
+  }
+
+  const dueDate = parseStoredDate(item.fechaVencimiento);
+
+  if (dueDate) {
+    return dueDate < startOfToday;
+  }
+
+  const normalizedStatus = normalizeSearchValue(item.estado || "");
+  return (
+    normalizedStatus.includes("vencid") ||
+    normalizedStatus.includes("overdue")
+  );
+}
+
 function findMatchingClient(
   clients: ClientRecord[],
   client?: {
@@ -452,9 +518,14 @@ export default function DashboardHomeClient({
   const [selectedInsightId, setSelectedInsightId] =
     useState<InsightCardId | null>(null);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+  const hydrateFrameRef = useRef<number | null>(null);
   const firstName = getUserFirstName(userProfile);
   const hasRegisteredUser = firstName.length > 0;
-  const normalizedQuery = normalizeSearchValue(search);
+  const deferredSearch = useDeferredValue(search);
+  const normalizedQuery = useMemo(
+    () => normalizeSearchValue(deferredSearch),
+    [deferredSearch],
+  );
   const filterUi =
     language === "es"
       ? {
@@ -570,32 +641,65 @@ export default function DashboardHomeClient({
         };
 
   useClientLayoutEffect(() => {
-    const hydrateDashboardData = () => {
+    const runHydration = () => {
       const savedHomeVisibility = readStoredHomeVisibility();
 
-      setClientes(readClients());
-      setHistorial(safeReadArray<HistoryItem>(HISTORY_KEY));
-      setBorradores(readDrafts<DraftItem>());
-      setVerifactuRecords(readVerifactuRecords());
-      setUserProfile(readUserProfile());
-      setHomeVisibility(savedHomeVisibility);
-      setDraftHomeVisibility(savedHomeVisibility);
-      setHasLoadedDashboardData(true);
+      startTransition(() => {
+        setClientes(readClients());
+        setHistorial(safeReadArray<HistoryItem>(HISTORY_KEY));
+        setBorradores(readDrafts<DraftItem>());
+        setVerifactuRecords(readVerifactuRecords());
+        setUserProfile(readUserProfile());
+        setHomeVisibility(savedHomeVisibility);
+        setDraftHomeVisibility(savedHomeVisibility);
+        setHasLoadedDashboardData(true);
+      });
+    };
+    const hydrateDashboardData = () => {
+      if (typeof document !== "undefined" && document.hidden) {
+        return;
+      }
+
+      if (hydrateFrameRef.current !== null) {
+        return;
+      }
+
+      hydrateFrameRef.current = window.requestAnimationFrame(() => {
+        hydrateFrameRef.current = null;
+        runHydration();
+      });
     };
 
-    hydrateDashboardData();
+    runHydration();
     window.addEventListener("pageshow", hydrateDashboardData);
     document.addEventListener("visibilitychange", hydrateDashboardData);
     window.addEventListener("focus", hydrateDashboardData);
     window.addEventListener(DRAFTS_UPDATED_EVENT, hydrateDashboardData);
 
     return () => {
+      if (hydrateFrameRef.current !== null) {
+        window.cancelAnimationFrame(hydrateFrameRef.current);
+      }
+
       window.removeEventListener("pageshow", hydrateDashboardData);
       document.removeEventListener("visibilitychange", hydrateDashboardData);
       window.removeEventListener("focus", hydrateDashboardData);
       window.removeEventListener(DRAFTS_UPDATED_EVENT, hydrateDashboardData);
     };
   }, []);
+
+  useEffect(() => {
+    [
+      "/crear-factura",
+      "/clientes",
+      "/historial",
+      "/informes",
+      "/ajustes/verifactu",
+      "/ajustes",
+    ].forEach((href) => {
+      router.prefetch(href);
+    });
+  }, [router]);
 
   useEffect(() => {
     if (!selectedInsightId && !isFilterSheetOpen) {
@@ -709,10 +813,8 @@ export default function DashboardHomeClient({
     );
     const monthLabel = now.toLocaleDateString(language, { month: "long" });
     const padCount = (value: number) => String(value).padStart(2, "0");
-    const invoices = historial.filter((item) => item.tipo === "factura");
-    const proposals = historial.filter(
-      (item) => item.tipo === "presupuesto" || item.tipo === "proforma",
-    );
+    const invoices = historial.filter(isInvoiceHistoryItem);
+    const proposals = historial.filter(isProposalHistoryItem);
     const proposalDrafts = borradores.filter(
       (item) => item.tipo === "presupuesto" || item.tipo === "proforma",
     ).length;
@@ -760,10 +862,9 @@ export default function DashboardHomeClient({
     const nextDueInvoice = pendingSorted.find((item) =>
       Boolean(parseStoredDate(item.fechaVencimiento)),
     );
-    const overdueInvoices = pendingInvoices.filter((item) => {
-      const dueDate = parseStoredDate(item.fechaVencimiento);
-      return dueDate ? dueDate < startOfToday : false;
-    });
+    const overdueInvoices = pendingInvoices.filter((item) =>
+      isOverdueInvoice(item, startOfToday),
+    );
     const overdueTotal = overdueInvoices.reduce(
       (sum, item) => sum + Number(item.total || 0),
       0,
@@ -781,9 +882,7 @@ export default function DashboardHomeClient({
       return bTime - aTime;
     });
     const latestClient = sortedClients[0];
-    const incompleteClients = clientes.filter(
-      (client) => !client.nombre || !client.nif || !client.email,
-    );
+    const incompleteClients = clientes.filter(isIncompleteClient);
     const latestInvoice = invoices[0];
     const latestDraft = borradores[0];
     const latestVerifactuRecord = verifactuRecords[0];
@@ -794,7 +893,7 @@ export default function DashboardHomeClient({
       ["queued", "sent"].includes(record.status),
     );
     const verifactuErrorCount = verifactuRecords.filter(
-      (record) => record.status === "error" || Boolean(record.lastError),
+      isVerifactuIssueRecord,
     ).length;
     const nextPendingClient = findMatchingClient(
       clientes,
@@ -1294,6 +1393,167 @@ export default function DashboardHomeClient({
   const selectedInsight =
     insightCards.find((card) => card.id === selectedInsightId) ?? null;
   const SelectedInsightIcon = selectedInsight?.icon;
+  const homeStatus = useMemo<HomeStatus>(() => {
+    const now = new Date();
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    const invoices = historial.filter(isInvoiceHistoryItem);
+    const pendingInvoices = invoices.filter((item) => !isPaidStatus(item.estado));
+    const overdueInvoices = pendingInvoices.filter((item) =>
+      isOverdueInvoice(item, startOfToday),
+    );
+    const overdueTotal = overdueInvoices.reduce(
+      (sum, item) => sum + Number(item.total || 0),
+      0,
+    );
+    const incompleteClients = clientes.filter(isIncompleteClient);
+    const verifactuErrors = verifactuRecords.filter(isVerifactuIssueRecord);
+    const overdueInvoice = [...overdueInvoices].sort((left, right) => {
+      const leftTime =
+        parseStoredDate(left.fechaVencimiento)?.getTime() ??
+        Number.POSITIVE_INFINITY;
+      const rightTime =
+        parseStoredDate(right.fechaVencimiento)?.getTime() ??
+        Number.POSITIVE_INFINITY;
+
+      return leftTime - rightTime;
+    })[0];
+    const incompleteClient = [...clientes]
+      .sort((left, right) => {
+        const leftTime = parseStoredDate(left.updatedAt)?.getTime() ?? 0;
+        const rightTime = parseStoredDate(right.updatedAt)?.getTime() ?? 0;
+
+        return rightTime - leftTime;
+      })
+      .find(isIncompleteClient);
+
+    if (verifactuErrors.length > 0) {
+      return language === "es"
+        ? {
+            kind: "issue",
+            title:
+              verifactuErrors.length === 1
+                ? "1 incidencia en VeriFactu"
+                : `${verifactuErrors.length} incidencias en VeriFactu`,
+            description:
+              "Revisa los registros pendientes para dejar el seguimiento al dia.",
+            badge: "Incidencia prioritaria",
+            actionLabel:
+              verifactuErrors.length === 1
+                ? "Abrir incidencia"
+                : "Abrir incidencias",
+            href: `/ajustes/verifactu?focus=${encodeURIComponent(verifactuErrors[0]?.id || "")}`,
+            accentClassName:
+              "border-rose-200 bg-[linear-gradient(180deg,rgba(255,250,250,0.98),rgba(255,241,242,0.95))]",
+          }
+        : {
+            kind: "issue",
+            title:
+              verifactuErrors.length === 1
+                ? "1 VeriFactu issue"
+                : `${verifactuErrors.length} VeriFactu issues`,
+            description:
+              "Review the pending records to bring tracking back up to date.",
+            badge: "Priority issue",
+            actionLabel:
+              verifactuErrors.length === 1
+                ? "Open issue"
+                : "Open issues",
+            href: `/ajustes/verifactu?focus=${encodeURIComponent(verifactuErrors[0]?.id || "")}`,
+            accentClassName:
+              "border-rose-200 bg-[linear-gradient(180deg,rgba(255,250,250,0.98),rgba(255,241,242,0.95))]",
+          };
+    }
+
+    if (overdueInvoices.length > 0 && overdueInvoice) {
+      return language === "es"
+        ? {
+            kind: "issue",
+            title:
+              overdueInvoices.length === 1
+                ? "1 factura fuera de plazo"
+                : `${overdueInvoices.length} facturas fuera de plazo`,
+            description: `Tienes ${formatCurrency(overdueTotal, language)} vencidos pendientes de seguimiento.`,
+            badge: "Cobro pendiente",
+            actionLabel: "Abrir factura",
+            href: `/historial?focus=${encodeURIComponent(
+              getHistoryDocumentFocusKey(overdueInvoice),
+            )}`,
+            accentClassName:
+              "border-amber-200 bg-[linear-gradient(180deg,rgba(255,251,235,0.98),rgba(255,247,237,0.96))]",
+          }
+        : {
+            kind: "issue",
+            title:
+              overdueInvoices.length === 1
+                ? "1 overdue invoice"
+                : `${overdueInvoices.length} overdue invoices`,
+            description: `${formatCurrency(overdueTotal, language)} is overdue and needs follow-up.`,
+            badge: "Collections issue",
+            actionLabel: "Open invoice",
+            href: `/historial?focus=${encodeURIComponent(
+              getHistoryDocumentFocusKey(overdueInvoice),
+            )}`,
+            accentClassName:
+              "border-amber-200 bg-[linear-gradient(180deg,rgba(255,251,235,0.98),rgba(255,247,237,0.96))]",
+          };
+    }
+
+    if (incompleteClients.length > 0 && incompleteClient) {
+      return language === "es"
+        ? {
+            kind: "issue",
+            title:
+              incompleteClients.length === 1
+                ? "1 ficha de cliente incompleta"
+                : `${incompleteClients.length} fichas de cliente incompletas`,
+            description:
+              "Completa nombre, NIF o email para tener la base de clientes al dia.",
+            badge: "Datos pendientes",
+            actionLabel: "Abrir ficha",
+            href: `/clientes/${incompleteClient.id}?edit=1`,
+            accentClassName:
+              "border-sky-200 bg-[linear-gradient(180deg,rgba(248,250,255,0.98),rgba(239,246,255,0.96))]",
+          }
+        : {
+            kind: "issue",
+            title:
+              incompleteClients.length === 1
+                ? "1 incomplete client record"
+                : `${incompleteClients.length} incomplete client records`,
+            description:
+              "Complete the name, tax ID, or email to keep your client base up to date.",
+            badge: "Data pending",
+            actionLabel: "Open record",
+            href: `/clientes/${incompleteClient.id}?edit=1`,
+            accentClassName:
+              "border-sky-200 bg-[linear-gradient(180deg,rgba(248,250,255,0.98),rgba(239,246,255,0.96))]",
+          };
+    }
+
+    return language === "es"
+      ? {
+          kind: "healthy",
+          title: "Todo esta al dia",
+          description:
+            "No hay incidencias abiertas en el negocio. Puedes seguir facturando con normalidad.",
+          badge: "Estado operativo",
+          accentClassName:
+            "border-emerald-200 bg-[linear-gradient(180deg,rgba(247,254,250,0.98),rgba(236,253,245,0.96))]",
+        }
+      : {
+          kind: "healthy",
+          title: "Everything is up to date",
+          description:
+            "There are no open business issues. You can keep invoicing normally.",
+          badge: "Operating status",
+          accentClassName:
+            "border-emerald-200 bg-[linear-gradient(180deg,rgba(247,254,250,0.98),rgba(236,253,245,0.96))]",
+        };
+  }, [clientes, historial, language, verifactuRecords]);
 
   function runInsightAction(action: InsightAction) {
     setSelectedInsightId(null);
@@ -1303,22 +1563,30 @@ export default function DashboardHomeClient({
         writeActiveDraft(action.draft);
       }
 
-      router.push(action.fallbackHref);
+      startTransition(() => {
+        router.push(action.fallbackHref);
+      });
       return;
     }
 
     if (action.type === "convert-budget") {
       if (action.budget) {
         window.localStorage.setItem(CONVERT_KEY, JSON.stringify(action.budget));
-        router.push("/crear-factura");
+        startTransition(() => {
+          router.push("/crear-factura");
+        });
         return;
       }
 
-      router.push(action.fallbackHref);
+      startTransition(() => {
+        router.push(action.fallbackHref);
+      });
       return;
     }
 
-    router.push(action.href);
+    startTransition(() => {
+      router.push(action.href);
+    });
   }
 
   const totalResults =
@@ -1333,36 +1601,50 @@ export default function DashboardHomeClient({
     !showRegisteredDashboard
       ? publicUi.title
       : language === "es"
-      ? hasBusinessActivity
-        ? "Tu negocio en marcha"
-        : copy.home.emptyTitle
-      : hasBusinessActivity
-        ? "Your business in motion"
-        : copy.home.emptyTitle;
+        ? hasBusinessActivity
+          ? homeStatus.kind === "healthy"
+            ? homeStatus.title
+            : "Hay algo por revisar"
+          : copy.home.emptyTitle
+        : hasBusinessActivity
+          ? homeStatus.kind === "healthy"
+            ? homeStatus.title
+            : "Something needs attention"
+          : copy.home.emptyTitle;
   const heroDescription =
     !showRegisteredDashboard
       ? publicUi.description
       : language === "es"
-      ? hasBusinessActivity
-        ? "Consulta la actividad y crea nuevos documentos desde un solo lugar."
-        : copy.home.emptyDescription
-      : hasBusinessActivity
-        ? "Review activity and create documents from one place."
-        : copy.home.emptyDescription;
+        ? hasBusinessActivity
+          ? homeStatus.kind === "healthy"
+            ? homeStatus.description
+            : "Te dejamos el acceso directo a la incidencia prioritaria para resolverla sin friccion."
+          : copy.home.emptyDescription
+        : hasBusinessActivity
+          ? homeStatus.kind === "healthy"
+            ? homeStatus.description
+            : "You have a direct shortcut to the top-priority issue so you can resolve it without friction."
+          : copy.home.emptyDescription;
   function openFirstResult() {
     if (clientResults[0]) {
-      router.push(`/clientes/${clientResults[0].id}`);
+      startTransition(() => {
+        router.push(`/clientes/${clientResults[0].id}`);
+      });
       return;
     }
 
     if (historyResults[0]) {
-      router.push("/historial");
+      startTransition(() => {
+        router.push("/historial");
+      });
       return;
     }
 
     if (draftResults[0]) {
       writeActiveDraft(draftResults[0]);
-      router.push("/crear-factura");
+      startTransition(() => {
+        router.push("/crear-factura");
+      });
     }
   }
 
@@ -1664,6 +1946,33 @@ export default function DashboardHomeClient({
                   {heroDescription}
                 </p>
               </div>
+
+              {homeStatus.kind === "issue" && homeStatus.href ? (
+                <button
+                  type="button"
+                  onClick={() => router.push(homeStatus.href!)}
+                  className={`mx-auto mt-6 flex w-full max-w-sm items-start justify-between gap-4 rounded-[28px] border px-5 py-4 text-left shadow-[0_20px_44px_-28px_rgba(15,23,42,0.28)] transition hover:-translate-y-0.5 hover:bg-white ${homeStatus.accentClassName}`}
+                >
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-500">
+                      {homeStatus.badge}
+                    </p>
+                    <p className="mt-2 text-[1.02rem] font-semibold leading-6 text-slate-950">
+                      {homeStatus.title}
+                    </p>
+                    <p className="mt-2 text-[13px] leading-5 text-slate-600">
+                      {homeStatus.description}
+                    </p>
+                    <span className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/88 px-3 py-1.5 text-xs font-semibold text-slate-800">
+                      {homeStatus.actionLabel}
+                      <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.3} />
+                    </span>
+                  </div>
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.72)]">
+                    <TriangleAlert className="h-[18px] w-[18px]" strokeWidth={2.2} />
+                  </span>
+                </button>
+              ) : null}
 
               {homeVisibility.insights && hasLoadedDashboardData ? (
                 <>

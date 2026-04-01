@@ -91,6 +91,11 @@ export type VerifactuEvent = {
   detail: string;
 };
 
+export type VerifactuSettings = {
+  taxAgencyAutoSubmissionEnabled: boolean;
+  updatedAt: string;
+};
+
 export type PrepareVerifactuRecordInput = {
   sourceDocumentId: string;
   sourceAction: VerifactuSourceAction;

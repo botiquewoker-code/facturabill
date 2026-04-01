@@ -25,10 +25,10 @@ export default function Contacto() {
             </h2>
             <p className="text-2xl mb-8">
               <a
-                href="mailto:facturabill.net@gmail.com"
+                href="mailto:soporte@facturabill.net"
                 className="text-blue-600 hover:underline"
               >
-                facturabill.net@gmail.com
+                soporte@facturabill.net
               </a>
             </p>
             <p className="text-lg">

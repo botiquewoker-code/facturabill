@@ -9,6 +9,7 @@ import {
   ensureVerifactuInstallationId,
   findLatestChainedRecord,
   readVerifactuRecords,
+  readVerifactuSettings,
   upsertVerifactuRecord,
 } from "./storage";
 import type {
@@ -46,6 +47,7 @@ export async function prepareVerifactuInvoiceRecord(
 ): Promise<VerifactuRecord> {
   const now = new Date().toISOString();
   const installationId = ensureVerifactuInstallationId();
+  const verifactuSettings = readVerifactuSettings();
   const issuer = normalizeParty(input.issuer);
   const recipient = normalizeParty(input.recipient);
   const lines = input.lines.map(normalizeLine);
@@ -96,7 +98,9 @@ export async function prepareVerifactuInvoiceRecord(
   const record: VerifactuRecord = {
     id: existingRecord?.id || createVerifactuLocalId("vf-record"),
     kind: "alta",
-    status: "prepared",
+    status: verifactuSettings.taxAgencyAutoSubmissionEnabled
+      ? "queued"
+      : "prepared",
     sourceDocumentId: input.sourceDocumentId,
     sourceAction: input.sourceAction,
     invoiceType: input.invoiceType,
@@ -139,6 +143,16 @@ export async function prepareVerifactuInvoiceRecord(
     occurredAt: now,
     detail: `Factura ${record.invoiceNumber} lista para su seguimiento.`,
   });
+
+  if (verifactuSettings.taxAgencyAutoSubmissionEnabled) {
+    appendVerifactuEvent({
+      id: createVerifactuLocalId("vf-event"),
+      type: "queue_exported",
+      recordId: record.id,
+      occurredAt: now,
+      detail: `Factura ${record.invoiceNumber} programada para su envio a Hacienda.`,
+    });
+  }
 
   return record;
 }

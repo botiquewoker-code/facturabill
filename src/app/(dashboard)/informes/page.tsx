@@ -1,31 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 import {
-  Building2,
   ChartColumn,
-  CircleCheckBig,
-  Clock3,
-  FileText,
-  ShieldCheck,
-  TrendingUp,
-  UsersRound,
-  Wallet,
 } from "lucide-react";
 import { getLanguageLocale } from "@/features/i18n/core";
 import { readUserProfile, type UserProfile } from "@/features/account/profile";
@@ -112,14 +98,6 @@ type AlertMetric = {
   toneClassName: string;
 };
 
-type KpiCardProps = {
-  label: string;
-  value: string;
-  caption: string;
-  icon: typeof Wallet;
-  accentClassName: string;
-};
-
 const HISTORY_KEY = "historial";
 const COMPANY_KEY = "datosEmpresa";
 const EMPTY_COMPANY: CompanyProfile = {
@@ -132,7 +110,7 @@ const EMPTY_COMPANY: CompanyProfile = {
   email: "",
 };
 const SECTION_CLASS =
-  "rounded-[34px] border border-white/70 bg-white/76 p-6 shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)] backdrop-blur-xl";
+  "rounded-[30px] border border-white/70 bg-white/76 p-5 shadow-[0_26px_60px_-40px_rgba(15,23,42,0.4)] backdrop-blur-xl";
 const CHART_TOOLTIP_STYLE = {
   borderRadius: 18,
   border: "1px solid rgba(226,232,240,0.9)",
@@ -327,35 +305,6 @@ function buildRevenueTrend(invoices: HistoryDocument[], now: Date, locale: strin
   });
 
   return points;
-}
-
-function KpiCard({
-  label,
-  value,
-  caption,
-  icon: Icon,
-  accentClassName,
-}: KpiCardProps) {
-  return (
-    <div className="rounded-[28px] border border-white/70 bg-white/82 p-4 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-            {label}
-          </p>
-          <p className="mt-3 text-[1.25rem] font-semibold tracking-[-0.03em] text-slate-950">
-            {value}
-          </p>
-        </div>
-        <span
-          className={`flex h-10 w-10 items-center justify-center rounded-2xl ${accentClassName}`}
-        >
-          <Icon className="h-[18px] w-[18px]" strokeWidth={2.1} />
-        </span>
-      </div>
-      <p className="mt-3 text-sm leading-6 text-slate-500">{caption}</p>
-    </div>
-  );
 }
 
 function ChartPlaceholder({ label }: { label: string }) {
@@ -554,7 +503,7 @@ export default function InformesPage() {
 
     const topClients = [...billedClients.values()]
       .sort((left, right) => right.total - left.total)
-      .slice(0, 4);
+      .slice(0, 3);
     const completeClients = snapshot.clientes.filter(
       (client) => client.nombre && client.nif && client.email && client.telefono,
     );
@@ -781,108 +730,95 @@ export default function InformesPage() {
         style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
       >
         <header className="flex items-start gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_16px_24px_-18px_rgba(15,23,42,0.82)]">
             <ChartColumn className="h-[18px] w-[18px]" strokeWidth={2.1} />
           </span>
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
               {isSpanish ? "Panel ejecutivo" : "Executive dashboard"}
             </p>
-            <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
+            <h1 className="mt-1 text-[1.7rem] font-semibold tracking-[-0.04em] text-slate-950">
               {summary.businessName}
             </h1>
-            <p className="mt-3 max-w-sm text-[15px] leading-6 text-slate-500">
+            <p className="mt-2 max-w-sm text-[14px] leading-6 text-slate-500">
               {isSpanish
-                ? "Facturacion, clientes, actividad pendiente y cumplimiento en una vista mas propia de un panel de direccion."
-                : "Billing, clients, pending activity, and compliance in a view designed more like a serious executive control panel."}
+                ? "Solo los datos clave del negocio: facturacion, caja, clientes y seguimiento."
+                : "Only the core business data: billing, cash position, clients, and follow-up."}
             </p>
           </div>
         </header>
 
-        <section className="relative mt-6 overflow-hidden rounded-[36px] border border-slate-900/10 bg-[linear-gradient(135deg,#0f172a_0%,#17304a_48%,#0f766e_100%)] p-6 text-white shadow-[0_34px_80px_-40px_rgba(15,23,42,0.88)]">
-          <div className="pointer-events-none absolute -right-8 top-6 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
-          <div className="pointer-events-none absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-[#b97a45]/25 blur-3xl" />
+        <section className="relative mt-5 overflow-hidden rounded-[32px] border border-slate-900/10 bg-[linear-gradient(135deg,#0f172a_0%,#17304a_52%,#0f766e_100%)] p-5 text-white shadow-[0_28px_64px_-40px_rgba(15,23,42,0.86)]">
+          <div className="pointer-events-none absolute -right-8 top-6 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
+          <div className="pointer-events-none absolute -left-10 bottom-0 h-28 w-28 rounded-full bg-[#b97a45]/20 blur-3xl" />
           <div className="relative">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/65">
-                  {isSpanish ? "Direccion general" : "Executive overview"}
+                  {isSpanish ? "Resumen del negocio" : "Business overview"}
                 </p>
-                <h2 className="mt-3 text-[1.5rem] font-semibold tracking-[-0.04em] text-white">
-                  {summary.ownerName}
+                <h2 className="mt-2 text-[1.85rem] font-semibold tracking-[-0.05em] text-white">
+                  {money(summary.totalFacturado, locale)}
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-white/72">
-                  {summary.businessStatus}
+                <p className="mt-2 text-[13px] leading-6 text-white/72">
+                  {isSpanish
+                    ? `Facturacion acumulada con ${summary.totalFacturas} facturas emitidas y ${summary.activeClients} clientes activos.`
+                    : `Accumulated billing with ${summary.totalFacturas} issued invoices and ${summary.activeClients} active clients.`}
                 </p>
               </div>
-              <div className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white">
+              <div className="rounded-full border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white">
                 {isSpanish ? "Perfil" : "Profile"}{" "}
                 {formatPercent(summary.companyCompletion)}
               </div>
             </div>
 
-            <div className="mt-6 rounded-[28px] border border-white/10 bg-white/8 p-5 backdrop-blur-xl">
-              <p className="text-sm font-medium uppercase tracking-[0.18em] text-white/65">
-                {isSpanish ? "Facturacion acumulada" : "Accumulated billing"}
-              </p>
-              <p className="mt-3 text-[2.1rem] font-semibold tracking-[-0.05em] text-white">
-                {money(summary.totalFacturado, locale)}
-              </p>
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <div className="rounded-[22px] border border-white/10 bg-white/8 px-4 py-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/55">{isSpanish ? "Mes actual" : "Current month"}</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{money(summary.facturadoMesActual, locale)}</p>
-                </div>
-                <div className="rounded-[22px] border border-white/10 bg-white/8 px-4 py-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/55">{isSpanish ? "Pendiente" : "Pending"}</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{money(summary.pendingTotal, locale)}</p>
-                </div>
-                <div className="rounded-[22px] border border-white/10 bg-white/8 px-4 py-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/55">{isSpanish ? "Clientes activos" : "Active clients"}</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{summary.activeClients}</p>
-                </div>
-                <div className="rounded-[22px] border border-white/10 bg-white/8 px-4 py-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/55">{isSpanish ? "Docs del mes" : "Docs this month"}</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{summary.documentsThisMonth}</p>
-                </div>
+            <div className="mt-4 grid grid-cols-2 gap-2.5">
+              <div className="rounded-[22px] border border-white/10 bg-white/8 px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/55">
+                  {isSpanish ? "Mes actual" : "Current month"}
+                </p>
+                <p className="mt-1.5 text-base font-semibold text-white">
+                  {money(summary.facturadoMesActual, locale)}
+                </p>
+              </div>
+              <div className="rounded-[22px] border border-white/10 bg-white/8 px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/55">
+                  {isSpanish ? "Pendiente" : "Pending"}
+                </p>
+                <p className="mt-1.5 text-base font-semibold text-white">
+                  {money(summary.pendingTotal, locale)}
+                </p>
+              </div>
+              <div className="rounded-[22px] border border-white/10 bg-white/8 px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/55">
+                  {isSpanish ? "Ticket medio" : "Average ticket"}
+                </p>
+                <p className="mt-1.5 text-base font-semibold text-white">
+                  {money(summary.ticketMedio, locale)}
+                </p>
+              </div>
+              <div className="rounded-[22px] border border-white/10 bg-white/8 px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/55">
+                  {isSpanish ? "Clientes activos" : "Active clients"}
+                </p>
+                <p className="mt-1.5 text-base font-semibold text-white">
+                  {summary.activeClients}
+                </p>
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <div className="rounded-[24px] border border-white/10 bg-white/8 px-4 py-4">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-white/55">{isSpanish ? "NIF" : "Tax ID"}</p>
-                <p className="mt-2 text-sm font-semibold text-white">{summary.company.nif || (isSpanish ? "Pendiente" : "Pending")}</p>
-              </div>
-              <div className="rounded-[24px] border border-white/10 bg-white/8 px-4 py-4">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-white/55">{isSpanish ? "Ubicacion" : "Location"}</p>
-                <p className="mt-2 text-sm font-semibold text-white">{summary.cityLabel}</p>
-              </div>
-              <div className="rounded-[24px] border border-white/10 bg-white/8 px-4 py-4">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-white/55">{isSpanish ? "Email" : "Email"}</p>
-                <p className="mt-2 truncate text-sm font-semibold text-white">{summary.company.email || (isSpanish ? "Pendiente" : "Pending")}</p>
-              </div>
-              <div className="rounded-[24px] border border-white/10 bg-white/8 px-4 py-4">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-white/55">{isSpanish ? "Alta" : "Registration"}</p>
-                <p className="mt-2 text-sm font-semibold text-white">{summary.registeredAt}</p>
-              </div>
-            </div>
-
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Link href="/empresa" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-white/10 px-4 text-sm font-semibold text-white transition hover:bg-white/15">{isSpanish ? "Empresa" : "Company"}</Link>
-              <Link href="/clientes" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-white/10 px-4 text-sm font-semibold text-white transition hover:bg-white/15">{isSpanish ? "Clientes" : "Clients"}</Link>
-              <Link href="/historial" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-white/10 px-4 text-sm font-semibold text-white transition hover:bg-white/15">{isSpanish ? "Historial" : "History"}</Link>
-              <Link href="/ajustes/verifactu" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-white/10 px-4 text-sm font-semibold text-white transition hover:bg-white/15">VeriFactu</Link>
+            <div className="mt-4 flex flex-wrap gap-2.5 text-xs text-white/72">
+              <span className="rounded-full border border-white/12 bg-white/8 px-3 py-1.5">
+                {summary.businessStatus}
+              </span>
+              <span className="rounded-full border border-white/12 bg-white/8 px-3 py-1.5">
+                {summary.cityLabel}
+              </span>
+              <span className="rounded-full border border-white/12 bg-white/8 px-3 py-1.5">
+                {isSpanish ? "Ultima factura" : "Latest invoice"}: {summary.latestInvoiceLabel}
+              </span>
             </div>
           </div>
-        </section>
-
-        <section className="mt-5 grid grid-cols-2 gap-3">
-          <KpiCard label={isSpanish ? "Mes actual" : "Current month"} value={money(summary.facturadoMesActual, locale)} caption={isSpanish ? `${summary.documentsThisMonth} documentos emitidos en el mes` : `${summary.documentsThisMonth} documents issued this month`} icon={TrendingUp} accentClassName="bg-slate-950 text-white" />
-          <KpiCard label={isSpanish ? "Pendiente de cobro" : "Outstanding"} value={money(summary.pendingTotal, locale)} caption={isSpanish ? `${summary.totalFacturas} facturas registradas en total` : `${summary.totalFacturas} invoices registered in total`} icon={Wallet} accentClassName="bg-[#fff4e5] text-[#8a5a33]" />
-          <KpiCard label={isSpanish ? "Ticket medio" : "Average ticket"} value={money(summary.ticketMedio, locale)} caption={isSpanish ? "Valor medio por factura emitida" : "Average value per issued invoice"} icon={FileText} accentClassName="bg-sky-50 text-sky-700" />
-          <KpiCard label={isSpanish ? "Clientes activos" : "Active clients"} value={String(summary.activeClients)} caption={isSpanish ? `${summary.billedClients} clientes han facturado al menos una vez` : `${summary.billedClients} clients have been billed at least once`} icon={UsersRound} accentClassName="bg-emerald-50 text-emerald-700" />
-          <KpiCard label={isSpanish ? "Borradores activos" : "Active drafts"} value={String(summary.draftCount)} caption={isSpanish ? `Ultimo borrador: ${summary.latestDraftLabel}` : `Latest draft: ${summary.latestDraftLabel}`} icon={Clock3} accentClassName="bg-slate-100 text-slate-700" />
-          <KpiCard label="VeriFactu" value={`${summary.verifactuInFlight}`} caption={isSpanish ? `${summary.verifactuPrepared} preparados en la cola de seguimiento` : `${summary.verifactuPrepared} prepared in the tracking queue`} icon={ShieldCheck} accentClassName="bg-teal-50 text-teal-700" />
         </section>
 
         <section className={`mt-5 ${SECTION_CLASS}`}>
@@ -891,24 +827,23 @@ export default function InformesPage() {
               <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
                 {isSpanish ? "Rendimiento" : "Performance"}
               </p>
-              <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
+              <h2 className="mt-2 text-[1.2rem] font-semibold tracking-[-0.04em] text-slate-950">
                 {isSpanish
                   ? "Facturacion de los ultimos seis meses"
                   : "Billing across the last six months"}
               </h2>
-              <p className="mt-2 max-w-sm text-[14px] leading-6 text-slate-500">
+              <p className="mt-2 max-w-sm text-[13px] leading-6 text-slate-500">
                 {isSpanish
-                  ? "Un resumen limpio del ritmo comercial real, centrado en facturas emitidas."
-                  : "A clean summary of real commercial pace, focused on issued invoices."}
+                  ? "Tendencia de ingresos reales, sin repetir indicadores operativos."
+                  : "Real revenue trend without repeating operational indicators."}
               </p>
             </div>
             <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
-              {isSpanish ? "Ultima factura" : "Latest invoice"}:{" "}
-              {summary.latestInvoiceLabel}
+              {isSpanish ? "Facturas" : "Invoices"}: {summary.totalFacturas}
             </span>
           </div>
 
-          <div className="mt-6 h-[260px] w-full">
+          <div className="mt-5 h-[220px] w-full">
             {chartsReady ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={summary.revenueTrend}>
@@ -937,13 +872,13 @@ export default function InformesPage() {
             )}
           </div>
 
-          <div className="mt-4 grid grid-cols-3 gap-3">
-            <div className="rounded-[24px] border border-white/70 bg-slate-50/85 px-4 py-3">
+          <div className="mt-4 grid grid-cols-3 gap-2.5">
+            <div className="rounded-[22px] border border-white/70 bg-slate-50/85 px-3.5 py-3">
               <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">{isSpanish ? "Mejor mes" : "Best month"}</p>
               <p className="mt-2 text-sm font-semibold text-slate-950">{summary.bestMonth?.mes || (isSpanish ? "Sin datos" : "No data")}</p>
-              <p className="mt-1 text-sm text-slate-500">{money(summary.bestMonth?.total || 0, locale)}</p>
+              <p className="mt-1 text-[13px] text-slate-500">{money(summary.bestMonth?.total || 0, locale)}</p>
             </div>
-            <div className="rounded-[24px] border border-white/70 bg-slate-50/85 px-4 py-3">
+            <div className="rounded-[22px] border border-white/70 bg-slate-50/85 px-3.5 py-3">
               <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">{isSpanish ? "Variacion" : "Variation"}</p>
               <p className="mt-2 text-sm font-semibold text-slate-950">
                 {summary.revenueGrowth === null
@@ -952,151 +887,37 @@ export default function InformesPage() {
                     : "No comparison"
                   : `${summary.revenueGrowth >= 0 ? "+" : ""}${summary.revenueGrowth.toFixed(0)}%`}
               </p>
-              <p className="mt-1 text-sm text-slate-500">{isSpanish ? "frente al mes anterior" : "versus the previous month"}</p>
+              <p className="mt-1 text-[13px] text-slate-500">{isSpanish ? "frente al mes anterior" : "versus the previous month"}</p>
             </div>
-            <div className="rounded-[24px] border border-white/70 bg-slate-50/85 px-4 py-3">
+            <div className="rounded-[22px] border border-white/70 bg-slate-50/85 px-3.5 py-3">
               <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">{isSpanish ? "Media mensual" : "Monthly average"}</p>
               <p className="mt-2 text-sm font-semibold text-slate-950">{money(summary.averageMonthlyRevenue, locale)}</p>
-              <p className="mt-1 text-sm text-slate-500">{isSpanish ? "en la ventana analizada" : "in the analysed window"}</p>
+              <p className="mt-1 text-[13px] text-slate-500">{isSpanish ? "en la ventana analizada" : "in the analysed window"}</p>
             </div>
-          </div>
-        </section>
-
-        <section className={`mt-5 ${SECTION_CLASS}`}>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
-                {isSpanish ? "Produccion documental" : "Document production"}
-              </p>
-              <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
-                {isSpanish ? "Embudo operativo del negocio" : "Operational business pipeline"}
-              </h2>
-            </div>
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
-              {summary.totalDocuments}{" "}
-              {isSpanish ? "documentos historicos" : "historical documents"}
-            </span>
-          </div>
-
-          <div className="mt-6 h-[280px] w-full">
-            {chartsReady ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={summary.documentPipeline} layout="vertical">
-                  <CartesianGrid stroke="rgba(148,163,184,0.16)" horizontal={false} />
-                  <XAxis type="number" tickLine={false} axisLine={false} />
-                  <YAxis dataKey="label" type="category" width={94} tickLine={false} axisLine={false} />
-                  <Tooltip formatter={(value) => Number(Array.isArray(value) ? value[0] : value || 0)} contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "rgba(15,23,42,0.04)" }} />
-                  <Bar dataKey="total" radius={[0, 12, 12, 0]} barSize={18}>
-                    {summary.documentPipeline.map((entry) => (
-                      <Cell key={entry.label} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <ChartPlaceholder label={isSpanish ? "Cargando embudo documental" : "Loading document pipeline"} />
-            )}
-          </div>
-
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="rounded-[24px] border border-white/70 bg-[#f7f6f3] px-4 py-4">
-              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">{isSpanish ? "Propuestas abiertas" : "Open proposals"}</p>
-              <p className="mt-2 text-[1.15rem] font-semibold text-slate-950">{summary.totalPropuestas}</p>
-              <p className="mt-1 text-sm leading-6 text-slate-500">{isSpanish ? "Presupuestos y proformas preparados para convertir." : "Quotes and proformas ready to be converted."}</p>
-            </div>
-            <div className="rounded-[24px] border border-white/70 bg-[#f7f6f3] px-4 py-4">
-              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">{isSpanish ? "Entregas registradas" : "Registered deliveries"}</p>
-              <p className="mt-2 text-[1.15rem] font-semibold text-slate-950">{summary.totalAlbaranes}</p>
-              <p className="mt-1 text-sm leading-6 text-slate-500">{isSpanish ? "Albaranes listos para seguir la trazabilidad de entrega." : "Delivery notes ready to track delivery traceability."}</p>
-            </div>
-          </div>
-        </section>
-
-        <section className={`mt-5 ${SECTION_CLASS}`}>
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">{isSpanish ? "Mezcla documental" : "Document mix"}</p>
-          <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">{isSpanish ? "Distribucion de documentos emitidos" : "Distribution of issued documents"}</h2>
-          <div className="relative mt-5 h-[250px] w-full">
-            {chartsReady ? (
-              <>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={summary.documentMixChartData} dataKey="value" innerRadius={58} outerRadius={88} paddingAngle={4} stroke="rgba(255,255,255,0.85)" strokeWidth={3}>
-                      {summary.documentMixChartData.map((entry) => (
-                        <Cell key={entry.name} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => Number(Array.isArray(value) ? value[0] : value || 0)} contentStyle={CHART_TOOLTIP_STYLE} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                  <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">Total</p>
-                  <p className="mt-2 text-[1.8rem] font-semibold tracking-[-0.04em] text-slate-950">{summary.totalDocuments}</p>
-                  <p className="mt-1 text-sm text-slate-500">{isSpanish ? "documentos" : "documents"}</p>
-                </div>
-              </>
-            ) : (
-              <ChartPlaceholder label={isSpanish ? "Cargando distribucion" : "Loading distribution"} />
-            )}
-          </div>
-
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            {summary.documentMixRaw.map((item) => (
-              <div key={item.name} className="flex items-center justify-between gap-3 rounded-[22px] border border-white/70 bg-white/85 px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
-                  <p className="text-sm font-medium text-slate-600">{item.name}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-slate-950">{item.value}</p>
-                  <p className="text-xs text-slate-400">{summary.totalDocuments > 0 ? formatPercent((item.value / summary.totalDocuments) * 100) : "0%"}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className={`mt-5 ${SECTION_CLASS}`}>
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">{isSpanish ? "Salud operativa" : "Operational health"}</p>
-          <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">{isSpanish ? "Indicadores internos del negocio" : "Internal business indicators"}</h2>
-          <div className="mt-5 space-y-4">
-            {summary.healthMetrics.map((metric) => (
-              <div key={metric.label} className="rounded-[26px] border border-white/70 bg-white/84 p-4 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)]">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-950">{metric.label}</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-500">{metric.caption}</p>
-                  </div>
-                  <span className="text-sm font-semibold text-slate-950">{formatPercent(metric.value)}</span>
-                </div>
-                <div className="mt-4 h-2.5 rounded-full bg-slate-100">
-                  <div className="h-2.5 rounded-full" style={{ width: `${Math.max(0, Math.min(metric.value, 100))}%`, backgroundColor: metric.color }} />
-                </div>
-              </div>
-            ))}
           </div>
         </section>
 
         <section className={`mt-5 ${SECTION_CLASS}`}>
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">{isSpanish ? "Clientes clave" : "Key clients"}</p>
-          <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">{isSpanish ? "Cartera con mayor impacto" : "Portfolio with the highest impact"}</h2>
-          <div className="mt-5 space-y-3">
+          <h2 className="mt-2 text-[1.2rem] font-semibold tracking-[-0.04em] text-slate-950">{isSpanish ? "Clientes con mayor facturacion" : "Highest-billing clients"}</h2>
+          <div className="mt-4 space-y-2.5">
             {summary.topClients.length > 0 ? (
               summary.topClients.map((client, index) => (
-                <div key={client.key} className="rounded-[26px] border border-white/70 bg-white/85 p-4 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)]">
+                <div key={client.key} className="rounded-[24px] border border-white/70 bg-white/85 p-3.5 shadow-[0_14px_26px_-24px_rgba(15,23,42,0.32)]">
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-950">{String(index + 1).padStart(2, "0")} - {client.name}</p>
-                      <p className="mt-1 text-sm leading-6 text-slate-500">{isSpanish ? `${client.invoices} facturas / Ultima actividad ${formatShortDate(client.lastDate, locale, "Sin fecha")}` : `${client.invoices} invoices / Latest activity ${formatShortDate(client.lastDate, locale, "No date")}`}</p>
+                      <p className="text-sm font-semibold text-slate-950">{String(index + 1).padStart(2, "0")} · {client.name}</p>
+                      <p className="mt-1 text-[13px] leading-5 text-slate-500">{isSpanish ? `${client.invoices} facturas · Ultima actividad ${formatShortDate(client.lastDate, locale, "Sin fecha")}` : `${client.invoices} invoices · Latest activity ${formatShortDate(client.lastDate, locale, "No date")}`}</p>
                     </div>
                     <p className="shrink-0 text-sm font-semibold text-slate-950">{money(client.total, locale)}</p>
                   </div>
-                  <div className="mt-4 h-2.5 rounded-full bg-slate-100">
-                    <div className="h-2.5 rounded-full bg-[linear-gradient(90deg,#1d4d7f,#0f766e)]" style={{ width: `${Math.max(10, summary.maxClientRevenue > 0 ? (client.total / summary.maxClientRevenue) * 100 : 0)}%` }} />
+                  <div className="mt-3 h-2 rounded-full bg-slate-100">
+                    <div className="h-2 rounded-full bg-[linear-gradient(90deg,#1d4d7f,#0f766e)]" style={{ width: `${Math.max(10, summary.maxClientRevenue > 0 ? (client.total / summary.maxClientRevenue) * 100 : 0)}%` }} />
                   </div>
                 </div>
               ))
             ) : (
-              <div className="rounded-[26px] border border-dashed border-slate-200 bg-white/70 px-4 py-5 text-sm leading-6 text-slate-500">
+              <div className="rounded-[24px] border border-dashed border-slate-200 bg-white/70 px-4 py-4 text-sm leading-6 text-slate-500">
                 {isSpanish
                   ? "Aun no hay suficiente historico de facturas para generar un ranking de clientes."
                   : "There is not enough invoice history yet to generate a client ranking."}
@@ -1107,46 +928,24 @@ export default function InformesPage() {
 
         <section className={`mt-5 ${SECTION_CLASS}`}>
           <div className="flex items-start gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
-              <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={2.1} />
-            </span>
             <div>
               <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">{isSpanish ? "Alertas y control" : "Alerts and control"}</p>
-              <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">{isSpanish ? "Prioridades de seguimiento" : "Follow-up priorities"}</h2>
+              <h2 className="mt-2 text-[1.2rem] font-semibold tracking-[-0.04em] text-slate-950">{isSpanish ? "Prioridades de seguimiento" : "Follow-up priorities"}</h2>
             </div>
           </div>
 
-          <div className="mt-5 space-y-3">
-            {summary.alerts.map((item) => (
-              <div key={item.label} className="rounded-[26px] border border-white/70 bg-white/85 p-4 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)]">
+          <div className="mt-4 space-y-2.5">
+            {summary.alerts.slice(0, 3).map((item) => (
+              <div key={item.label} className="rounded-[24px] border border-white/70 bg-white/85 p-3.5 shadow-[0_14px_26px_-24px_rgba(15,23,42,0.32)]">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-950">{item.label}</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-500">{item.detail}</p>
+                    <p className="mt-1 text-[13px] leading-5 text-slate-500">{item.detail}</p>
                   </div>
                   <span className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${item.toneClassName}`}>{item.value}</span>
                 </div>
               </div>
             ))}
-          </div>
-
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <Link href="/historial" className="flex items-center gap-3 rounded-[24px] border border-white/70 bg-[#f7f6f3] px-4 py-4 transition hover:bg-white">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white"><FileText className="h-4 w-4" strokeWidth={2.1} /></span>
-              <div><p className="text-sm font-semibold text-slate-950">{isSpanish ? "Historial" : "History"}</p><p className="text-sm text-slate-500">{isSpanish ? "Revisar documentos" : "Review documents"}</p></div>
-            </Link>
-            <Link href="/clientes" className="flex items-center gap-3 rounded-[24px] border border-white/70 bg-[#f7f6f3] px-4 py-4 transition hover:bg-white">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-100 text-sky-700"><UsersRound className="h-4 w-4" strokeWidth={2.1} /></span>
-              <div><p className="text-sm font-semibold text-slate-950">{isSpanish ? "Clientes" : "Clients"}</p><p className="text-sm text-slate-500">{isSpanish ? "Completar fichas" : "Complete records"}</p></div>
-            </Link>
-            <Link href="/empresa" className="flex items-center gap-3 rounded-[24px] border border-white/70 bg-[#f7f6f3] px-4 py-4 transition hover:bg-white">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#fff4e5] text-[#8a5a33]"><Building2 className="h-4 w-4" strokeWidth={2.1} /></span>
-              <div><p className="text-sm font-semibold text-slate-950">{isSpanish ? "Empresa" : "Company"}</p><p className="text-sm text-slate-500">{isSpanish ? "Actualizar identidad" : "Update identity"}</p></div>
-            </Link>
-            <Link href="/ajustes/verifactu" className="flex items-center gap-3 rounded-[24px] border border-white/70 bg-[#f7f6f3] px-4 py-4 transition hover:bg-white">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-50 text-teal-700"><CircleCheckBig className="h-4 w-4" strokeWidth={2.1} /></span>
-              <div><p className="text-sm font-semibold text-slate-950">VeriFactu</p><p className="text-sm text-slate-500">{isSpanish ? "Abrir seguimiento" : "Open tracking"}</p></div>
-            </Link>
           </div>
         </section>
       </main>

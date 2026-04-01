@@ -2,9 +2,16 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import {
+  startTransition,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ChartColumn,
+  House,
   Package,
   Plus,
   Sparkles,
@@ -77,14 +84,15 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   const [hasHydratedShell, setHasHydratedShell] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [drafts, setDrafts] = useState<DraftItem[]>([]);
+  const hydrateFrameRef = useRef<number | null>(null);
 
   const moreNavLabel = language === "es" ? "Mas" : "More";
   const moreMenuUi =
     language === "es"
       ? {
-          title: "Documentos adicionales",
+          title: "Mas opciones",
           description:
-            "Accede a proformas, albaranes y borradores sin romper la navegacion principal.",
+            "Accede a informes, documentos adicionales y borradores sin romper la navegacion principal.",
           draftsEyebrow: "Borradores",
           draftsTitle: "Borradores recientes",
           draftsDescription:
@@ -97,9 +105,9 @@ export default function DashboardShell({ children }: DashboardShellProps) {
           noClient: "Sin cliente",
         }
       : {
-          title: "Additional documents",
+          title: "More options",
           description:
-            "Access proformas, delivery notes, and drafts without breaking the main navigation.",
+            "Access reports, additional documents, and drafts without breaking the main navigation.",
           draftsEyebrow: "Drafts",
           draftsTitle: "Recent drafts",
           draftsDescription:
@@ -112,6 +120,15 @@ export default function DashboardShell({ children }: DashboardShellProps) {
           noClient: "No client",
         };
   const moreMenuItems: MoreMenuItem[] = [
+    {
+      label: copy.nav.reports,
+      description:
+        language === "es"
+          ? "Consulta el panel de control y el resumen ejecutivo del negocio."
+          : "Open the business dashboard and executive summary.",
+      href: "/informes",
+      icon: ChartColumn,
+    },
     {
       label: language === "es" ? "Crear proforma" : "Create proforma",
       description:
@@ -133,25 +150,62 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   ];
 
   useClientLayoutEffect(() => {
+    const runHydration = () => {
+      startTransition(() => {
+        setHasRegisteredUser(getUserFirstName(readUserProfile()).length > 0);
+        setDrafts(readDrafts<DraftItem>());
+        setHasHydratedShell(true);
+      });
+    };
     const hydrateShellData = () => {
-      setHasRegisteredUser(getUserFirstName(readUserProfile()).length > 0);
-      setDrafts(readDrafts<DraftItem>());
-      setHasHydratedShell(true);
+      if (typeof document !== "undefined" && document.hidden) {
+        return;
+      }
+
+      if (hydrateFrameRef.current !== null) {
+        return;
+      }
+
+      hydrateFrameRef.current = window.requestAnimationFrame(() => {
+        hydrateFrameRef.current = null;
+        runHydration();
+      });
     };
 
-    hydrateShellData();
+    runHydration();
     window.addEventListener("pageshow", hydrateShellData);
     document.addEventListener("visibilitychange", hydrateShellData);
     window.addEventListener("focus", hydrateShellData);
     window.addEventListener(DRAFTS_UPDATED_EVENT, hydrateShellData);
 
     return () => {
+      if (hydrateFrameRef.current !== null) {
+        window.cancelAnimationFrame(hydrateFrameRef.current);
+      }
+
       window.removeEventListener("pageshow", hydrateShellData);
       document.removeEventListener("visibilitychange", hydrateShellData);
       window.removeEventListener("focus", hydrateShellData);
       window.removeEventListener(DRAFTS_UPDATED_EVENT, hydrateShellData);
     };
   }, []);
+
+  useEffect(() => {
+    [
+      "/",
+      "/catalogo",
+      "/clientes",
+      "/ajustes",
+      "/informes",
+      "/borradores",
+      "/historial",
+      "/crear-factura",
+      "/crear-factura?tipo=proforma",
+      "/crear-factura?tipo=albaran",
+    ].forEach((href) => {
+      router.prefetch(href);
+    });
+  }, [router]);
 
   useEffect(() => {
     setIsMoreMenuOpen(false);
@@ -192,7 +246,19 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   );
 
   const activeSection = useMemo(() => {
-    if (isMoreMenuOpen || pathname === "/" || pathname === "/borradores" || pathname === "/historial") {
+    if (isMoreMenuOpen) {
+      return "more";
+    }
+
+    if (pathname === "/") {
+      return "home";
+    }
+
+    if (
+      pathname === "/borradores" ||
+      pathname === "/historial" ||
+      pathname.startsWith("/informes")
+    ) {
       return "more";
     }
 
@@ -202,10 +268,6 @@ export default function DashboardShell({ children }: DashboardShellProps) {
 
     if (pathname.startsWith("/clientes")) {
       return "clients";
-    }
-
-    if (pathname.startsWith("/informes")) {
-      return "reports";
     }
 
     if (pathname.startsWith("/ajustes") || pathname.startsWith("/empresa")) {
@@ -219,6 +281,13 @@ export default function DashboardShell({ children }: DashboardShellProps) {
     hasHydratedShell && hasRegisteredUser && !pathname.startsWith("/crear-factura");
 
   const navItems: NavItem[] = [
+    {
+      key: "home",
+      label: copy.nav.home,
+      icon: House,
+      href: "/",
+      active: activeSection === "home",
+    },
     {
       key: "more",
       label: moreNavLabel,
@@ -242,13 +311,6 @@ export default function DashboardShell({ children }: DashboardShellProps) {
       active: activeSection === "clients",
     },
     {
-      key: "reports",
-      label: copy.nav.reports,
-      icon: ChartColumn,
-      href: "/informes",
-      active: activeSection === "reports",
-    },
-    {
       key: "profile",
       label: copy.nav.profile,
       icon: UserRound,
@@ -259,13 +321,17 @@ export default function DashboardShell({ children }: DashboardShellProps) {
 
   function openMoreMenuItem(href: string) {
     setIsMoreMenuOpen(false);
-    router.push(href);
+    startTransition(() => {
+      router.push(href);
+    });
   }
 
   function restoreDraft(draft: DraftItem) {
     setIsMoreMenuOpen(false);
     writeActiveDraft(draft);
-    router.push("/crear-factura");
+    startTransition(() => {
+      router.push("/crear-factura");
+    });
   }
 
   return (
@@ -281,7 +347,10 @@ export default function DashboardShell({ children }: DashboardShellProps) {
           className="fixed bottom-0 left-1/2 z-20 w-full max-w-[430px] -translate-x-1/2 px-4"
           style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
         >
-          <div className="grid grid-cols-5 rounded-[30px] border border-white/10 bg-slate-950/95 px-2 py-3 text-white shadow-[0_24px_60px_-26px_rgba(15,23,42,0.78)] backdrop-blur-xl">
+          <div
+            className="grid rounded-[30px] border border-white/10 bg-slate-950/95 px-2 py-3 text-white shadow-[0_24px_60px_-26px_rgba(15,23,42,0.78)] backdrop-blur-xl"
+            style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
+          >
             {navItems.map(({ key, label, icon: Icon, active, href, onClick, expanded }) => {
               const className = `flex flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center transition ${
                 active

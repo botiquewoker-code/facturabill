@@ -23,6 +23,7 @@ import {
   VERIFACTU_EVENTS_STORAGE_KEY,
   VERIFACTU_INSTALLATION_ID_STORAGE_KEY,
   VERIFACTU_RECORDS_STORAGE_KEY,
+  VERIFACTU_SETTINGS_STORAGE_KEY,
 } from "@/features/verifactu/storage";
 
 const PAYMENT_METHODS_STORAGE_KEY = "facturabill-payment-methods";
@@ -36,6 +37,7 @@ const EXPORTABLE_STORAGE_KEYS = [
   VERIFACTU_RECORDS_STORAGE_KEY,
   VERIFACTU_EVENTS_STORAGE_KEY,
   VERIFACTU_INSTALLATION_ID_STORAGE_KEY,
+  VERIFACTU_SETTINGS_STORAGE_KEY,
   "historial",
   "datosEmpresa",
   "configEmpresa",
@@ -214,14 +216,14 @@ const verifactuSettingsCopy: Record<
   { title: string; description: string }
 > = {
   es: {
-    title: "Preparacion VeriFactu",
+    title: "VeriFactu y envio",
     description:
-      "Consulta el estado de tus facturas y el seguimiento de VeriFactu.",
+      "Revisa el seguimiento y activa el envio automatico para nuevas facturas.",
   },
   en: {
-    title: "VeriFactu setup",
+    title: "VeriFactu and submission",
     description:
-      "Review your invoice status and VeriFactu follow-up.",
+      "Review tracking and enable automatic submission for new invoices.",
   },
   ar: {
     title: "VeriFactu",
@@ -229,24 +231,24 @@ const verifactuSettingsCopy: Record<
       "راجع حالة الفواتير ومتابعة VeriFactu.",
   },
   fr: {
-    title: "Preparation VeriFactu",
+    title: "VeriFactu et envoi",
     description:
-      "Consultez l'etat de vos factures et le suivi VeriFactu.",
+      "Consultez le suivi et activez l'envoi automatique pour les nouvelles factures.",
   },
   it: {
-    title: "Preparazione VeriFactu",
+    title: "VeriFactu e invio",
     description:
-      "Controlla lo stato delle fatture e il monitoraggio VeriFactu.",
+      "Controlla il monitoraggio e attiva l'invio automatico per le nuove fatture.",
   },
   nl: {
-    title: "VeriFactu voorbereiding",
+    title: "VeriFactu en verzending",
     description:
-      "Bekijk de status van je facturen en de VeriFactu-opvolging.",
+      "Bekijk tracking en activeer automatische verzending voor nieuwe facturen.",
   },
   pt: {
-    title: "Preparacao VeriFactu",
+    title: "VeriFactu e envio",
     description:
-      "Reve o estado das faturas e o acompanhamento VeriFactu.",
+      "Reve o acompanhamento e ativa o envio automatico para novas faturas.",
   },
 };
 
@@ -283,6 +285,188 @@ const accessProfileCopy: Record<
   pt: {
     title: "Dados de acesso",
     description: "Atualiza nome, email e palavra-passe do utilizador ou gerente.",
+  },
+};
+
+const legalComplianceCopy: Record<
+  AppLanguage,
+  {
+    title: string;
+    description: string;
+    legalNotice: string;
+    legalNoticeDescription: string;
+    privacy: string;
+    privacyDescription: string;
+    terms: string;
+    termsDescription: string;
+    serviceConditions: string;
+    serviceConditionsDescription: string;
+    invoiceRetention: string;
+    invoiceRetentionDescription: string;
+    verifactuTimeline: string;
+    verifactuTimelineDescription: string;
+  }
+> = {
+  es: {
+    title: "Cumplimiento y legal",
+    description:
+      "Transparencia, privacidad, conservacion documental y marco regulatorio para operar con criterio profesional.",
+    legalNotice: "Aviso legal",
+    legalNoticeDescription:
+      "Datos del titular, contacto e informacion general del servicio exigida por la LSSI.",
+    privacy: "Privacidad y proteccion de datos",
+    privacyDescription:
+      "Tratamiento, base legal, derechos RGPD/LOPDGDD y uso de datos de cuenta y clientes.",
+    terms: "Terminos de uso",
+    termsDescription:
+      "Reglas de acceso, responsabilidades del usuario y alcance del servicio.",
+    serviceConditions: "Condiciones del servicio",
+    serviceConditionsDescription:
+      "Marco operativo, disponibilidad, cambios del servicio y relacion contractual.",
+    invoiceRetention: "Conservacion de facturas",
+    invoiceRetentionDescription:
+      "Manten facturas y copias durante el plazo tributario y asegurate de que sigan siendo accesibles, integras y legibles.",
+    verifactuTimeline: "Calendario VeriFactu",
+    verifactuTimelineDescription:
+      "Si te aplica esta obligacion en Espana, revisa la adaptacion antes del 1 de enero de 2026 para Impuesto sobre Sociedades y antes del 1 de julio de 2026 para el resto.",
+  },
+  en: {
+    title: "Compliance and legal",
+    description:
+      "Transparency, privacy, document retention, and regulatory essentials for professional operation.",
+    legalNotice: "Legal notice",
+    legalNoticeDescription:
+      "Owner details, contact information, and general service disclosures required under Spanish law.",
+    privacy: "Privacy and data protection",
+    privacyDescription:
+      "Processing, legal basis, GDPR rights, and the use of account and client data.",
+    terms: "Terms of use",
+    termsDescription:
+      "Access rules, user responsibilities, and the scope of the service.",
+    serviceConditions: "Service conditions",
+    serviceConditionsDescription:
+      "Operating framework, availability, service changes, and contractual terms.",
+    invoiceRetention: "Invoice retention",
+    invoiceRetentionDescription:
+      "Keep invoices and copies for the tax retention period and ensure they remain accessible, intact, and legible.",
+    verifactuTimeline: "VeriFactu timeline",
+    verifactuTimelineDescription:
+      "If this obligation applies to you in Spain, review system readiness before January 1, 2026 for corporate taxpayers and before July 1, 2026 for the rest.",
+  },
+  ar: {
+    title: "Compliance and legal",
+    description:
+      "Transparency, privacy, document retention, and regulatory essentials for professional operation.",
+    legalNotice: "Legal notice",
+    legalNoticeDescription:
+      "Owner details, contact information, and general service disclosures required under Spanish law.",
+    privacy: "Privacy and data protection",
+    privacyDescription:
+      "Processing, legal basis, GDPR rights, and the use of account and client data.",
+    terms: "Terms of use",
+    termsDescription:
+      "Access rules, user responsibilities, and the scope of the service.",
+    serviceConditions: "Service conditions",
+    serviceConditionsDescription:
+      "Operating framework, availability, service changes, and contractual terms.",
+    invoiceRetention: "Invoice retention",
+    invoiceRetentionDescription:
+      "Keep invoices and copies for the tax retention period and ensure they remain accessible, intact, and legible.",
+    verifactuTimeline: "VeriFactu timeline",
+    verifactuTimelineDescription:
+      "If this obligation applies to you in Spain, review system readiness before January 1, 2026 for corporate taxpayers and before July 1, 2026 for the rest.",
+  },
+  fr: {
+    title: "Conformite et legal",
+    description:
+      "Transparence, confidentialite, conservation des documents et cadre reglementaire pour un usage professionnel.",
+    legalNotice: "Mentions legales",
+    legalNoticeDescription:
+      "Identite du titulaire, contact et informations generales du service requises par la LSSI.",
+    privacy: "Confidentialite et protection des donnees",
+    privacyDescription:
+      "Traitement, base legale, droits RGPD et usage des donnees du compte et des clients.",
+    terms: "Conditions d'utilisation",
+    termsDescription:
+      "Regles d'acces, responsabilites de l'utilisateur et perimetre du service.",
+    serviceConditions: "Conditions du service",
+    serviceConditionsDescription:
+      "Cadre operationnel, disponibilite, evolutions du service et relation contractuelle.",
+    invoiceRetention: "Conservation des factures",
+    invoiceRetentionDescription:
+      "Conservez les factures et leurs copies pendant le delai fiscal applicable et gardez-les accessibles, intgres et lisibles.",
+    verifactuTimeline: "Calendrier VeriFactu",
+    verifactuTimelineDescription:
+      "Si cette obligation vous concerne en Espagne, verifiez l'adaptation avant le 1 janvier 2026 pour l'impot sur les societes et avant le 1 juillet 2026 pour les autres cas.",
+  },
+  it: {
+    title: "Compliance e legale",
+    description:
+      "Trasparenza, privacy, conservazione documentale e riferimenti normativi per lavorare in modo professionale.",
+    legalNotice: "Informativa legale",
+    legalNoticeDescription:
+      "Dati del titolare, contatto e informazioni generali del servizio richieste dalla normativa spagnola.",
+    privacy: "Privacy e protezione dati",
+    privacyDescription:
+      "Trattamento, base giuridica, diritti GDPR e uso dei dati di account e clienti.",
+    terms: "Termini di utilizzo",
+    termsDescription:
+      "Regole di accesso, responsabilita dell'utente e ambito del servizio.",
+    serviceConditions: "Condizioni del servizio",
+    serviceConditionsDescription:
+      "Quadro operativo, disponibilita, modifiche del servizio e rapporto contrattuale.",
+    invoiceRetention: "Conservazione fatture",
+    invoiceRetentionDescription:
+      "Conserva fatture e copie per il periodo fiscale richiesto e mantienile accessibili, integre e leggibili.",
+    verifactuTimeline: "Scadenze VeriFactu",
+    verifactuTimelineDescription:
+      "Se l'obbligo ti riguarda in Spagna, verifica l'adeguamento entro il 1 gennaio 2026 per l'imposta sulle societa e entro il 1 luglio 2026 negli altri casi.",
+  },
+  nl: {
+    title: "Compliance en juridisch",
+    description:
+      "Transparantie, privacy, documentbewaring en wettelijke basis voor professioneel gebruik.",
+    legalNotice: "Juridische kennisgeving",
+    legalNoticeDescription:
+      "Gegevens van de eigenaar, contactinformatie en algemene dienstinformatie volgens de Spaanse wet.",
+    privacy: "Privacy en gegevensbescherming",
+    privacyDescription:
+      "Verwerking, rechtsgrond, AVG-rechten en gebruik van account- en klantgegevens.",
+    terms: "Gebruiksvoorwaarden",
+    termsDescription:
+      "Toegangsregels, verantwoordelijkheden van de gebruiker en reikwijdte van de dienst.",
+    serviceConditions: "Dienstvoorwaarden",
+    serviceConditionsDescription:
+      "Operationeel kader, beschikbaarheid, wijzigingen in de dienst en contractuele relatie.",
+    invoiceRetention: "Bewaren van facturen",
+    invoiceRetentionDescription:
+      "Bewaar facturen en kopieen gedurende de fiscale termijn en zorg dat ze toegankelijk, intact en leesbaar blijven.",
+    verifactuTimeline: "VeriFactu planning",
+    verifactuTimelineDescription:
+      "Als deze verplichting op jou van toepassing is in Spanje, controleer dan de aanpassing voor 1 januari 2026 voor vennootschapsbelasting en voor 1 juli 2026 in de overige gevallen.",
+  },
+  pt: {
+    title: "Compliance e legal",
+    description:
+      "Transparencia, privacidade, conservacao documental e enquadramento regulatorio para uso profissional.",
+    legalNotice: "Aviso legal",
+    legalNoticeDescription:
+      "Dados do titular, contacto e informacao geral do servico exigida pela legislacao espanhola.",
+    privacy: "Privacidade e protecao de dados",
+    privacyDescription:
+      "Tratamento, base legal, direitos RGPD e uso dos dados da conta e dos clientes.",
+    terms: "Termos de utilizacao",
+    termsDescription:
+      "Regras de acesso, responsabilidades do utilizador e ambito do servico.",
+    serviceConditions: "Condicoes do servico",
+    serviceConditionsDescription:
+      "Enquadramento operacional, disponibilidade, alteracoes do servico e relacao contratual.",
+    invoiceRetention: "Conservacao de faturas",
+    invoiceRetentionDescription:
+      "Guarda faturas e copias durante o prazo fiscal aplicavel e garante que permanecem acessiveis, integras e legiveis.",
+    verifactuTimeline: "Calendario VeriFactu",
+    verifactuTimelineDescription:
+      "Se esta obrigacao se aplicar em Espanha, verifica a adaptacao antes de 1 de janeiro de 2026 para imposto sobre sociedades e antes de 1 de julho de 2026 nos restantes casos.",
   },
 };
 
@@ -419,6 +603,7 @@ export default function AjustesPage() {
   const actionsCopy = accountActionsCopy[language];
   const verifactuCopy = verifactuSettingsCopy[language];
   const accessCopy = accessProfileCopy[language];
+  const legalCopy = legalComplianceCopy[language];
   const selectedLanguage =
     languageOptions.find((option) => option.value === language)?.nativeLabel || "";
 
@@ -535,6 +720,42 @@ export default function AjustesPage() {
     },
     {
       id: "03",
+      title: legalCopy.title,
+      description: legalCopy.description,
+      items: [
+        {
+          title: legalCopy.legalNotice,
+          description: legalCopy.legalNoticeDescription,
+          href: "/aviso-legal",
+        },
+        {
+          title: legalCopy.privacy,
+          description: legalCopy.privacyDescription,
+          href: "/privacidad",
+        },
+        {
+          title: legalCopy.terms,
+          description: legalCopy.termsDescription,
+          href: "/terminos",
+        },
+        {
+          title: legalCopy.serviceConditions,
+          description: legalCopy.serviceConditionsDescription,
+          href: "/condiciones",
+        },
+        {
+          title: legalCopy.invoiceRetention,
+          description: legalCopy.invoiceRetentionDescription,
+        },
+        {
+          title: legalCopy.verifactuTimeline,
+          description: legalCopy.verifactuTimelineDescription,
+          href: "/ajustes/verifactu",
+        },
+      ],
+    },
+    {
+      id: "04",
       title: copy.settings.accountActions,
       description: copy.settings.accountActionsDescription,
       items: [

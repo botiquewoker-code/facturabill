@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  startTransition,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { pdf } from "@react-pdf/renderer";
 import {
   CalendarDays,
@@ -318,6 +325,8 @@ export default function CrearFacturaPage() {
   const [clientSearch, setClientSearch] = useState("");
   const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
   const [catalogSearch, setCatalogSearch] = useState("");
+  const deferredClientSearch = useDeferredValue(clientSearch);
+  const deferredCatalogSearch = useDeferredValue(catalogSearch);
   const documentMeta = getInvoiceDocumentMeta(documentType, language);
   const isBudgetDocument = documentType === "presupuesto";
   const isProformaDocument = documentType === "proforma";
@@ -333,19 +342,19 @@ export default function CrearFacturaPage() {
   const iva = subtotal * (tipoIVA / 100);
   const total = subtotal + iva;
   const clientesFiltrados = useMemo(() => {
-    const query = clientSearch.trim().toLowerCase();
+    const query = deferredClientSearch.trim().toLowerCase();
     const base = query
       ? clientesGuardados.filter((item) => clientMatchesSearch(item, query))
       : [];
 
     return base.filter((item) => item.id !== linkedClientId).slice(0, 6);
-  }, [clientSearch, clientesGuardados, linkedClientId]);
+  }, [deferredClientSearch, clientesGuardados, linkedClientId]);
   const catalogoFiltrado = useMemo(() => {
     if (!(hasLoadedAccount && hasRegisteredUser)) {
       return [] as CatalogItem[];
     }
 
-    const query = catalogSearch.trim().toLowerCase();
+    const query = deferredCatalogSearch.trim().toLowerCase();
 
     if (!query) {
       return [] as CatalogItem[];
@@ -361,7 +370,13 @@ export default function CrearFacturaPage() {
           .includes(query),
       )
       .slice(0, 6);
-  }, [catalogItems, catalogSearch, documentType, hasLoadedAccount, hasRegisteredUser]);
+  }, [
+    catalogItems,
+    deferredCatalogSearch,
+    documentType,
+    hasLoadedAccount,
+    hasRegisteredUser,
+  ]);
   const pdfData = {
     documentType,
     esPresupuesto: isBudgetDocument,
@@ -821,124 +836,140 @@ export default function CrearFacturaPage() {
       return;
     }
 
-    const finishHydration = () => {
-      setHasLoadedAccount(true);
-      setIsPageReady(true);
-    };
-    const params = new URLSearchParams(window.location.search);
-    const initialDocumentType = normalizeInvoiceDocumentType(params.get("tipo"));
-    const storedClients = readClients();
-    const routeClientId = params.get("clienteId") || "";
-    const storedFiscalSettings = readFiscalSettings();
-    const storedProfile = readUserProfile();
+    const hydratePage = () => {
+      const finishHydration = () => {
+        startTransition(() => {
+          setHasLoadedAccount(true);
+          setIsPageReady(true);
+        });
+      };
+      const params = new URLSearchParams(window.location.search);
+      const initialDocumentType = normalizeInvoiceDocumentType(params.get("tipo"));
+      const storedClients = readClients();
+      const routeClientId = params.get("clienteId") || "";
+      const storedFiscalSettings = readFiscalSettings();
+      const storedProfile = readUserProfile();
 
-    setClientesGuardados(storedClients);
-    setCatalogItems(readCatalogItems());
-    setFiscalSettings(storedFiscalSettings);
-    setTipoIVA(storedFiscalSettings.defaultTaxRate);
-    setHasRegisteredUser(getUserFirstName(storedProfile).length > 0);
+      startTransition(() => {
+        setClientesGuardados(storedClients);
+        setCatalogItems(readCatalogItems());
+        setFiscalSettings(storedFiscalSettings);
+        setTipoIVA(storedFiscalSettings.defaultTaxRate);
+        setHasRegisteredUser(getUserFirstName(storedProfile).length > 0);
+      });
 
-    const rawCompany = localStorage.getItem("datosEmpresa");
-    let seededCompany = EMPTY_EMPRESA;
-    if (rawCompany) try { setEmpresa(normalizeEmpresa(JSON.parse(rawCompany))); } catch {}
-    if (rawCompany) try { seededCompany = normalizeEmpresa(JSON.parse(rawCompany)); } catch {}
-    const rawLogo = localStorage.getItem("logoUsuario");
-    if (rawLogo) setLogo(rawLogo);
-    const rawNotes = localStorage.getItem("notasUsuario");
-    if (rawNotes) setNotas(rawNotes);
-    const rawTemplate =
-      localStorage.getItem("plantillaSeleccionada") ||
-      localStorage.getItem("plantillaUsuario") ||
-      localStorage.getItem("plantillaElegida");
-    if (rawTemplate && isPlantilla(rawTemplate)) setPlantilla(rawTemplate);
+      const rawCompany = localStorage.getItem("datosEmpresa");
+      let seededCompany = EMPTY_EMPRESA;
+      if (rawCompany) try { startTransition(() => setEmpresa(normalizeEmpresa(JSON.parse(rawCompany)))); } catch {}
+      if (rawCompany) try { seededCompany = normalizeEmpresa(JSON.parse(rawCompany)); } catch {}
+      const rawLogo = localStorage.getItem("logoUsuario");
+      if (rawLogo) startTransition(() => setLogo(rawLogo));
+      const rawNotes = localStorage.getItem("notasUsuario");
+      if (rawNotes) startTransition(() => setNotas(rawNotes));
+      const rawTemplate =
+        localStorage.getItem("plantillaSeleccionada") ||
+        localStorage.getItem("plantillaUsuario") ||
+        localStorage.getItem("plantillaElegida");
+      if (rawTemplate && isPlantilla(rawTemplate)) startTransition(() => setPlantilla(rawTemplate));
 
-    const activeDraft = readActiveDraft<Partial<DraftInvoice>>();
-    if (activeDraft) {
-      try {
-        const draft = activeDraft;
-        draftIdRef.current = s(draft.id) || draftId();
-        setDocumentType(normalizeInvoiceDocumentType(draft.tipo));
-        setFecha(s(draft.fecha) || today());
-        setFechaVencimiento(
-          s(draft.fechaVencimiento) || addDays(s(draft.fecha) || today(), 30),
-        );
-        setNumeroFactura(normalizeInvoiceDocumentNumber(draft.numero));
-        setLinkedClientId(s(draft.linkedClientId));
-        setCliente(normalizeCliente(draft.cliente));
-        setEmpresa(normalizeEmpresa(draft.empresa));
-        setConceptos(normalizeConceptos(draft.conceptos));
-        setDeliveryDetails(normalizeDeliveryDetails(draft.deliveryDetails));
-        setLogo(s(draft.logo));
-        setNotas(s(draft.notas) || rawNotes || "");
-        setTipoIVA(num(draft.tipoIVA, storedFiscalSettings.defaultTaxRate));
-        const nextTemplate = s(draft.plantilla);
-        if (isPlantilla(nextTemplate)) setPlantilla(nextTemplate);
-      } catch {}
-      clearActiveDraft();
-      finishHydration();
-      return;
-    }
-
-    const convertDraft = localStorage.getItem("presupuestoConvertir");
-    if (convertDraft) {
-      try {
-        const parsed = JSON.parse(convertDraft) as Record<string, unknown>;
-        if (parsed.cliente) setCliente(normalizeCliente(parsed.cliente));
-        if (parsed.conceptos || parsed.items) {
-          setConceptos(normalizeConceptos(parsed.conceptos || parsed.items));
-        }
-        if (parsed.fechaVencimiento) {
-          setFechaVencimiento(s(parsed.fechaVencimiento));
-        }
-        if (parsed.tipoIVA) {
-          setTipoIVA(num(parsed.tipoIVA, storedFiscalSettings.defaultTaxRate));
-        }
-        setNumeroFactura(
-          normalizeInvoiceDocumentNumber(parsed.numero || parsed.id),
-        );
-      } catch {}
-      localStorage.removeItem("presupuestoConvertir");
-    }
-
-    if (routeClientId) {
-      const { client } = findClientById(storedClients, routeClientId);
-      if (client) {
-        const seededDraftId = draftIdRef.current || draftId();
-        const seededDraft: DraftInvoice = {
-          id: seededDraftId,
-          tipo: initialDocumentType,
-          numero: "001",
-          fecha: today(),
-          fechaVencimiento:
-            getInvoiceDocumentMeta(initialDocumentType).supportsSecondaryDate
-              ? addDays(today(), 30)
-              : "",
-          linkedClientId: client.id,
-          cliente: normalizeCliente(client),
-          empresa: seededCompany,
-          conceptos: [],
-          deliveryDetails: EMPTY_DELIVERY_DETAILS,
-          logo: rawLogo || "",
-          notas: rawNotes || "",
-          tipoIVA: storedFiscalSettings.defaultTaxRate,
-          ivaPorc: storedFiscalSettings.defaultTaxRate,
-          plantilla:
-            rawTemplate && isPlantilla(rawTemplate)
-              ? rawTemplate
-              : "InvoicePDF",
-          updatedAt: new Date().toISOString(),
-        };
-
-        draftIdRef.current = seededDraftId;
-        latestDraftRef.current = seededDraft;
-        setLinkedClientId(client.id);
-        setCliente(normalizeCliente(client));
-        persistStoredDraft(seededDraft);
+      const activeDraft = readActiveDraft<Partial<DraftInvoice>>();
+      if (activeDraft) {
+        try {
+          const draft = activeDraft;
+          draftIdRef.current = s(draft.id) || draftId();
+          startTransition(() => {
+            setDocumentType(normalizeInvoiceDocumentType(draft.tipo));
+            setFecha(s(draft.fecha) || today());
+            setFechaVencimiento(
+              s(draft.fechaVencimiento) || addDays(s(draft.fecha) || today(), 30),
+            );
+            setNumeroFactura(normalizeInvoiceDocumentNumber(draft.numero));
+            setLinkedClientId(s(draft.linkedClientId));
+            setCliente(normalizeCliente(draft.cliente));
+            setEmpresa(normalizeEmpresa(draft.empresa));
+            setConceptos(normalizeConceptos(draft.conceptos));
+            setDeliveryDetails(normalizeDeliveryDetails(draft.deliveryDetails));
+            setLogo(s(draft.logo));
+            setNotas(s(draft.notas) || rawNotes || "");
+            setTipoIVA(num(draft.tipoIVA, storedFiscalSettings.defaultTaxRate));
+            const nextTemplate = s(draft.plantilla);
+            if (isPlantilla(nextTemplate)) setPlantilla(nextTemplate);
+          });
+        } catch {}
+        clearActiveDraft();
+        finishHydration();
+        return;
       }
-    }
 
-    setDocumentType(initialDocumentType);
-    finishHydration();
+      const convertDraft = localStorage.getItem("presupuestoConvertir");
+      if (convertDraft) {
+        try {
+          const parsed = JSON.parse(convertDraft) as Record<string, unknown>;
+          startTransition(() => {
+            if (parsed.cliente) setCliente(normalizeCliente(parsed.cliente));
+            if (parsed.conceptos || parsed.items) {
+              setConceptos(normalizeConceptos(parsed.conceptos || parsed.items));
+            }
+            if (parsed.fechaVencimiento) {
+              setFechaVencimiento(s(parsed.fechaVencimiento));
+            }
+            if (parsed.tipoIVA) {
+              setTipoIVA(num(parsed.tipoIVA, storedFiscalSettings.defaultTaxRate));
+            }
+            setNumeroFactura(
+              normalizeInvoiceDocumentNumber(parsed.numero || parsed.id),
+            );
+          });
+        } catch {}
+        localStorage.removeItem("presupuestoConvertir");
+      }
+
+      if (routeClientId) {
+        const { client } = findClientById(storedClients, routeClientId);
+        if (client) {
+          const seededDraftId = draftIdRef.current || draftId();
+          const seededDraft: DraftInvoice = {
+            id: seededDraftId,
+            tipo: initialDocumentType,
+            numero: "001",
+            fecha: today(),
+            fechaVencimiento:
+              getInvoiceDocumentMeta(initialDocumentType).supportsSecondaryDate
+                ? addDays(today(), 30)
+                : "",
+            linkedClientId: client.id,
+            cliente: normalizeCliente(client),
+            empresa: seededCompany,
+            conceptos: [],
+            deliveryDetails: EMPTY_DELIVERY_DETAILS,
+            logo: rawLogo || "",
+            notas: rawNotes || "",
+            tipoIVA: storedFiscalSettings.defaultTaxRate,
+            ivaPorc: storedFiscalSettings.defaultTaxRate,
+            plantilla:
+              rawTemplate && isPlantilla(rawTemplate)
+                ? rawTemplate
+                : "InvoicePDF",
+            updatedAt: new Date().toISOString(),
+          };
+
+          draftIdRef.current = seededDraftId;
+          latestDraftRef.current = seededDraft;
+          startTransition(() => {
+            setLinkedClientId(client.id);
+            setCliente(normalizeCliente(client));
+          });
+          persistStoredDraft(seededDraft);
+        }
+      }
+
+      startTransition(() => {
+        setDocumentType(initialDocumentType);
+      });
+      finishHydration();
+    };
+
+    hydratePage();
   }, []);
 
   useEffect(() => {
@@ -953,8 +984,10 @@ export default function CrearFacturaPage() {
     const syncCatalog = () => {
       const storedProfile = readUserProfile();
 
-      setHasRegisteredUser(getUserFirstName(storedProfile).length > 0);
-      setCatalogItems(readCatalogItems());
+      startTransition(() => {
+        setHasRegisteredUser(getUserFirstName(storedProfile).length > 0);
+        setCatalogItems(readCatalogItems());
+      });
     };
 
     window.addEventListener("focus", syncCatalog);
