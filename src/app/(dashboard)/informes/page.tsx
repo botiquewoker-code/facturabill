@@ -14,20 +14,38 @@ import {
   ChartColumn,
 } from "lucide-react";
 import { getLanguageLocale } from "@/features/i18n/core";
-import { type UserProfile } from "@/features/account/profile";
-import { type ClientRecord } from "@/features/clients/storage";
-import { readDrafts } from "@/features/drafts/storage";
+import {
+  type UserProfile,
+  USER_PROFILE_STORAGE_KEY,
+} from "@/features/account/profile";
+import {
+  type ClientRecord,
+  CLIENTS_STORAGE_KEY,
+} from "@/features/clients/storage";
+import {
+  DRAFTS_STORAGE_KEY,
+  DRAFTS_UPDATED_EVENT,
+  readDrafts,
+} from "@/features/drafts/storage";
 import type { InvoiceDocumentType } from "@/features/invoices/document-types";
 import { useAppI18n } from "@/features/i18n/runtime";
-import { readVerifactuRecords } from "@/features/verifactu/storage";
+import {
+  readVerifactuRecords,
+  VERIFACTU_RECORDS_STORAGE_KEY,
+} from "@/features/verifactu/storage";
 import type { VerifactuRecord } from "@/features/verifactu/types";
-import { type CompanyProfile } from "@/features/storage/company";
+import {
+  type CompanyProfile,
+  COMPANY_WORKSPACE_STORAGE_KEY,
+} from "@/features/storage/company";
 import {
   activeClientRepository,
   activeCompanyRepository,
   activeHistoryRepository,
   activeUserRepository,
 } from "@/features/repositories";
+import { getStorageEventName } from "@/features/storage/local";
+import { HISTORY_STORAGE_KEY } from "@/features/storage/history";
 import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
 type HistoryDocument = {
@@ -282,13 +300,25 @@ export default function InformesPage() {
 
   useClientLayoutEffect(() => {
     const refreshSnapshot = () => setSnapshot(readReportsSnapshot());
+    const events = [
+      DRAFTS_UPDATED_EVENT,
+      getStorageEventName(HISTORY_STORAGE_KEY),
+      getStorageEventName(CLIENTS_STORAGE_KEY),
+      getStorageEventName(DRAFTS_STORAGE_KEY),
+      getStorageEventName(VERIFACTU_RECORDS_STORAGE_KEY),
+      getStorageEventName(USER_PROFILE_STORAGE_KEY),
+      getStorageEventName(COMPANY_WORKSPACE_STORAGE_KEY),
+    ];
 
     setChartsReady(true);
-
-    window.addEventListener("focus", refreshSnapshot);
+    events.forEach((eventName) =>
+      window.addEventListener(eventName, refreshSnapshot),
+    );
 
     return () => {
-      window.removeEventListener("focus", refreshSnapshot);
+      events.forEach((eventName) =>
+        window.removeEventListener(eventName, refreshSnapshot),
+      );
     };
   }, []);
 

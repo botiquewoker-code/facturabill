@@ -6,7 +6,6 @@ import {
   startTransition,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import {
@@ -22,9 +21,11 @@ import {
 } from "lucide-react";
 import {
   getUserFirstName,
+  USER_PROFILE_STORAGE_KEY,
 } from "@/features/account/profile";
 import {
   DRAFTS_UPDATED_EVENT,
+  DRAFTS_STORAGE_KEY,
   readDrafts,
   writeActiveDraft,
 } from "@/features/drafts/storage";
@@ -37,6 +38,7 @@ import {
   type InvoiceDocumentType,
 } from "@/features/invoices/document-types";
 import { activeUserRepository } from "@/features/repositories";
+import { getStorageEventName } from "@/features/storage/local";
 import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
 type DashboardShellProps = {
@@ -84,7 +86,6 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   const [hasHydratedShell, setHasHydratedShell] = useState(false);
   const [moreMenuPath, setMoreMenuPath] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<DraftItem[]>([]);
-  const hydrateFrameRef = useRef<number | null>(null);
   const isMoreMenuOpen = moreMenuPath === pathname;
 
   const moreNavLabel = language === "es" ? "Mas" : "More";
@@ -160,36 +161,22 @@ export default function DashboardShell({ children }: DashboardShellProps) {
         setHasHydratedShell(true);
       });
     };
-    const hydrateShellData = () => {
-      if (typeof document !== "undefined" && document.hidden) {
-        return;
-      }
-
-      if (hydrateFrameRef.current !== null) {
-        return;
-      }
-
-      hydrateFrameRef.current = window.requestAnimationFrame(() => {
-        hydrateFrameRef.current = null;
-        runHydration();
-      });
-    };
+    const hydrateShellData = () => runHydration();
+    const events = [
+      DRAFTS_UPDATED_EVENT,
+      getStorageEventName(DRAFTS_STORAGE_KEY),
+      getStorageEventName(USER_PROFILE_STORAGE_KEY),
+    ];
 
     runHydration();
-    window.addEventListener("pageshow", hydrateShellData);
-    document.addEventListener("visibilitychange", hydrateShellData);
-    window.addEventListener("focus", hydrateShellData);
-    window.addEventListener(DRAFTS_UPDATED_EVENT, hydrateShellData);
+    events.forEach((eventName) =>
+      window.addEventListener(eventName, hydrateShellData),
+    );
 
     return () => {
-      if (hydrateFrameRef.current !== null) {
-        window.cancelAnimationFrame(hydrateFrameRef.current);
-      }
-
-      window.removeEventListener("pageshow", hydrateShellData);
-      document.removeEventListener("visibilitychange", hydrateShellData);
-      window.removeEventListener("focus", hydrateShellData);
-      window.removeEventListener(DRAFTS_UPDATED_EVENT, hydrateShellData);
+      events.forEach((eventName) =>
+        window.removeEventListener(eventName, hydrateShellData),
+      );
     };
   }, []);
 

@@ -6,132 +6,83 @@ import {
   useDeferredValue,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
-import { pdf } from "@react-pdf/renderer";
 import {
-  CalendarDays,
-  Download,
   Palette,
   Plus,
   Search,
-  Save,
   Send,
   Trash2,
   UsersRound,
   Wallet,
 } from "lucide-react";
-import InvoicePDF from "@/features/invoices/components/InvoicePDF";
-import PlantillaNueva from "@/features/invoices/components/PlantillaNueva";
-import PlantillaStudio from "@/features/invoices/components/PlantillaStudio";
+import InvoiceEditorHeader from "@/features/invoices/components/InvoiceEditorHeader";
+import InvoiceEditorSummary from "@/features/invoices/components/InvoiceEditorSummary";
 import {
-  findClientById,
+  CLIENTS_STORAGE_KEY,
   type ClientRecord,
 } from "@/features/clients/storage";
-import { type CatalogItem } from "@/features/catalog/storage";
+import {
+  CATALOG_STORAGE_KEY,
+  type CatalogItem,
+} from "@/features/catalog/storage";
 import {
   DEFAULT_FISCAL_SETTINGS,
-  readFiscalSettings,
   type FiscalSettings,
 } from "@/features/invoices/fiscal-settings";
 import {
   EMPTY_DELIVERY_DETAILS,
-  hasDeliveryDetailsContent,
-  normalizeDeliveryDetails,
   type DeliveryDetails,
 } from "@/features/invoices/delivery-details";
 import {
   getInvoiceDocumentMeta,
   normalizeInvoiceDocumentNumber,
-  normalizeInvoiceDocumentType,
   stripInvoiceDocumentPrefix,
   type InvoiceDocumentType,
 } from "@/features/invoices/document-types";
 import {
   showSuccessToast,
-  showWarningToast,
 } from "@/features/notifications/toast";
-import { getUserFirstName } from "@/features/account/profile";
+import {
+  getUserFirstName,
+  USER_PROFILE_STORAGE_KEY,
+} from "@/features/account/profile";
 import { getLanguageLocale } from "@/features/i18n/core";
 import { useAppI18n } from "@/features/i18n/runtime";
-import { prepareVerifactuInvoiceRecord } from "@/features/verifactu/service";
-import type { VerifactuSourceAction } from "@/features/verifactu/types";
 import {
   DEFAULT_INVOICE_TEMPLATE,
-  type InvoiceTemplate,
 } from "@/features/storage/company";
-import type { EditableDocumentRecord } from "@/features/documents/storage";
 import {
   activeCatalogRepository,
-  activeClientRepository,
-  activeCompanyRepository,
-  activeDraftRepository,
-  activeDocumentRepository,
   activeHistoryRepository,
   activeUserRepository,
 } from "@/features/repositories";
+import { getStorageEventName } from "@/features/storage/local";
+import {
+  addDays,
+  clientMatchesSearch,
+  draftId,
+  EMPTY_CLIENTE,
+  EMPTY_CONCEPTO,
+  EMPTY_EMPRESA,
+  isEmptyConcept,
+  money,
+  normalizeCliente,
+  num,
+  persistStoredDraft,
+  readLastSavedNumber,
+  today,
+  type Cliente,
+  type Concepto,
+  type DraftInvoice,
+  type Empresa,
+  type Plantilla,
+} from "@/features/invoices/editor-helpers";
+import { useInvoicePersistence } from "@/features/invoices/useInvoicePersistence";
+import { useInvoiceDocumentActions } from "@/features/invoices/useInvoiceDocumentActions";
+import { useInvoiceHydration } from "@/features/invoices/useInvoiceHydration";
 import AppScreenLoader from "@/features/ui/AppScreenLoader";
-import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
-
-type Cliente = {
-  nombre: string;
-  nif: string;
-  direccion: string;
-  ciudad: string;
-  codigoPostal: string;
-  telefono: string;
-  email: string;
-};
-
-type Empresa = {
-  nombre: string;
-  nif: string;
-  direccion: string;
-  ciudad: string;
-  cp: string;
-  telefono: string;
-  email: string;
-};
-
-type Concepto = { desc: string; cant: number; precio: number };
-type Plantilla = InvoiceTemplate;
-type DraftInvoice = {
-  id: string;
-  tipo: InvoiceDocumentType;
-  numero: string;
-  fecha: string;
-  fechaVencimiento?: string;
-  linkedClientId?: string;
-  cliente: Cliente;
-  empresa: Empresa;
-  conceptos: Concepto[];
-  deliveryDetails: DeliveryDetails;
-  logo: string;
-  notas: string;
-  tipoIVA: number;
-  ivaPorc: number;
-  plantilla: Plantilla;
-  updatedAt: string;
-};
-
-type HistoryDocument = {
-  id?: string;
-  editableDocumentId?: string;
-  numero?: string;
-  tipo?: InvoiceDocumentType;
-  fecha?: string;
-  fechaVencimiento?: string;
-  total?: number;
-  estado?: string;
-  cliente?: {
-    nombre?: string;
-    nif?: string;
-    email?: string;
-  };
-  conceptos?: Concepto[];
-  deliveryDetails?: DeliveryDetails;
-};
 
 declare global {
   interface Window {
@@ -142,279 +93,12 @@ declare global {
     ) => void;
   }
 }
-
-const EMPTY_CLIENTE: Cliente = {
-  nombre: "",
-  nif: "",
-  direccion: "",
-  ciudad: "",
-  codigoPostal: "",
-  telefono: "",
-  email: "",
-};
-const EMPTY_EMPRESA: Empresa = {
-  nombre: "",
-  nif: "",
-  direccion: "",
-  ciudad: "",
-  cp: "",
-  telefono: "",
-  email: "",
-};
-const EMPTY_CONCEPTO: Concepto = { desc: "", cant: 0, precio: 0 };
 const inputClass =
   "h-14 w-full rounded-[22px] border border-white/70 bg-white/80 px-4 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.4)]";
-
-const today = () => new Date().toISOString().split("T")[0];
-const addDays = (baseDate: string, days: number) => {
-  const [year, month, day] = baseDate.split("-").map((value) => Number(value));
-
-  if (!year || !month || !day) {
-    return today();
-  }
-
-  const date = new Date(year, month - 1, day);
-  date.setDate(date.getDate() + days);
-
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-};
-const s = (v: unknown) => (typeof v === "string" ? v : "");
-const num = (v: unknown, fallback: number) => {
-  const parsed = Number(v);
-  return Number.isFinite(parsed) ? parsed : fallback;
-};
-const draftId = () =>
-  typeof crypto !== "undefined" && crypto.randomUUID
-    ? crypto.randomUUID()
-    : `draft-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-const isPlantilla = (v: string): v is Plantilla =>
-  v === "InvoicePDF" || v === "PlantillaNueva" || v === "PlantillaStudio";
-const pdfTemplates: Record<
-  Plantilla,
-  typeof InvoicePDF | typeof PlantillaNueva | typeof PlantillaStudio
-> = {
-  InvoicePDF,
-  PlantillaNueva,
-  PlantillaStudio,
-};
-const readLastSavedNumber = (documentType: InvoiceDocumentType) => {
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  const storedNumber = stripInvoiceDocumentPrefix(
-    activeHistoryRepository.readLastNumber(
-      getInvoiceDocumentMeta(documentType).lastNumberStorageKey,
-    ),
-  );
-
-  if (storedNumber) {
-    return storedNumber;
-  }
-
-  try {
-    const history = activeHistoryRepository.readDocuments<Record<string, unknown>>();
-    const latestDocument = history.find((item) =>
-      normalizeInvoiceDocumentType(item.tipo) === documentType,
-    );
-
-    return stripInvoiceDocumentPrefix(latestDocument?.numero || latestDocument?.id);
-  } catch {
-    return "";
-  }
-};
-const money = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
-const clientMatchesSearch = (client: ClientRecord, query: string) =>
-  [client.nombre, client.nif, client.email, client.telefono]
-    .join(" ")
-    .toLowerCase()
-    .includes(query);
-const normalizeCliente = (v: unknown): Cliente => {
-  const x = v && typeof v === "object" ? (v as Record<string, unknown>) : {};
-  return {
-    nombre: s(x.nombre),
-    nif: s(x.nif ?? x.dni),
-    direccion: s(x.direccion),
-    ciudad: s(x.ciudad),
-    codigoPostal: s(x.codigoPostal ?? x.cp),
-    telefono: s(x.telefono),
-    email: s(x.email),
-  };
-};
-const normalizeEmpresa = (v: unknown): Empresa => {
-  const x = v && typeof v === "object" ? (v as Record<string, unknown>) : {};
-  return {
-    nombre: s(x.nombre),
-    nif: s(x.nif),
-    direccion: s(x.direccion),
-    ciudad: s(x.ciudad),
-    cp: s(x.cp ?? x.codigoPostal),
-    telefono: s(x.telefono),
-    email: s(x.email),
-  };
-};
-const normalizeConceptos = (v: unknown): Concepto[] =>
-  Array.isArray(v) && v.length
-    ? v.map((item) => {
-        const x =
-          item && typeof item === "object" ? (item as Record<string, unknown>) : {};
-        const desc = s(x.desc);
-        const precio = Math.max(0, num(x.precio, 0));
-        const cant = Math.max(0, num(x.cant, 0));
-        const isLegacyEmptyConcept =
-          !desc.trim() && precio === 0 && cant <= 1;
-
-        return {
-          desc,
-          cant: isLegacyEmptyConcept ? 0 : Math.max(1, cant || 1),
-          precio,
-        };
-      })
-    : [EMPTY_CONCEPTO];
-const isEmptyConcept = (concept: Concepto) =>
-  !concept.desc.trim() && concept.cant === 0 && concept.precio === 0;
-
-function normalizeEditorDate(value: unknown, fallback: string) {
-  if (typeof value !== "string" || !value.trim()) {
-    return fallback;
-  }
-
-  const trimmed = value.trim();
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    return trimmed;
-  }
-
-  const localDateMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-
-  if (localDateMatch) {
-    const [, day, month, year] = localDateMatch;
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-  }
-
-  const parsed = new Date(trimmed);
-
-  if (Number.isNaN(parsed.getTime())) {
-    return fallback;
-  }
-
-  return parsed.toISOString().slice(0, 10);
-}
-
-function hasContent(d: DraftInvoice) {
-  const normalizedNumber = normalizeInvoiceDocumentNumber(d.numero);
-  const defaultIssueDate = today();
-  const baseIssueDate = d.fecha || defaultIssueDate;
-  const defaultSecondaryDate = addDays(baseIssueDate, 30);
-
-  return (
-    normalizedNumber !== "001" ||
-    (d.fecha ? d.fecha !== defaultIssueDate : false) ||
-    (d.fechaVencimiento
-      ? d.fechaVencimiento !== defaultSecondaryDate
-      : false) ||
-    Boolean(d.linkedClientId?.trim()) ||
-    Object.values(d.cliente).some((v) => v.trim()) ||
-    hasDeliveryDetailsContent(d.deliveryDetails) ||
-    d.notas.trim().length > 0 ||
-    d.conceptos.some((concept) => !isEmptyConcept(concept))
-  );
-}
-
-function persistStoredDraft(draft: DraftInvoice) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const saved = activeDraftRepository.readAll<DraftInvoice>();
-
-  activeDraftRepository.saveAll(activeDraftRepository.upsert(draft, saved));
-  activeHistoryRepository.saveLastNumber(
-    getInvoiceDocumentMeta(draft.tipo).lastNumberStorageKey,
-    normalizeInvoiceDocumentNumber(draft.numero),
-  );
-}
-
-function toEditableDocumentRecord(
-  draft: DraftInvoice,
-  options?: {
-    documentId?: string;
-    total?: number;
-    estado?: string;
-    sourceAction?: VerifactuSourceAction | "saved";
-    createdAt?: string;
-  },
-): EditableDocumentRecord {
-  const now = new Date().toISOString();
-
-  return {
-    id: options?.documentId || draft.id,
-    tipo: draft.tipo,
-    numero: normalizeInvoiceDocumentNumber(draft.numero),
-    fecha: draft.fecha,
-    fechaVencimiento: draft.fechaVencimiento || "",
-    linkedClientId: draft.linkedClientId || "",
-    cliente: draft.cliente,
-    empresa: draft.empresa,
-    conceptos: draft.conceptos,
-    deliveryDetails: draft.deliveryDetails,
-    logo: draft.logo,
-    notas: draft.notas,
-    tipoIVA: draft.tipoIVA,
-    ivaPorc: draft.ivaPorc,
-    plantilla: draft.plantilla,
-    total: options?.total ?? 0,
-    estado: options?.estado || "Guardado",
-    sourceAction: options?.sourceAction || "saved",
-    createdAt: options?.createdAt || now,
-    updatedAt: now,
-  };
-}
-
-function hydrateFromEditableDocument(
-  document: EditableDocumentRecord,
-  apply: {
-    setDocumentType: (value: InvoiceDocumentType) => void;
-    setFecha: (value: string) => void;
-    setFechaVencimiento: (value: string) => void;
-    setNumeroFactura: (value: string) => void;
-    setLinkedClientId: (value: string) => void;
-    setCliente: (value: Cliente) => void;
-    setEmpresa: (value: Empresa) => void;
-    setConceptos: (value: Concepto[]) => void;
-    setDeliveryDetails: (value: DeliveryDetails) => void;
-    setLogo: (value: string) => void;
-    setNotas: (value: string) => void;
-    setTipoIVA: (value: number) => void;
-    setPlantilla: (value: Plantilla) => void;
-  },
-) {
-  apply.setDocumentType(document.tipo);
-  apply.setFecha(document.fecha || today());
-  apply.setFechaVencimiento(
-    document.fechaVencimiento || addDays(document.fecha || today(), 30),
-  );
-  apply.setNumeroFactura(normalizeInvoiceDocumentNumber(document.numero));
-  apply.setLinkedClientId(document.linkedClientId || "");
-  apply.setCliente(normalizeCliente(document.cliente));
-  apply.setEmpresa(normalizeEmpresa(document.empresa));
-  apply.setConceptos(normalizeConceptos(document.conceptos));
-  apply.setDeliveryDetails(normalizeDeliveryDetails(document.deliveryDetails));
-  apply.setLogo(s(document.logo));
-  apply.setNotas(s(document.notas));
-  apply.setTipoIVA(num(document.tipoIVA, 21));
-  if (isPlantilla(document.plantilla)) {
-    apply.setPlantilla(document.plantilla);
-  }
-}
 
 export default function CrearFacturaPage() {
   const { language } = useAppI18n();
   const isSpanish = language === "es";
-  const latestDraftRef = useRef<DraftInvoice | null>(null);
-  const draftIdRef = useRef<string | null>(null);
-  const editableDocumentIdRef = useRef<string | null>(null);
 
   const [cliente, setCliente] = useState<Cliente>(EMPTY_CLIENTE);
   const [clientesGuardados, setClientesGuardados] = useState<ClientRecord[]>([]);
@@ -495,39 +179,70 @@ export default function CrearFacturaPage() {
     hasLoadedAccount,
     hasRegisteredUser,
   ]);
-  const pdfData = {
-    documentType,
-    esPresupuesto: isBudgetDocument,
-    numero: normalizeInvoiceDocumentNumber(numeroFactura),
-    fecha,
-    fechaVencimiento: documentMeta.supportsSecondaryDate ? fechaVencimiento : "",
-    empresa,
-    cliente: { ...cliente, cp: cliente.codigoPostal },
-    conceptos: activeConceptos,
-    deliveryDetails,
-    logo,
-    plantilla,
-    subtotal,
-    iva,
-    ivaPct: tipoIVA,
-    tipiIVA: tipoIVA,
-    tipoIVA,
-    taxLabel: fiscalSettings.taxLabel,
-    taxNote: fiscalSettings.fiscalNote,
-    total,
-    notas,
-  };
+  const pdfData = useMemo(
+    () => ({
+      documentType,
+      esPresupuesto: isBudgetDocument,
+      numero: normalizeInvoiceDocumentNumber(numeroFactura),
+      fecha,
+      fechaVencimiento: documentMeta.supportsSecondaryDate ? fechaVencimiento : "",
+      empresa,
+      cliente: { ...cliente, cp: cliente.codigoPostal },
+      conceptos: activeConceptos,
+      deliveryDetails,
+      logo,
+      plantilla,
+      subtotal,
+      iva,
+      ivaPct: tipoIVA,
+      tipiIVA: tipoIVA,
+      tipoIVA,
+      taxLabel: fiscalSettings.taxLabel,
+      taxNote: fiscalSettings.fiscalNote,
+      total,
+      notas,
+    }),
+    [
+      activeConceptos,
+      cliente,
+      deliveryDetails,
+      documentMeta.supportsSecondaryDate,
+      documentType,
+      empresa,
+      fecha,
+      fechaVencimiento,
+      fiscalSettings.fiscalNote,
+      fiscalSettings.taxLabel,
+      iva,
+      isBudgetDocument,
+      logo,
+      notas,
+      numeroFactura,
+      plantilla,
+      subtotal,
+      tipoIVA,
+      total,
+    ],
+  );
   const documentPrefix = documentMeta.prefix;
-  const formattedDueDate = fechaVencimiento
-    ? new Date(fechaVencimiento).toLocaleDateString(getLanguageLocale(language), {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    : "";
-  const modeCopy =
-    language === "es"
-      ? documentType === "presupuesto"
+  const formattedDueDate = useMemo(
+    () =>
+      fechaVencimiento
+        ? new Date(fechaVencimiento).toLocaleDateString(
+            getLanguageLocale(language),
+            {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            },
+          )
+        : "",
+    [fechaVencimiento, language],
+  );
+  const modeCopy = useMemo(
+    () =>
+      language === "es"
+        ? documentType === "presupuesto"
       ? {
           workspace: "Propuestas",
           title: "Crear presupuesto",
@@ -715,10 +430,13 @@ export default function CrearFacturaPage() {
                 documentNumberLabel: "Invoice number",
                 dateSectionTitle: "Date and due date",
                 dateSectionDescription: "It will also be shown on the PDF.",
-              };
-  const guestModeCopy =
-    language === "es"
-      ? {
+              },
+    [documentType, language],
+  );
+  const guestModeCopy = useMemo(
+    () =>
+      language === "es"
+        ? {
           eyebrow: "Acceso",
           title:
             documentType === "presupuesto"
@@ -773,11 +491,14 @@ export default function CrearFacturaPage() {
           companyHint:
             "Complete the company details before downloading the document.",
           companyAction: "Company details",
-        };
+        },
+    [documentType, language],
+  );
   const currentTaxLabel = fiscalSettings.taxLabel.trim() || "IVA";
-  const uiCopy =
-    language === "es"
-      ? {
+  const uiCopy = useMemo(
+    () =>
+      language === "es"
+        ? {
           document: "Documento",
           lastSaved: "Ultimo guardado",
           noneSaved: "Todavia no hay ninguno",
@@ -888,8 +609,13 @@ export default function CrearFacturaPage() {
           fiscalApplied: `${currentTaxLabel} default applied to the document`,
           fiscalEmpty:
             "No additional tax note. You can change it from Tax settings.",
-        };
-  const showAdvancedTools = hasLoadedAccount && hasRegisteredUser;
+        },
+    [currentTaxLabel, language],
+  );
+  const showAdvancedTools = useMemo(
+    () => hasLoadedAccount && hasRegisteredUser,
+    [hasLoadedAccount, hasRegisteredUser],
+  );
   const primaryActionClass = isBudgetDocument
     ? "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#8a5a33] px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(138,90,51,0.9)] transition hover:bg-[#754a28]"
     : isProformaDocument
@@ -941,274 +667,89 @@ export default function CrearFacturaPage() {
       setUltimoNumeroGuardado(normalizedValue);
     }
   };
+  const {
+    buildDraft,
+    draftIdRef,
+    editableDocumentIdRef,
+    latestDraftRef,
+    saveDraftNow,
+  } = useInvoicePersistence({
+    documentType,
+    numeroFacturaActual,
+    fecha,
+    fechaVencimiento,
+    supportsSecondaryDate: documentMeta.supportsSecondaryDate,
+    linkedClientId,
+    cliente,
+    empresa,
+    activeConceptos,
+    deliveryDetails,
+    logo,
+    notas,
+    tipoIVA,
+    plantilla,
+    total,
+    isPageReady,
+    isSpanish,
+    documentLabel: documentMeta.label,
+    saveLastNumber,
+  });
+  const { descargar, enviar, isDocumentActionPending } = useInvoiceDocumentActions({
+    activeConceptos,
+    buildDraft,
+    cliente,
+    currentTaxLabel,
+    deliveryDetails,
+    documentArticle: documentMeta.article,
+    documentLabel: documentMeta.label,
+    documentMetaLabel: documentMeta.label,
+    documentType,
+    editableDocumentIdRef,
+    empresa,
+    fecha,
+    fechaVencimiento,
+    isSpanish,
+    iva,
+    language,
+    logo,
+    notas,
+    numeroFacturaActual,
+    pdfData,
+    plantilla,
+    saveLastNumber,
+    supportsSecondaryDate: documentMeta.supportsSecondaryDate,
+    supportsVerifactu: documentMeta.supportsVerifactu,
+    tipoIVA,
+    total,
+  });
   const handleNumeroFacturaChange = (value: string) => {
     setNumeroFactura(stripInvoiceDocumentPrefix(value).toUpperCase());
   };
 
-  useClientLayoutEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const hydratePage = () => {
-      const finishHydration = () => {
-        startTransition(() => {
-          setHasLoadedAccount(true);
-          setIsPageReady(true);
-        });
-      };
-      const params = new URLSearchParams(window.location.search);
-      const initialDocumentType = normalizeInvoiceDocumentType(params.get("tipo"));
-      const requestedDocumentId = params.get("documentId") || "";
-      const storedClients = activeClientRepository.readAll();
-      const routeClientId = params.get("clienteId") || "";
-      const storedFiscalSettings = readFiscalSettings();
-      const storedProfile = activeUserRepository.readProfile();
-
-      startTransition(() => {
-        setClientesGuardados(storedClients);
-        setCatalogItems(activeCatalogRepository.readAll());
-        setFiscalSettings(storedFiscalSettings);
-        setTipoIVA(storedFiscalSettings.defaultTaxRate);
-        setHasRegisteredUser(getUserFirstName(storedProfile).length > 0);
-      });
-
-      const workspace = activeCompanyRepository.readWorkspace();
-      const seededCompany = normalizeEmpresa(workspace.company);
-      const rawLogo = workspace.logo;
-      const rawNotes = workspace.notes;
-      const rawTemplate = workspace.template;
-
-      startTransition(() => {
-        setEmpresa(seededCompany);
-        setLogo(rawLogo);
-        setNotas(rawNotes);
-        if (isPlantilla(rawTemplate)) {
-          setPlantilla(rawTemplate);
-        }
-      });
-
-      if (requestedDocumentId) {
-        const editableDocument =
-          activeDocumentRepository.readById(requestedDocumentId);
-
-        if (editableDocument) {
-          editableDocumentIdRef.current = editableDocument.id;
-          draftIdRef.current = editableDocument.id;
-          latestDraftRef.current = {
-            id: editableDocument.id,
-            tipo: editableDocument.tipo,
-            numero: editableDocument.numero,
-            fecha: editableDocument.fecha,
-            fechaVencimiento: editableDocument.fechaVencimiento,
-            linkedClientId: editableDocument.linkedClientId,
-            cliente: normalizeCliente(editableDocument.cliente),
-            empresa: normalizeEmpresa(editableDocument.empresa),
-            conceptos: normalizeConceptos(editableDocument.conceptos),
-            deliveryDetails: normalizeDeliveryDetails(
-              editableDocument.deliveryDetails,
-            ),
-            logo: editableDocument.logo,
-            notas: editableDocument.notas,
-            tipoIVA: editableDocument.tipoIVA,
-            ivaPorc: editableDocument.ivaPorc,
-            plantilla: editableDocument.plantilla,
-            updatedAt: editableDocument.updatedAt,
-          };
-
-          startTransition(() => {
-            hydrateFromEditableDocument(editableDocument, {
-              setDocumentType,
-              setFecha,
-              setFechaVencimiento,
-              setNumeroFactura,
-              setLinkedClientId,
-              setCliente,
-              setEmpresa,
-              setConceptos,
-              setDeliveryDetails,
-              setLogo,
-              setNotas,
-              setTipoIVA,
-              setPlantilla,
-            });
-          });
-          finishHydration();
-          return;
-        }
-
-        const historyDocument = activeHistoryRepository
-          .readDocuments<HistoryDocument>()
-          .find(
-            (item) =>
-              item.editableDocumentId === requestedDocumentId ||
-              item.id === requestedDocumentId ||
-              item.numero === requestedDocumentId,
-          );
-
-        if (historyDocument) {
-          const fallbackDocument = toEditableDocumentRecord(
-            {
-              id: requestedDocumentId,
-              tipo: normalizeInvoiceDocumentType(historyDocument.tipo),
-              numero: normalizeInvoiceDocumentNumber(
-                historyDocument.numero || historyDocument.id,
-              ),
-              fecha: normalizeEditorDate(historyDocument.fecha, today()),
-              fechaVencimiento: normalizeEditorDate(
-                historyDocument.fechaVencimiento,
-                "",
-              ),
-              linkedClientId: "",
-              cliente: normalizeCliente(historyDocument.cliente),
-              empresa: seededCompany,
-              conceptos: normalizeConceptos(historyDocument.conceptos),
-              deliveryDetails: normalizeDeliveryDetails(
-                historyDocument.deliveryDetails,
-              ),
-              logo: rawLogo,
-              notas: rawNotes,
-              tipoIVA: storedFiscalSettings.defaultTaxRate,
-              ivaPorc: storedFiscalSettings.defaultTaxRate,
-              plantilla:
-                rawTemplate && isPlantilla(rawTemplate)
-                  ? rawTemplate
-                  : DEFAULT_INVOICE_TEMPLATE,
-              updatedAt: new Date().toISOString(),
-            },
-            {
-              documentId: requestedDocumentId,
-              total: num(historyDocument.total, 0),
-              estado: s(historyDocument.estado) || "Guardado",
-              sourceAction: "saved",
-            },
-          );
-
-          activeDocumentRepository.upsert(fallbackDocument);
-          editableDocumentIdRef.current = fallbackDocument.id;
-          draftIdRef.current = fallbackDocument.id;
-          startTransition(() => {
-            hydrateFromEditableDocument(fallbackDocument, {
-              setDocumentType,
-              setFecha,
-              setFechaVencimiento,
-              setNumeroFactura,
-              setLinkedClientId,
-              setCliente,
-              setEmpresa,
-              setConceptos,
-              setDeliveryDetails,
-              setLogo,
-              setNotas,
-              setTipoIVA,
-              setPlantilla,
-            });
-          });
-          finishHydration();
-          return;
-        }
-      }
-
-      const activeDraft = activeDraftRepository.readActive<Partial<DraftInvoice>>();
-      if (activeDraft) {
-        try {
-          const draft = activeDraft;
-          draftIdRef.current = s(draft.id) || draftId();
-          startTransition(() => {
-            setDocumentType(normalizeInvoiceDocumentType(draft.tipo));
-            setFecha(s(draft.fecha) || today());
-            setFechaVencimiento(
-              s(draft.fechaVencimiento) || addDays(s(draft.fecha) || today(), 30),
-            );
-            setNumeroFactura(normalizeInvoiceDocumentNumber(draft.numero));
-            setLinkedClientId(s(draft.linkedClientId));
-            setCliente(normalizeCliente(draft.cliente));
-            setEmpresa(normalizeEmpresa(draft.empresa));
-            setConceptos(normalizeConceptos(draft.conceptos));
-            setDeliveryDetails(normalizeDeliveryDetails(draft.deliveryDetails));
-            setLogo(s(draft.logo));
-            setNotas(s(draft.notas) || rawNotes || "");
-            setTipoIVA(num(draft.tipoIVA, storedFiscalSettings.defaultTaxRate));
-            const nextTemplate = s(draft.plantilla);
-            if (isPlantilla(nextTemplate)) setPlantilla(nextTemplate);
-          });
-        } catch {}
-        activeDraftRepository.clearActive();
-        finishHydration();
-        return;
-      }
-
-      const convertDraft =
-        activeHistoryRepository.readConversionDraft<Record<string, unknown>>();
-      if (convertDraft) {
-        try {
-          const parsed = convertDraft;
-          startTransition(() => {
-            if (parsed.cliente) setCliente(normalizeCliente(parsed.cliente));
-            if (parsed.conceptos || parsed.items) {
-              setConceptos(normalizeConceptos(parsed.conceptos || parsed.items));
-            }
-            if (parsed.fechaVencimiento) {
-              setFechaVencimiento(s(parsed.fechaVencimiento));
-            }
-            if (parsed.tipoIVA) {
-              setTipoIVA(num(parsed.tipoIVA, storedFiscalSettings.defaultTaxRate));
-            }
-            setNumeroFactura(
-              normalizeInvoiceDocumentNumber(parsed.numero || parsed.id),
-            );
-          });
-        } catch {}
-        activeHistoryRepository.clearConversionDraft();
-      }
-
-      if (routeClientId) {
-        const { client } = findClientById(storedClients, routeClientId);
-        if (client) {
-          const seededDraftId = draftIdRef.current || draftId();
-          const seededDraft: DraftInvoice = {
-            id: seededDraftId,
-            tipo: initialDocumentType,
-            numero: "001",
-            fecha: today(),
-            fechaVencimiento:
-              getInvoiceDocumentMeta(initialDocumentType).supportsSecondaryDate
-                ? addDays(today(), 30)
-                : "",
-            linkedClientId: client.id,
-            cliente: normalizeCliente(client),
-            empresa: seededCompany,
-            conceptos: [],
-            deliveryDetails: EMPTY_DELIVERY_DETAILS,
-            logo: rawLogo || "",
-            notas: rawNotes || "",
-            tipoIVA: storedFiscalSettings.defaultTaxRate,
-            ivaPorc: storedFiscalSettings.defaultTaxRate,
-            plantilla:
-              rawTemplate && isPlantilla(rawTemplate)
-                ? rawTemplate
-                : "InvoicePDF",
-            updatedAt: new Date().toISOString(),
-          };
-
-          draftIdRef.current = seededDraftId;
-          latestDraftRef.current = seededDraft;
-          startTransition(() => {
-            setLinkedClientId(client.id);
-            setCliente(normalizeCliente(client));
-          });
-          persistStoredDraft(seededDraft);
-        }
-      }
-
-      startTransition(() => {
-        setDocumentType(initialDocumentType);
-      });
-      finishHydration();
-    };
-
-    hydratePage();
-  }, []);
+  useInvoiceHydration({
+    latestDraftRef,
+    draftIdRef,
+    editableDocumentIdRef,
+    setClientesGuardados,
+    setCatalogItems,
+    setFiscalSettings,
+    setTipoIVA,
+    setHasRegisteredUser,
+    setHasLoadedAccount,
+    setIsPageReady,
+    setEmpresa,
+    setLogo,
+    setNotas,
+    setPlantilla,
+    setDocumentType,
+    setFecha,
+    setFechaVencimiento,
+    setNumeroFactura,
+    setLinkedClientId,
+    setCliente,
+    setConceptos,
+    setDeliveryDetails,
+  });
 
   useEffect(() => {
     setUltimoNumeroGuardado(readLastSavedNumber(documentType));
@@ -1227,96 +768,18 @@ export default function CrearFacturaPage() {
         setCatalogItems(activeCatalogRepository.readAll());
       });
     };
+    const events = [
+      getStorageEventName(USER_PROFILE_STORAGE_KEY),
+      getStorageEventName(CATALOG_STORAGE_KEY),
+      getStorageEventName(CLIENTS_STORAGE_KEY),
+    ];
 
-    window.addEventListener("focus", syncCatalog);
-    return () => window.removeEventListener("focus", syncCatalog);
+    events.forEach((eventName) => window.addEventListener(eventName, syncCatalog));
+    return () =>
+      events.forEach((eventName) =>
+        window.removeEventListener(eventName, syncCatalog),
+      );
   }, [hasLoadedAccount]);
-
-  useEffect(() => {
-    const nextDraft: DraftInvoice = {
-      id: draftIdRef.current || draftId(),
-      tipo: documentType,
-      numero: numeroFacturaActual,
-      fecha,
-      fechaVencimiento: documentMeta.supportsSecondaryDate ? fechaVencimiento : "",
-      linkedClientId,
-      cliente,
-      empresa,
-      conceptos: activeConceptos,
-      deliveryDetails,
-      logo,
-      notas,
-      tipoIVA,
-      ivaPorc: tipoIVA,
-      plantilla,
-      updatedAt: new Date().toISOString(),
-    };
-    draftIdRef.current = nextDraft.id;
-    latestDraftRef.current = nextDraft;
-    if (!isPageReady || typeof window === "undefined") {
-      return;
-    }
-
-    try {
-      persistDraftSilently(nextDraft);
-
-      if (editableDocumentIdRef.current) {
-        activeDocumentRepository.upsert(
-          toEditableDocumentRecord(nextDraft, {
-            documentId: editableDocumentIdRef.current,
-            total,
-            estado: "Guardado",
-            sourceAction: "saved",
-          }),
-        );
-      }
-    } catch {}
-  }, [
-    activeConceptos,
-    cliente,
-    deliveryDetails,
-    documentMeta.supportsSecondaryDate,
-    documentType,
-    empresa,
-    fecha,
-    fechaVencimiento,
-    isPageReady,
-    linkedClientId,
-    logo,
-    notas,
-    numeroFacturaActual,
-    plantilla,
-    total,
-    tipoIVA,
-  ]);
-
-  useEffect(() => {
-    const persist = () => {
-      const draft = latestDraftRef.current;
-      if (!draft || typeof window === "undefined") return;
-      try {
-        persistDraftSilently(draft);
-
-        if (editableDocumentIdRef.current) {
-          activeDocumentRepository.upsert(
-            toEditableDocumentRecord(draft, {
-              documentId: editableDocumentIdRef.current,
-              total,
-              estado: "Guardado",
-              sourceAction: "saved",
-            }),
-          );
-        }
-      } catch {}
-    };
-    window.addEventListener("beforeunload", persist);
-    window.addEventListener("pagehide", persist);
-    return () => {
-      persist();
-      window.removeEventListener("beforeunload", persist);
-      window.removeEventListener("pagehide", persist);
-    };
-  }, [total]);
 
   const updateConcept = (index: number, field: keyof Concepto, value: string | number) =>
     setConceptos((current) =>
@@ -1421,334 +884,6 @@ export default function CrearFacturaPage() {
   ) => {
     setDeliveryDetails((current) => ({ ...current, [field]: value }));
   };
-  const persistDraftSilently = (draft: DraftInvoice) => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-
-    const saved = activeDraftRepository.readAll<DraftInvoice>();
-
-    if (!hasContent(draft)) {
-      const nextSaved = saved.filter((item) => item.id !== draft.id);
-
-      if (nextSaved.length !== saved.length) {
-        activeDraftRepository.saveAll(nextSaved);
-      }
-
-      return false;
-    }
-
-    persistStoredDraft(draft);
-
-    return true;
-  };
-  const saveDraftNow = () => {
-    const draft = latestDraftRef.current;
-    if (!draft) {
-      return;
-    }
-
-    if (!hasContent(draft)) {
-      saveLastNumber(draft.numero, draft.tipo);
-      showSuccessToast(
-        isSpanish
-          ? `Numero de ${documentMeta.label.toLowerCase()} guardado`
-          : `${documentMeta.label} number saved`,
-      );
-      return;
-    }
-
-    try {
-      persistDraftSilently(draft);
-      saveLastNumber(draft.numero, draft.tipo);
-      showSuccessToast(isSpanish ? "Borrador guardado" : "Draft saved");
-    } catch {
-      showWarningToast(
-        isSpanish ? "No se pudo guardar el borrador" : "Unable to save the draft",
-      );
-    }
-  };
-  const validate = (requireEmail?: boolean) => {
-    const recommendations: string[] = [];
-
-    if (!empresa.nombre.trim() || !empresa.nif.trim()) {
-      recommendations.push(
-        isSpanish
-          ? "revisa los datos basicos de tu empresa"
-          : "review your company basic details",
-      );
-    }
-
-    if (!cliente.nombre.trim()) {
-      recommendations.push(
-        isSpanish
-          ? "anade al menos el nombre del cliente"
-          : "add at least the client name",
-      );
-    }
-
-    if (!activeConceptos.some((item) => item.desc.trim() && item.cant > 0)) {
-      recommendations.push(
-        isSpanish
-          ? "incluye algun concepto para que el documento quede mas claro"
-          : "include at least one line item so the document is clearer",
-      );
-    }
-
-    if (recommendations.length > 0) {
-      showWarningToast(
-        isSpanish
-          ? `Antes de continuar, te recomendamos ${recommendations.join(", ")}.`
-          : `Before continuing, we recommend ${recommendations.join(", ")}.`,
-      );
-    }
-
-    if (requireEmail && !cliente.email.trim()) {
-      return (
-        showWarningToast(
-          isSpanish
-            ? "Anade el email del cliente para poder enviar el documento."
-            : "Add the client email to send the document.",
-        ),
-        false
-      );
-    }
-
-    return true;
-  };
-  const updateHistory = async (
-    estado: string,
-    sourceAction: VerifactuSourceAction,
-  ) => {
-    const currentDraft: DraftInvoice = {
-      id:
-        editableDocumentIdRef.current ||
-        draftIdRef.current ||
-        latestDraftRef.current?.id ||
-        draftId(),
-      tipo: documentType,
-      numero: numeroFacturaActual,
-      fecha,
-      fechaVencimiento: documentMeta.supportsSecondaryDate ? fechaVencimiento : "",
-      linkedClientId,
-      cliente,
-      empresa,
-      conceptos: activeConceptos,
-      deliveryDetails,
-      logo,
-      notas,
-      tipoIVA,
-      ivaPorc: tipoIVA,
-      plantilla,
-      updatedAt: new Date().toISOString(),
-    };
-
-    let verifactuSummary:
-      | {
-          recordId: string;
-          status: string;
-          fingerprint: string;
-          generatedAt: string;
-          qrPreview: string;
-        }
-      | {
-          status: "error";
-          lastError: string;
-        }
-      | undefined;
-
-    if (documentMeta.supportsVerifactu) {
-      try {
-        const verifactuRecord = await prepareVerifactuInvoiceRecord({
-          sourceDocumentId: numeroFacturaActual,
-          sourceAction,
-          invoiceType: "F1",
-          invoiceNumber: numeroFacturaActual,
-          issueDate: fecha,
-          issuer: {
-            name: empresa.nombre,
-            taxId: empresa.nif,
-            email: empresa.email,
-            address: empresa.direccion,
-            postalCode: empresa.cp,
-            city: empresa.ciudad,
-          },
-          recipient: {
-            name: cliente.nombre,
-            taxId: cliente.nif,
-            email: cliente.email,
-            address: cliente.direccion,
-            postalCode: cliente.codigoPostal,
-            city: cliente.ciudad,
-          },
-          lines: activeConceptos.map((item) => ({
-            description: item.desc,
-            quantity: item.cant,
-            unitPrice: item.precio,
-            lineTotal: item.cant * item.precio,
-          })),
-          subtotalAmount: subtotal,
-          taxLabel: currentTaxLabel,
-          taxRate: tipoIVA,
-          taxAmount: iva,
-          totalAmount: total,
-        });
-
-        verifactuSummary = {
-          recordId: verifactuRecord.id,
-          status: verifactuRecord.status,
-          fingerprint: verifactuRecord.fingerprint,
-          generatedAt: verifactuRecord.generatedAt,
-          qrPreview: verifactuRecord.qr.previewText,
-        };
-      } catch (error) {
-        console.error("Error preparing local VeriFactu record", error);
-        verifactuSummary = {
-          status: "error",
-          lastError: isSpanish
-            ? "No se pudo actualizar el seguimiento de esta factura."
-            : "Unable to update the tracking for this invoice.",
-        };
-      }
-    }
-
-    const editableDocumentId =
-      editableDocumentIdRef.current || currentDraft.id || draftId();
-    const existingEditableDocument = activeDocumentRepository.readById(
-      editableDocumentId,
-    );
-    editableDocumentIdRef.current = editableDocumentId;
-    const editableDocument = toEditableDocumentRecord(currentDraft, {
-      documentId: editableDocumentId,
-      total,
-      estado,
-      sourceAction,
-      createdAt: existingEditableDocument?.createdAt,
-    });
-    activeDocumentRepository.upsert(editableDocument);
-
-    const item = {
-      id: numeroFacturaActual,
-      editableDocumentId,
-      numero: numeroFacturaActual,
-      tipo: documentType,
-      cliente,
-      empresa,
-      deliveryDetails,
-      fecha: new Date(fecha).toLocaleDateString(getLanguageLocale(language)),
-      fechaVencimiento:
-        documentMeta.supportsSecondaryDate && fechaVencimiento
-          ? new Date(fechaVencimiento).toLocaleDateString(getLanguageLocale(language))
-          : "",
-      conceptos: activeConceptos,
-      logo,
-      notas,
-      tipoIVA,
-      ivaPorc: tipoIVA,
-      plantilla,
-      total,
-      estado,
-      verifactu: verifactuSummary,
-    };
-    const history = activeHistoryRepository.readDocuments<Record<string, unknown>>();
-    const index = history.findIndex(
-      (doc) => s(doc.numero || doc.id) === numeroFacturaActual,
-    );
-    if (index >= 0) history[index] = { ...history[index], ...item };
-    else history.unshift(item);
-    activeHistoryRepository.saveDocuments(history);
-    saveLastNumber(numeroFacturaActual, documentType);
-  };
-  const descargar = async () => {
-    if (!validate()) return;
-    try {
-      const Component = pdfTemplates[plantilla];
-      const blob = await pdf(<Component datos={pdfData} numeroFactura={numeroFacturaActual} conceptos={activeConceptos} />).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${documentMeta.label}_${numeroFacturaActual}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-      await updateHistory(
-        `${documentMeta.label} descargad${documentMeta.article === "la" ? "a" : "o"}`,
-        "downloaded",
-      );
-      showSuccessToast(isSpanish ? "PDF descargado" : "PDF downloaded");
-    } catch {
-      showWarningToast(
-        isSpanish ? "No se pudo generar el PDF" : "Unable to generate the PDF",
-      );
-    }
-  };
-  const enviar = async () => {
-    if (!validate(true)) return;
-    try {
-      const Component = pdfTemplates[plantilla];
-      const blob = await pdf(<Component datos={pdfData} numeroFactura={numeroFacturaActual} conceptos={activeConceptos} />).toBlob();
-      const formData = new FormData();
-      formData.append("file", blob, `${documentMeta.label}_${numeroFacturaActual}.pdf`);
-      formData.append("to", cliente.email);
-      formData.append("subject", `${documentMeta.label} ${numeroFacturaActual}`);
-      formData.append("text", isSpanish
-        ? `Hola,\n\nAdjunto ${documentMeta.article} ${documentMeta.label.toLowerCase()} ${numeroFacturaActual}.\n\nGracias.\n${empresa.nombre || "Tu empresa"}`
-        : `Hello,\n\nAttached is the ${documentMeta.label.toLowerCase()} ${numeroFacturaActual}.\n\nThank you.\n${empresa.nombre || "Your company"}`);
-      const res = await fetch("/api/enviar-email", { method: "POST", body: formData });
-      const payload = (await res.json().catch(() => null)) as
-        | { error?: string }
-        | null;
-      if (!res.ok) {
-        throw new Error(payload?.error || "send failed");
-      }
-      if (window.gtag) window.gtag("event", "conversion", { send_to: "AW-1791812185/PvpICL_mx_obENHy-BC", value: total, currency: "EUR" });
-      await updateHistory(
-        `${documentMeta.label} enviad${documentMeta.article === "la" ? "a" : "o"}`,
-        "emailed",
-      );
-      showSuccessToast(isSpanish ? "Documento enviado" : "Document sent");
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : isSpanish
-            ? "No se pudo enviar el documento"
-            : "Unable to send the document";
-
-      if (message === "Email service is not configured correctly") {
-        showWarningToast(
-          isSpanish
-            ? "El envio por correo no esta disponible en este momento"
-            : "Email sending is not available at the moment",
-        );
-        return;
-      }
-
-      if (message === "Invalid email payload") {
-        showWarningToast(
-          isSpanish
-            ? "Revisa el email del cliente antes de enviar"
-            : "Check the client email before sending",
-        );
-        return;
-      }
-
-      if (message.toLowerCase().includes("not verified")) {
-        showWarningToast(
-          isSpanish
-            ? "No se pudo completar el envio. Revisa los datos del correo y vuelve a intentarlo."
-            : "The send could not be completed. Check the email details and try again.",
-        );
-        return;
-      }
-
-      showWarningToast(
-        isSpanish
-          ? "No se pudo enviar el documento. Intentalo de nuevo."
-          : "Unable to send the document. Try again.",
-      );
-    }
-  };
-
   if (!isPageReady) {
     return (
       <AppScreenLoader
@@ -1773,116 +908,25 @@ export default function CrearFacturaPage() {
         className="relative mx-auto flex min-h-screen w-full max-w-[410px] flex-col px-4 pt-4 font-sans sm:max-w-[430px] sm:px-5 sm:pt-6"
         style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
       >
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
-              {modeCopy.workspace}
-            </p>
-            <h1 className="mt-2 text-[1.78rem] sm:text-[2rem] font-semibold tracking-[-0.04em] text-slate-950">
-              {modeCopy.title}
-            </h1>
-            <p className="mt-3 max-w-xs text-[14px] leading-5 sm:text-[15px] sm:leading-6 text-slate-500">
-              {modeCopy.subtitle}
-            </p>
-          </div>
-          {showAdvancedTools ? (
-            <button
-              type="button"
-              onClick={saveDraftNow}
-              className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)] transition hover:bg-slate-800"
-            >
-              <Save className="h-[18px] w-[18px]" strokeWidth={2.1} />
-            </button>
-          ) : null}
-        </header>
-
-        <section className="mt-5 rounded-[26px] border border-white/70 bg-white/76 p-4 shadow-[0_22px_44px_-30px_rgba(15,23,42,0.28)] backdrop-blur-xl sm:rounded-[34px] sm:p-6 sm:shadow-[0_30px_70px_-42px_rgba(15,23,42,0.45)]">
-          <div className="flex items-start gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_18px_28px_-18px_rgba(15,23,42,0.82)]">
-              <CalendarDays className="h-[18px] w-[18px]" strokeWidth={2.1} />
-            </span>
-            <div>
-              <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
-                {uiCopy.document}
-              </p>
-              <h3 className="mt-2 text-[1.18rem] sm:text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950">
-                {modeCopy.dateSectionTitle}
-              </h3>
-              <p className="mt-2 max-w-xs text-[14px] leading-6 text-slate-500">
-                {modeCopy.dateSectionDescription}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-5 rounded-[22px] border border-slate-200 bg-white/85 px-4 py-3">
-            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-              {modeCopy.documentNumberLabel}
-            </p>
-            <div className="mt-3 flex items-center gap-3">
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold tracking-[0.16em] text-slate-600">
-                {documentPrefix}-
-              </span>
-              <input
-                type="text"
-                value={numeroFactura}
-                onChange={(event) => handleNumeroFacturaChange(event.target.value)}
-                onBlur={() => setNumeroFactura(numeroFacturaActual)}
-                placeholder="001"
-                autoCapitalize="characters"
-                spellCheck={false}
-                className={`${inputClass} h-12`}
-              />
-            </div>
-            <div className="mt-3 flex items-center justify-between gap-3 rounded-[18px] bg-slate-50 px-3 py-2 text-xs text-slate-500">
-              <span>{uiCopy.lastSaved}</span>
-              <span className="font-semibold text-slate-900">
-                {ultimoNumeroGuardado
-                  ? `${documentPrefix}-${ultimoNumeroGuardado}`
-                  : uiCopy.noneSaved}
-              </span>
-            </div>
-          </div>
-
-          <div
-            className={`mt-4 grid gap-3 ${
-              documentMeta.supportsSecondaryDate ? "grid-cols-2" : "grid-cols-1"
-            }`}
-          >
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-600">
-                {documentMeta.primaryDateLabel}
-              </span>
-              <input
-                type="date"
-                value={fecha}
-                onChange={(event) => setFecha(event.target.value)}
-                className={inputClass}
-              />
-            </label>
-            {documentMeta.supportsSecondaryDate ? (
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-600">
-                  {documentMeta.secondaryDateLabel}
-                </span>
-                <input
-                  type="date"
-                  value={fechaVencimiento}
-                  onChange={(event) => setFechaVencimiento(event.target.value)}
-                  className={inputClass}
-                />
-              </label>
-            ) : null}
-          </div>
-
-          {documentMeta.supportsSecondaryDate ? (
-            <div className="mt-4 flex items-center justify-between gap-3 rounded-[22px] bg-slate-50 px-4 py-3 text-sm text-slate-500">
-              <span>{documentMeta.currentSecondaryDateLabel}</span>
-              <span className="font-semibold text-slate-900">
-                {formattedDueDate || uiCopy.noDate}
-              </span>
-            </div>
-          ) : null}
-        </section>
+        <InvoiceEditorHeader
+          documentMeta={documentMeta}
+          documentPrefix={documentPrefix}
+          formattedDueDate={formattedDueDate}
+          handleNumeroFacturaChange={handleNumeroFacturaChange}
+          inputClass={inputClass}
+          modeCopy={modeCopy}
+          numeroFactura={numeroFactura}
+          numeroFacturaActual={numeroFacturaActual}
+          saveDraftNow={saveDraftNow}
+          setFecha={setFecha}
+          setFechaVencimiento={setFechaVencimiento}
+          setNumeroFactura={setNumeroFactura}
+          showAdvancedTools={showAdvancedTools}
+          uiCopy={uiCopy}
+          ultimoNumeroGuardado={ultimoNumeroGuardado}
+          fecha={fecha}
+          fechaVencimiento={fechaVencimiento}
+        />
 
         {!showAdvancedTools ? (
           <section className="mt-5 rounded-[28px] border border-white/70 bg-white/82 p-5 shadow-[0_18px_45px_-26px_rgba(15,23,42,0.32)] backdrop-blur-xl">
@@ -2325,82 +1369,25 @@ export default function CrearFacturaPage() {
               </h3>
             </div>
           </div>
-          <div className="mt-6 rounded-[28px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(247,245,240,0.92))] p-4 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.35)]">
-            <div className="flex items-center justify-between py-2 text-sm text-slate-600">
-              <span>{uiCopy.taxableBase}</span>
-              <span className="font-semibold text-slate-950">{money(subtotal)}</span>
-            </div>
-            <div className="flex items-center justify-between py-2 text-sm text-slate-600">
-              <span>{currentTaxLabel} ({tipoIVA}%)</span>
-              <span className="font-semibold text-slate-950">{money(iva)}</span>
-            </div>
-            <div className={totalCardClass}>
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-white/70">{modeCopy.totalLabel}</p>
-                <p className="text-[1.55rem] font-semibold tracking-[-0.04em]">
-                  {money(total)}
-                </p>
-              </div>
-            </div>
-          </div>
-          {showAdvancedTools ? (
-            <div className="mt-4 rounded-[24px] border border-white/70 bg-white/84 px-4 py-4 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)]">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
-                    {uiCopy.fiscal}
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-slate-950">
-                    {uiCopy.fiscalApplied}
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
-                    {currentTaxNote || uiCopy.fiscalEmpty}
-                  </p>
-                </div>
-                <Link
-                  href="/ajustes/configuracion-fiscal"
-                  className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                >
-                  {uiCopy.fiscal}
-                </Link>
-              </div>
-            </div>
-          ) : null}
-          <div className="mt-6 grid gap-3">
-            <button
-              type="button"
-              onClick={descargar}
-              className={primaryActionClass}
-            >
-              <Download className="h-4 w-4" strokeWidth={2.2} />
-              {modeCopy.downloadLabel}
-            </button>
-            {showAdvancedTools ? (
-              <button
-                type="button"
-                onClick={enviar}
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                <Send className="h-4 w-4" strokeWidth={2.2} />
-                {modeCopy.sendLabel}
-              </button>
-            ) : null}
-          </div>
-          <div className="mt-4 flex items-center justify-between gap-3 rounded-[22px] border border-white/70 bg-white/82 px-4 py-3 text-sm text-slate-500 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)]">
-            <p>
-              {showAdvancedTools
-                ? cliente.email.trim()
-                  ? modeCopy.sendHint(cliente.email)
-                  : modeCopy.emptyEmailHint
-                : guestModeCopy.companyHint}
-            </p>
-            <Link
-              href="/empresa"
-              className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-            >
-              {showAdvancedTools ? "Perfil" : guestModeCopy.companyAction}
-            </Link>
-          </div>
+          <InvoiceEditorSummary
+            clienteEmail={cliente.email}
+            currentTaxLabel={currentTaxLabel}
+            currentTaxNote={currentTaxNote}
+            descargar={descargar}
+            enviar={enviar}
+            guestModeCopy={guestModeCopy}
+            iva={iva}
+            isDocumentActionPending={isDocumentActionPending}
+            modeCopy={modeCopy}
+            money={money}
+            primaryActionClass={primaryActionClass}
+            showAdvancedTools={showAdvancedTools}
+            subtotal={subtotal}
+            tipoIVA={tipoIVA}
+            total={total}
+            totalCardClass={totalCardClass}
+            uiCopy={uiCopy}
+          />
         </section>
       </main>
     </div>

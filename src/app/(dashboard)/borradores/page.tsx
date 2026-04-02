@@ -13,10 +13,12 @@ import {
   DRAFTS_UPDATED_EVENT,
   MAX_DRAFTS,
   DRAFT_RETENTION_DAYS,
+  DRAFTS_STORAGE_KEY,
 } from "@/features/drafts/storage";
 import { formatDateTimeByLanguage } from "@/features/i18n/core";
 import { useAppI18n } from "@/features/i18n/runtime";
 import { activeDraftRepository } from "@/features/repositories";
+import { getStorageEventName } from "@/features/storage/local";
 
 type DraftItem = {
   id: string;
@@ -37,17 +39,19 @@ export default function BorradoresPage() {
 
   useEffect(() => {
     const refreshDrafts = () => setBorradores(activeDraftRepository.readAll());
+    const events = [
+      DRAFTS_UPDATED_EVENT,
+      getStorageEventName(DRAFTS_STORAGE_KEY),
+    ];
 
-    window.addEventListener("pageshow", refreshDrafts);
-    document.addEventListener("visibilitychange", refreshDrafts);
-    window.addEventListener("focus", refreshDrafts);
-    window.addEventListener(DRAFTS_UPDATED_EVENT, refreshDrafts);
+    events.forEach((eventName) =>
+      window.addEventListener(eventName, refreshDrafts),
+    );
 
     return () => {
-      window.removeEventListener("pageshow", refreshDrafts);
-      document.removeEventListener("visibilitychange", refreshDrafts);
-      window.removeEventListener("focus", refreshDrafts);
-      window.removeEventListener(DRAFTS_UPDATED_EVENT, refreshDrafts);
+      events.forEach((eventName) =>
+        window.removeEventListener(eventName, refreshDrafts),
+      );
     };
   }, []);
 

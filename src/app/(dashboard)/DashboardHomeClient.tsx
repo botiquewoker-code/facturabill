@@ -7,7 +7,6 @@ import {
   useDeferredValue,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import {
@@ -27,14 +26,17 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import {
+  CLIENTS_STORAGE_KEY,
   type ClientRecord,
 } from "@/features/clients/storage";
 import {
   DRAFTS_UPDATED_EVENT,
+  DRAFTS_STORAGE_KEY,
   readDrafts,
   writeActiveDraft,
 } from "@/features/drafts/storage";
 import {
+  HOME_VISIBILITY_STORAGE_KEY,
   type HomeVisibility,
   type HomeVisibilityKey,
 } from "@/features/home/preferences";
@@ -43,6 +45,7 @@ import { dashboardCopy } from "@/features/i18n/dashboard-copy";
 import { useAppLanguage } from "@/features/i18n/provider";
 import {
   getUserFirstName,
+  USER_PROFILE_STORAGE_KEY,
   type UserProfile,
 } from "@/features/account/profile";
 import {
@@ -50,11 +53,15 @@ import {
   normalizeInvoiceDocumentType,
   type InvoiceDocumentType,
 } from "@/features/invoices/document-types";
-import { readVerifactuRecords } from "@/features/verifactu/storage";
+import {
+  readVerifactuRecords,
+  VERIFACTU_RECORDS_STORAGE_KEY,
+} from "@/features/verifactu/storage";
 import type { VerifactuRecord } from "@/features/verifactu/types";
 import {
   getStorageEventName,
 } from "@/features/storage/local";
+import { HISTORY_STORAGE_KEY } from "@/features/storage/history";
 import {
   activeClientRepository,
   activeHistoryRepository,
@@ -501,7 +508,6 @@ export default function DashboardHomeClient({
   const [selectedInsightId, setSelectedInsightId] =
     useState<InsightCardId | null>(null);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
-  const hydrateFrameRef = useRef<number | null>(null);
   const firstName = getUserFirstName(userProfile);
   const hasRegisteredUser = firstName.length > 0;
   const deferredSearch = useDeferredValue(search);
@@ -638,43 +644,25 @@ export default function DashboardHomeClient({
         setHasLoadedDashboardData(true);
       });
     };
-    const hydrateDashboardData = () => {
-      if (typeof document !== "undefined" && document.hidden) {
-        return;
-      }
-
-      if (hydrateFrameRef.current !== null) {
-        return;
-      }
-
-      hydrateFrameRef.current = window.requestAnimationFrame(() => {
-        hydrateFrameRef.current = null;
-        runHydration();
-      });
-    };
+    const hydrateDashboardData = () => runHydration();
+    const events = [
+      DRAFTS_UPDATED_EVENT,
+      getStorageEventName(DRAFTS_STORAGE_KEY),
+      getStorageEventName(HISTORY_STORAGE_KEY),
+      getStorageEventName(CLIENTS_STORAGE_KEY),
+      getStorageEventName(USER_PROFILE_STORAGE_KEY),
+      getStorageEventName(HOME_VISIBILITY_STORAGE_KEY),
+      getStorageEventName(VERIFACTU_RECORDS_STORAGE_KEY),
+    ];
 
     runHydration();
-    window.addEventListener("pageshow", hydrateDashboardData);
-    document.addEventListener("visibilitychange", hydrateDashboardData);
-    window.addEventListener("focus", hydrateDashboardData);
-    window.addEventListener(DRAFTS_UPDATED_EVENT, hydrateDashboardData);
-    window.addEventListener(
-      getStorageEventName("historial"),
-      hydrateDashboardData,
+    events.forEach((eventName) =>
+      window.addEventListener(eventName, hydrateDashboardData),
     );
 
     return () => {
-      if (hydrateFrameRef.current !== null) {
-        window.cancelAnimationFrame(hydrateFrameRef.current);
-      }
-
-      window.removeEventListener("pageshow", hydrateDashboardData);
-      document.removeEventListener("visibilitychange", hydrateDashboardData);
-      window.removeEventListener("focus", hydrateDashboardData);
-      window.removeEventListener(DRAFTS_UPDATED_EVENT, hydrateDashboardData);
-      window.removeEventListener(
-        getStorageEventName("historial"),
-        hydrateDashboardData,
+      events.forEach((eventName) =>
+        window.removeEventListener(eventName, hydrateDashboardData),
       );
     };
   }, []);

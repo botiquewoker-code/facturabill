@@ -12,6 +12,8 @@ import {
 import { formatCurrencyByLanguage } from "@/features/i18n/core";
 import { useAppI18n } from "@/features/i18n/runtime";
 import { activeHistoryRepository } from "@/features/repositories";
+import { getStorageEventName } from "@/features/storage/local";
+import { HISTORY_STORAGE_KEY } from "@/features/storage/history";
 
 type HistoryDocument = {
   id?: string;
@@ -49,11 +51,12 @@ export default function HistorialPage() {
   useEffect(() => {
     const refreshHistory = () =>
       setDocumentos(activeHistoryRepository.readDocuments());
+    const eventName = getStorageEventName(HISTORY_STORAGE_KEY);
 
-    window.addEventListener("focus", refreshHistory);
+    window.addEventListener(eventName, refreshHistory);
 
     return () => {
-      window.removeEventListener("focus", refreshHistory);
+      window.removeEventListener(eventName, refreshHistory);
     };
   }, []);
 
