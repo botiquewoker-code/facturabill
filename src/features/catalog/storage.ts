@@ -1,4 +1,5 @@
 import type { InvoiceDocumentType } from "@/features/invoices/document-types";
+import { createJsonLocalStore } from "@/features/storage/local";
 
 export const CATALOG_STORAGE_KEY = "facturabill-catalog-items";
 
@@ -168,39 +169,22 @@ export function normalizeCatalogItem(value: unknown): CatalogItem {
   );
 }
 
+const catalogItemsStore = createJsonLocalStore<CatalogItem[]>(
+  CATALOG_STORAGE_KEY,
+  {
+    fallback: [],
+    migrate(value) {
+      return Array.isArray(value)
+        ? sortCatalogItems(value.map(normalizeCatalogItem))
+        : [];
+    },
+  },
+);
+
 export function readCatalogItems() {
-  if (typeof window === "undefined") {
-    return [] as CatalogItem[];
-  }
-
-  try {
-    const raw = window.localStorage.getItem(CATALOG_STORAGE_KEY);
-
-    if (!raw) {
-      return [];
-    }
-
-    const parsed: unknown = JSON.parse(raw);
-
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    const normalized = sortCatalogItems(parsed.map(normalizeCatalogItem));
-    writeCatalogItems(normalized);
-    return normalized;
-  } catch {
-    return [];
-  }
+  return catalogItemsStore.read();
 }
 
 export function writeCatalogItems(items: CatalogItem[]) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(
-    CATALOG_STORAGE_KEY,
-    JSON.stringify(sortCatalogItems(items)),
-  );
+  catalogItemsStore.write(sortCatalogItems(items));
 }

@@ -1,3 +1,5 @@
+import { createJsonLocalStore } from "@/features/storage/local";
+
 export const FISCAL_SETTINGS_STORAGE_KEY = "facturabill-fiscal-settings";
 
 export type FiscalSettings = {
@@ -28,20 +30,24 @@ export function normalizeFiscalSettings(
   };
 }
 
+const fiscalSettingsStore = createJsonLocalStore<FiscalSettings>(
+  FISCAL_SETTINGS_STORAGE_KEY,
+  {
+    fallback: DEFAULT_FISCAL_SETTINGS,
+    migrate(value) {
+      return normalizeFiscalSettings(
+        value && typeof value === "object"
+          ? (value as Partial<FiscalSettings>)
+          : null,
+      );
+    },
+  },
+);
+
 export function readFiscalSettings(): FiscalSettings {
-  if (typeof window === "undefined") {
-    return DEFAULT_FISCAL_SETTINGS;
-  }
+  return fiscalSettingsStore.read();
+}
 
-  try {
-    const raw = window.localStorage.getItem(FISCAL_SETTINGS_STORAGE_KEY);
-
-    if (!raw) {
-      return DEFAULT_FISCAL_SETTINGS;
-    }
-
-    return normalizeFiscalSettings(JSON.parse(raw) as Partial<FiscalSettings>);
-  } catch {
-    return DEFAULT_FISCAL_SETTINGS;
-  }
+export function writeFiscalSettings(value: FiscalSettings) {
+  fiscalSettingsStore.write(normalizeFiscalSettings(value));
 }

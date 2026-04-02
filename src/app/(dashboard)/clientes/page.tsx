@@ -18,15 +18,14 @@ import {
   createClientRecord,
   createEmptyClientDraft,
   hasDuplicateTaxId,
-  readClients,
   type ClientDraft,
   type ClientRecord,
-  writeClients,
 } from "@/features/clients/storage";
 import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import { activeClientRepository } from "@/features/repositories";
 import { useAppI18n } from "@/features/i18n/runtime";
 import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
@@ -56,7 +55,7 @@ export default function ClientesPage() {
     useState<ClientDraft>(createEmptyClientDraft);
 
   useClientLayoutEffect(() => {
-    setClientes(readClients());
+    setClientes(activeClientRepository.readAll());
     setIsReady(true);
   }, []);
 
@@ -138,7 +137,7 @@ export default function ClientesPage() {
   }
 
   function refreshClients() {
-    setClientes(readClients());
+    setClientes(activeClientRepository.readAll());
   }
 
   function openModal() {
@@ -202,7 +201,7 @@ export default function ClientesPage() {
     const actualizados = [clienteGuardado, ...clientes];
 
     setClientes(actualizados);
-    writeClients(actualizados);
+    activeClientRepository.saveAll(actualizados);
     closeModal();
     showNotice(copy.clientSaved, "success");
 

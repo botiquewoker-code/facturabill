@@ -1,3 +1,5 @@
+import { createJsonLocalStore } from "@/features/storage/local";
+
 export const HOME_VISIBILITY_STORAGE_KEY = "facturabill-home-visibility";
 export const HOME_VISIBILITY_COOKIE_KEY = "facturabill-home-visibility";
 
@@ -71,24 +73,28 @@ export function serializeHomeVisibility(value: HomeVisibility) {
   return JSON.stringify(normalizeHomeVisibility(value));
 }
 
-export function readStoredHomeVisibility() {
-  if (typeof window === "undefined") {
-    return DEFAULT_HOME_VISIBILITY;
-  }
+const homeVisibilityStore = createJsonLocalStore<HomeVisibility>(
+  HOME_VISIBILITY_STORAGE_KEY,
+  {
+    fallback: DEFAULT_HOME_VISIBILITY,
+    migrate(value) {
+      return normalizeHomeVisibility(
+        value && typeof value === "object"
+          ? (value as Partial<HomeVisibility>)
+          : null,
+      );
+    },
+    onWrite(value) {
+      const serializedValue = encodeURIComponent(serializeHomeVisibility(value));
+      document.cookie = `${HOME_VISIBILITY_COOKIE_KEY}=${serializedValue}; path=/; max-age=31536000; samesite=lax`;
+    },
+  },
+);
 
-  return parseHomeVisibility(
-    window.localStorage.getItem(HOME_VISIBILITY_STORAGE_KEY),
-  );
+export function readStoredHomeVisibility() {
+  return homeVisibilityStore.read();
 }
 
 export function writeStoredHomeVisibility(value: HomeVisibility) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const normalizedValue = normalizeHomeVisibility(value);
-  const serializedValue = serializeHomeVisibility(normalizedValue);
-
-  window.localStorage.setItem(HOME_VISIBILITY_STORAGE_KEY, serializedValue);
-  document.cookie = `${HOME_VISIBILITY_COOKIE_KEY}=${encodeURIComponent(serializedValue)}; path=/; max-age=31536000; samesite=lax`;
+  homeVisibilityStore.write(normalizeHomeVisibility(value));
 }

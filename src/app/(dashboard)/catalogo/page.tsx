@@ -19,15 +19,12 @@ import {
 import {
   createCatalogItem,
   createEmptyCatalogItemDraft,
-  readCatalogItems,
   type CatalogDocumentType,
   type CatalogItem,
   type CatalogItemDraft,
-  writeCatalogItems,
 } from "@/features/catalog/storage";
 import {
   getUserFirstName,
-  readUserProfile,
 } from "@/features/account/profile";
 import {
   showSuccessToast,
@@ -35,6 +32,10 @@ import {
 } from "@/features/notifications/toast";
 import { getLanguageLocale } from "@/features/i18n/core";
 import { useAppI18n } from "@/features/i18n/runtime";
+import {
+  activeCatalogRepository,
+  activeUserRepository,
+} from "@/features/repositories";
 import AppScreenLoader from "@/features/ui/AppScreenLoader";
 import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
@@ -215,12 +216,12 @@ export default function CatalogoPage() {
   };
 
   const refreshCatalog = () => {
-    setItems(readCatalogItems());
+    setItems(activeCatalogRepository.readAll());
   };
 
   useClientLayoutEffect(() => {
     const syncViewState = () => {
-      const profile = readUserProfile();
+      const profile = activeUserRepository.readProfile();
       const name = getUserFirstName(profile);
 
       setFirstName(name);
@@ -366,7 +367,7 @@ export default function CatalogoPage() {
       ? items.map((item) => (item.id === existingItem.id ? nextItem : item))
       : [nextItem, ...items];
 
-    writeCatalogItems(nextItems);
+    activeCatalogRepository.saveAll(nextItems);
     refreshCatalog();
     closeModal();
     showSuccessToast(existingItem ? copy.updated : copy.created);
@@ -388,7 +389,7 @@ export default function CatalogoPage() {
       supportedDocuments: [...item.supportedDocuments],
     });
 
-    writeCatalogItems([duplicated, ...items]);
+    activeCatalogRepository.saveAll([duplicated, ...items]);
     refreshCatalog();
     showSuccessToast(copy.duplicated);
   };
@@ -400,7 +401,7 @@ export default function CatalogoPage() {
       status: nextStatus as CatalogItem["status"],
     };
 
-    writeCatalogItems(
+    activeCatalogRepository.saveAll(
       items.map((current) => (current.id === item.id ? updatedItem : current)),
     );
     refreshCatalog();

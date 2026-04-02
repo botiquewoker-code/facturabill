@@ -27,7 +27,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import {
-  readClients,
   type ClientRecord,
 } from "@/features/clients/storage";
 import {
@@ -36,17 +35,14 @@ import {
   writeActiveDraft,
 } from "@/features/drafts/storage";
 import {
-  readStoredHomeVisibility,
   type HomeVisibility,
   type HomeVisibilityKey,
-  writeStoredHomeVisibility,
 } from "@/features/home/preferences";
 import type { AppLanguage } from "@/features/i18n/config";
 import { dashboardCopy } from "@/features/i18n/dashboard-copy";
 import { useAppLanguage } from "@/features/i18n/provider";
 import {
   getUserFirstName,
-  readUserProfile,
   type UserProfile,
 } from "@/features/account/profile";
 import {
@@ -56,6 +52,15 @@ import {
 } from "@/features/invoices/document-types";
 import { readVerifactuRecords } from "@/features/verifactu/storage";
 import type { VerifactuRecord } from "@/features/verifactu/types";
+import {
+  getStorageEventName,
+} from "@/features/storage/local";
+import {
+  activeClientRepository,
+  activeHistoryRepository,
+  activePreferenceRepository,
+  activeUserRepository,
+} from "@/features/repositories";
 import AppScreenLoader from "@/features/ui/AppScreenLoader";
 import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 import { getHistoryDocumentFocusKey } from "@/features/history/focus";
@@ -86,9 +91,6 @@ type HistoryItem = {
     email?: string;
   };
 };
-
-const HISTORY_KEY = "historial";
-const CONVERT_KEY = "presupuestoConvertir";
 
 type InsightCardId =
   | "billing"
@@ -273,25 +275,6 @@ const searchUi: Record<
     untitledDraft: "Rascunho sem numero",
   },
 };
-
-function safeReadArray<T>(key: string): T[] {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  try {
-    const raw = window.localStorage.getItem(key);
-
-    if (!raw) {
-      return [];
-    }
-
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as T[]) : [];
-  } catch {
-    return [];
-  }
-}
 
 function getLocalizedDocumentLabel(
   type: InvoiceDocumentType | undefined,
@@ -642,14 +625,14 @@ export default function DashboardHomeClient({
 
   useClientLayoutEffect(() => {
     const runHydration = () => {
-      const savedHomeVisibility = readStoredHomeVisibility();
+      const savedHomeVisibility = activePreferenceRepository.readHomeVisibility();
 
       startTransition(() => {
-        setClientes(readClients());
-        setHistorial(safeReadArray<HistoryItem>(HISTORY_KEY));
+        setClientes(activeClientRepository.readAll());
+        setHistorial(activeHistoryRepository.readDocuments<HistoryItem>());
         setBorradores(readDrafts<DraftItem>());
         setVerifactuRecords(readVerifactuRecords());
-        setUserProfile(readUserProfile());
+        setUserProfile(activeUserRepository.readProfile());
         setHomeVisibility(savedHomeVisibility);
         setDraftHomeVisibility(savedHomeVisibility);
         setHasLoadedDashboardData(true);
@@ -675,6 +658,10 @@ export default function DashboardHomeClient({
     document.addEventListener("visibilitychange", hydrateDashboardData);
     window.addEventListener("focus", hydrateDashboardData);
     window.addEventListener(DRAFTS_UPDATED_EVENT, hydrateDashboardData);
+    window.addEventListener(
+      getStorageEventName("historial"),
+      hydrateDashboardData,
+    );
 
     return () => {
       if (hydrateFrameRef.current !== null) {
@@ -685,6 +672,10 @@ export default function DashboardHomeClient({
       document.removeEventListener("visibilitychange", hydrateDashboardData);
       window.removeEventListener("focus", hydrateDashboardData);
       window.removeEventListener(DRAFTS_UPDATED_EVENT, hydrateDashboardData);
+      window.removeEventListener(
+        getStorageEventName("historial"),
+        hydrateDashboardData,
+      );
     };
   }, []);
 
@@ -1559,7 +1550,7 @@ export default function DashboardHomeClient({
 
     if (action.type === "convert-budget") {
       if (action.budget) {
-        window.localStorage.setItem(CONVERT_KEY, JSON.stringify(action.budget));
+        activeHistoryRepository.saveConversionDraft(action.budget);
         startTransition(() => {
           router.push("/crear-factura");
         });
@@ -1659,7 +1650,7 @@ export default function DashboardHomeClient({
     }
 
     setHomeVisibility(draftHomeVisibility);
-    writeStoredHomeVisibility(draftHomeVisibility);
+    activePreferenceRepository.saveHomeVisibility(draftHomeVisibility);
 
     setIsFilterSheetOpen(false);
   }

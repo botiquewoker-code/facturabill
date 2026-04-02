@@ -1,4 +1,5 @@
 "use client";
+import { createJsonLocalStore } from "@/features/storage/local";
 
 export const DRAFTS_STORAGE_KEY = "borradores";
 export const ACTIVE_DRAFT_STORAGE_KEY = "borradorActivo";
@@ -58,45 +59,28 @@ export function isDraftExpired(value: unknown): boolean {
   return Date.now() - updatedAt >= DRAFT_RETENTION_MS;
 }
 
+const draftsStore = createJsonLocalStore<unknown[]>(DRAFTS_STORAGE_KEY, {
+  fallback: [],
+  migrate(value) {
+    return Array.isArray(value) ? sanitizeDrafts(value) : [];
+  },
+});
+
+const activeDraftStore = createJsonLocalStore<unknown | null>(
+  ACTIVE_DRAFT_STORAGE_KEY,
+  {
+    fallback: null,
+  },
+);
+
 export function writeDrafts<T extends DraftRecord>(drafts: T[]) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
   const sanitized = sanitizeDrafts<T>(drafts);
-
-  window.localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify(sanitized));
+  draftsStore.write(sanitized);
   window.dispatchEvent(new CustomEvent(DRAFTS_UPDATED_EVENT));
 }
 
 export function readDrafts<T extends DraftRecord>(): T[] {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  try {
-    const raw = window.localStorage.getItem(DRAFTS_STORAGE_KEY);
-
-    if (!raw) {
-      return [];
-    }
-
-    const parsed: unknown = JSON.parse(raw);
-
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    const filtered = sanitizeDrafts<T>(parsed);
-
-    if (JSON.stringify(filtered) !== JSON.stringify(parsed)) {
-      writeDrafts(filtered);
-    }
-
-    return filtered;
-  } catch {
-    return [];
-  }
+  return sanitizeDrafts<T>(draftsStore.read());
 }
 
 export function upsertDraft<T extends DraftRecord>(draft: T, drafts: T[]): T[] {
@@ -105,46 +89,20 @@ export function upsertDraft<T extends DraftRecord>(draft: T, drafts: T[]): T[] {
 }
 
 export function writeActiveDraft<T extends DraftRecord>(draft: T) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(
-    ACTIVE_DRAFT_STORAGE_KEY,
-    JSON.stringify(draft),
-  );
+  activeDraftStore.write(draft);
 }
 
 export function clearActiveDraft() {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.removeItem(ACTIVE_DRAFT_STORAGE_KEY);
+  activeDraftStore.clear();
 }
 
 export function readActiveDraft<T extends DraftRecord>(): T | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
+  const parsed = activeDraftStore.read();
 
-  try {
-    const raw = window.localStorage.getItem(ACTIVE_DRAFT_STORAGE_KEY);
-
-    if (!raw) {
-      return null;
-    }
-
-    const parsed: unknown = JSON.parse(raw);
-
-    if (isDraftExpired(parsed)) {
-      clearActiveDraft();
-      return null;
-    }
-
-    return parsed as T;
-  } catch {
+  if (!parsed || isDraftExpired(parsed)) {
     clearActiveDraft();
     return null;
   }
+
+  return parsed as T;
 }

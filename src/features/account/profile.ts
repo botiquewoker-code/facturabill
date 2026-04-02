@@ -1,3 +1,5 @@
+import { createJsonLocalStore } from "@/features/storage/local";
+
 export const USER_PROFILE_STORAGE_KEY = "facturabill-user-profile";
 
 export type UserProfile = {
@@ -31,38 +33,27 @@ export function normalizeUserProfile(value: unknown): UserProfile | null {
   };
 }
 
+const userProfileStore = createJsonLocalStore<UserProfile | null>(
+  USER_PROFILE_STORAGE_KEY,
+  {
+    fallback: null,
+    migrate(value) {
+      return normalizeUserProfile(value);
+    },
+  },
+);
+
 export function readUserProfile() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(USER_PROFILE_STORAGE_KEY);
-
-    if (!raw) {
-      return null;
-    }
-
-    return normalizeUserProfile(JSON.parse(raw));
-  } catch {
-    return null;
-  }
+  return userProfileStore.read();
 }
 
 export function writeUserProfile(profile: UserProfile) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(
-    USER_PROFILE_STORAGE_KEY,
-    JSON.stringify({
-      displayName: profile.displayName.trim(),
-      email: profile.email.trim(),
-      companyName: profile.companyName.trim(),
-      registeredAt: profile.registeredAt,
-    }),
-  );
+  userProfileStore.write({
+    displayName: profile.displayName.trim(),
+    email: profile.email.trim(),
+    companyName: profile.companyName.trim(),
+    registeredAt: profile.registeredAt,
+  });
 }
 
 export function getUserFirstName(profile: UserProfile | null) {

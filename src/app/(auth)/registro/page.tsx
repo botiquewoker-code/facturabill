@@ -12,18 +12,16 @@ import {
   UserRound,
 } from "lucide-react";
 import {
-  readLocalAccountCredentials,
   hashLocalAccountPassword,
-  writeLocalAccountCredentials,
 } from "@/features/account/credentials";
-import {
-  readUserProfile,
-  writeUserProfile,
-} from "@/features/account/profile";
 import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import {
+  activeCompanyRepository,
+  activeUserRepository,
+} from "@/features/repositories";
 import AppScreenLoader from "@/features/ui/AppScreenLoader";
 import { useAppI18n } from "@/features/i18n/runtime";
 
@@ -94,8 +92,8 @@ export default function RegistroPage() {
   };
 
   useEffect(() => {
-    const storedProfile = readUserProfile();
-    const storedCredentials = readLocalAccountCredentials();
+    const storedProfile = activeUserRepository.readProfile();
+    const storedCredentials = activeUserRepository.readCredentials();
 
     startTransition(() => {
       setDisplayName(
@@ -126,40 +124,18 @@ export default function RegistroPage() {
 
       const normalizedEmail = email.trim().toLowerCase();
       const passwordHash = await hashLocalAccountPassword(password.trim());
-      const existingCompany =
-        typeof window !== "undefined"
-          ? window.localStorage.getItem("datosEmpresa")
-          : null;
-      let parsedCompany: Record<string, unknown> | null = null;
+      const workspace = activeCompanyRepository.readWorkspace();
+      const companyName = workspace.company.nombre.trim();
+      const existingTemplate = workspace.template || DEFAULT_TEMPLATE;
+      const currentCredentials = activeUserRepository.readCredentials();
 
-      if (existingCompany) {
-        try {
-          parsedCompany = JSON.parse(existingCompany) as Record<string, unknown>;
-        } catch {
-          parsedCompany = null;
-        }
-      }
-
-      const companyName =
-        parsedCompany && typeof parsedCompany.nombre === "string"
-          ? parsedCompany.nombre.trim()
-          : "";
-      const existingNotes =
-        window.localStorage.getItem("notasUsuario")?.trim() || "";
-      const existingTemplate =
-        window.localStorage.getItem("plantillaSeleccionada") ||
-        window.localStorage.getItem("plantillaUsuario") ||
-        window.localStorage.getItem("plantillaElegida") ||
-        DEFAULT_TEMPLATE;
-      const currentCredentials = readLocalAccountCredentials();
-
-      writeUserProfile({
+      activeUserRepository.saveProfile({
         displayName: displayName.trim(),
         email: normalizedEmail,
         companyName,
         registeredAt: new Date().toISOString(),
       });
-      writeLocalAccountCredentials({
+      activeUserRepository.saveCredentials({
         displayName: displayName.trim(),
         email: normalizedEmail,
         passwordHash,
@@ -167,21 +143,7 @@ export default function RegistroPage() {
           currentCredentials?.registeredAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
-      window.localStorage.setItem(
-        "configEmpresa",
-        JSON.stringify({
-          user: {
-            displayName: displayName.trim(),
-            email: normalizedEmail,
-          },
-          empresa: parsedCompany || {},
-          notas: existingNotes,
-          plantilla: existingTemplate,
-        }),
-      );
-      window.localStorage.setItem("plantillaSeleccionada", existingTemplate);
-      window.localStorage.setItem("plantillaUsuario", existingTemplate);
-      window.localStorage.setItem("plantillaElegida", existingTemplate);
+      activeCompanyRepository.saveTemplate(existingTemplate);
 
       showSuccessToast(copy.accountCreated);
       router.replace("/");

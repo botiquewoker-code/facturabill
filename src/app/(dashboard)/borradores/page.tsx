@@ -13,11 +13,10 @@ import {
   DRAFTS_UPDATED_EVENT,
   MAX_DRAFTS,
   DRAFT_RETENTION_DAYS,
-  readDrafts,
-  writeActiveDraft,
 } from "@/features/drafts/storage";
 import { formatDateTimeByLanguage } from "@/features/i18n/core";
 import { useAppI18n } from "@/features/i18n/runtime";
+import { activeDraftRepository } from "@/features/repositories";
 
 type DraftItem = {
   id: string;
@@ -32,10 +31,12 @@ type DraftItem = {
 export default function BorradoresPage() {
   const router = useRouter();
   const { language, t } = useAppI18n();
-  const [borradores, setBorradores] = useState<DraftItem[]>(() => readDrafts());
+  const [borradores, setBorradores] = useState<DraftItem[]>(() =>
+    activeDraftRepository.readAll(),
+  );
 
   useEffect(() => {
-    const refreshDrafts = () => setBorradores(readDrafts());
+    const refreshDrafts = () => setBorradores(activeDraftRepository.readAll());
 
     window.addEventListener("pageshow", refreshDrafts);
     document.addEventListener("visibilitychange", refreshDrafts);
@@ -187,7 +188,7 @@ export default function BorradoresPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      writeActiveDraft(item);
+                      activeDraftRepository.saveActive(item);
                       router.push("/crear-factura");
                     }}
                     className="mt-3.5 inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-full bg-slate-950 px-3.5 text-[13px] font-semibold text-white shadow-[0_16px_24px_-20px_rgba(15,23,42,0.76)] transition hover:bg-slate-800 sm:mt-5 sm:min-h-12 sm:px-5 sm:text-sm sm:shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)]"

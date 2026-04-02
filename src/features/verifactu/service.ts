@@ -3,15 +3,7 @@ import {
   sha256Hex,
 } from "./hash";
 import { buildVerifactuQrPayload } from "./qr";
-import {
-  appendVerifactuEvent,
-  createVerifactuLocalId,
-  ensureVerifactuInstallationId,
-  findLatestChainedRecord,
-  readVerifactuRecords,
-  readVerifactuSettings,
-  upsertVerifactuRecord,
-} from "./storage";
+import { activeVerifactuRepository } from "@/features/repositories";
 import type {
   PrepareVerifactuRecordInput,
   VerifactuLineItem,
@@ -46,18 +38,21 @@ export async function prepareVerifactuInvoiceRecord(
   input: PrepareVerifactuRecordInput,
 ): Promise<VerifactuRecord> {
   const now = new Date().toISOString();
-  const installationId = ensureVerifactuInstallationId();
-  const verifactuSettings = readVerifactuSettings();
+  const installationId = activeVerifactuRepository.ensureInstallationId();
+  const verifactuSettings = activeVerifactuRepository.readSettings();
   const issuer = normalizeParty(input.issuer);
   const recipient = normalizeParty(input.recipient);
   const lines = input.lines.map(normalizeLine);
   const existingRecord =
-    readVerifactuRecords().find(
+    activeVerifactuRepository.readRecords().find(
       (record) =>
         record.kind === "alta" &&
         record.sourceDocumentId === input.sourceDocumentId,
     ) || null;
-  const previousRecord = findLatestChainedRecord(issuer.taxId, existingRecord?.id);
+  const previousRecord = activeVerifactuRepository.findLatestChainedRecord(
+    issuer.taxId,
+    existingRecord?.id,
+  );
   const fingerprintSource = buildVerifactuFingerprintSource({
     invoiceNumber: input.invoiceNumber,
     issueDate: input.issueDate,
@@ -96,7 +91,7 @@ export async function prepareVerifactuInvoiceRecord(
     lines,
   };
   const record: VerifactuRecord = {
-    id: existingRecord?.id || createVerifactuLocalId("vf-record"),
+    id: existingRecord?.id || activeVerifactuRepository.createLocalId("vf-record"),
     kind: "alta",
     status: verifactuSettings.taxAgencyAutoSubmissionEnabled
       ? "queued"
@@ -135,9 +130,9 @@ export async function prepareVerifactuInvoiceRecord(
     lastError: null,
   };
 
-  upsertVerifactuRecord(record);
-  appendVerifactuEvent({
-    id: createVerifactuLocalId("vf-event"),
+  activeVerifactuRepository.upsertRecord(record);
+  activeVerifactuRepository.appendEvent({
+    id: activeVerifactuRepository.createLocalId("vf-event"),
     type: "record_prepared",
     recordId: record.id,
     occurredAt: now,
@@ -145,8 +140,8 @@ export async function prepareVerifactuInvoiceRecord(
   });
 
   if (verifactuSettings.taxAgencyAutoSubmissionEnabled) {
-    appendVerifactuEvent({
-      id: createVerifactuLocalId("vf-event"),
+    activeVerifactuRepository.appendEvent({
+      id: activeVerifactuRepository.createLocalId("vf-event"),
       type: "queue_exported",
       recordId: record.id,
       occurredAt: now,

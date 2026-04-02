@@ -27,20 +27,9 @@ import PlantillaNueva from "@/features/invoices/components/PlantillaNueva";
 import PlantillaStudio from "@/features/invoices/components/PlantillaStudio";
 import {
   findClientById,
-  readClients,
   type ClientRecord,
 } from "@/features/clients/storage";
-import {
-  readCatalogItems,
-  type CatalogItem,
-} from "@/features/catalog/storage";
-import {
-  clearActiveDraft,
-  readActiveDraft,
-  readDrafts,
-  upsertDraft,
-  writeDrafts,
-} from "@/features/drafts/storage";
+import { type CatalogItem } from "@/features/catalog/storage";
 import {
   DEFAULT_FISCAL_SETTINGS,
   readFiscalSettings,
@@ -63,14 +52,25 @@ import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
-import {
-  getUserFirstName,
-  readUserProfile,
-} from "@/features/account/profile";
+import { getUserFirstName } from "@/features/account/profile";
 import { getLanguageLocale } from "@/features/i18n/core";
 import { useAppI18n } from "@/features/i18n/runtime";
 import { prepareVerifactuInvoiceRecord } from "@/features/verifactu/service";
 import type { VerifactuSourceAction } from "@/features/verifactu/types";
+import {
+  DEFAULT_INVOICE_TEMPLATE,
+  type InvoiceTemplate,
+} from "@/features/storage/company";
+import type { EditableDocumentRecord } from "@/features/documents/storage";
+import {
+  activeCatalogRepository,
+  activeClientRepository,
+  activeCompanyRepository,
+  activeDraftRepository,
+  activeDocumentRepository,
+  activeHistoryRepository,
+  activeUserRepository,
+} from "@/features/repositories";
 import AppScreenLoader from "@/features/ui/AppScreenLoader";
 import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
@@ -95,7 +95,7 @@ type Empresa = {
 };
 
 type Concepto = { desc: string; cant: number; precio: number };
-type Plantilla = "InvoicePDF" | "PlantillaNueva" | "PlantillaStudio";
+type Plantilla = InvoiceTemplate;
 type DraftInvoice = {
   id: string;
   tipo: InvoiceDocumentType;
@@ -115,6 +115,24 @@ type DraftInvoice = {
   updatedAt: string;
 };
 
+type HistoryDocument = {
+  id?: string;
+  editableDocumentId?: string;
+  numero?: string;
+  tipo?: InvoiceDocumentType;
+  fecha?: string;
+  fechaVencimiento?: string;
+  total?: number;
+  estado?: string;
+  cliente?: {
+    nombre?: string;
+    nif?: string;
+    email?: string;
+  };
+  conceptos?: Concepto[];
+  deliveryDetails?: DeliveryDetails;
+};
+
 declare global {
   interface Window {
     gtag?: (
@@ -125,7 +143,6 @@ declare global {
   }
 }
 
-const HISTORY_KEY = "historial";
 const EMPTY_CLIENTE: Cliente = {
   nombre: "",
   nif: "",
@@ -186,7 +203,9 @@ const readLastSavedNumber = (documentType: InvoiceDocumentType) => {
   }
 
   const storedNumber = stripInvoiceDocumentPrefix(
-    localStorage.getItem(getInvoiceDocumentMeta(documentType).lastNumberStorageKey),
+    activeHistoryRepository.readLastNumber(
+      getInvoiceDocumentMeta(documentType).lastNumberStorageKey,
+    ),
   );
 
   if (storedNumber) {
@@ -194,9 +213,7 @@ const readLastSavedNumber = (documentType: InvoiceDocumentType) => {
   }
 
   try {
-    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]") as Array<
-      Record<string, unknown>
-    >;
+    const history = activeHistoryRepository.readDocuments<Record<string, unknown>>();
     const latestDocument = history.find((item) =>
       normalizeInvoiceDocumentType(item.tipo) === documentType,
     );
@@ -258,6 +275,33 @@ const normalizeConceptos = (v: unknown): Concepto[] =>
 const isEmptyConcept = (concept: Concepto) =>
   !concept.desc.trim() && concept.cant === 0 && concept.precio === 0;
 
+function normalizeEditorDate(value: unknown, fallback: string) {
+  if (typeof value !== "string" || !value.trim()) {
+    return fallback;
+  }
+
+  const trimmed = value.trim();
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  const localDateMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+
+  if (localDateMatch) {
+    const [, day, month, year] = localDateMatch;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+
+  const parsed = new Date(trimmed);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return fallback;
+  }
+
+  return parsed.toISOString().slice(0, 10);
+}
+
 function hasContent(d: DraftInvoice) {
   const normalizedNumber = normalizeInvoiceDocumentNumber(d.numero);
   const defaultIssueDate = today();
@@ -283,13 +327,86 @@ function persistStoredDraft(draft: DraftInvoice) {
     return;
   }
 
-  const saved = readDrafts<DraftInvoice>();
+  const saved = activeDraftRepository.readAll<DraftInvoice>();
 
-  writeDrafts(upsertDraft(draft, saved));
-  localStorage.setItem(
+  activeDraftRepository.saveAll(activeDraftRepository.upsert(draft, saved));
+  activeHistoryRepository.saveLastNumber(
     getInvoiceDocumentMeta(draft.tipo).lastNumberStorageKey,
     normalizeInvoiceDocumentNumber(draft.numero),
   );
+}
+
+function toEditableDocumentRecord(
+  draft: DraftInvoice,
+  options?: {
+    documentId?: string;
+    total?: number;
+    estado?: string;
+    sourceAction?: VerifactuSourceAction | "saved";
+    createdAt?: string;
+  },
+): EditableDocumentRecord {
+  const now = new Date().toISOString();
+
+  return {
+    id: options?.documentId || draft.id,
+    tipo: draft.tipo,
+    numero: normalizeInvoiceDocumentNumber(draft.numero),
+    fecha: draft.fecha,
+    fechaVencimiento: draft.fechaVencimiento || "",
+    linkedClientId: draft.linkedClientId || "",
+    cliente: draft.cliente,
+    empresa: draft.empresa,
+    conceptos: draft.conceptos,
+    deliveryDetails: draft.deliveryDetails,
+    logo: draft.logo,
+    notas: draft.notas,
+    tipoIVA: draft.tipoIVA,
+    ivaPorc: draft.ivaPorc,
+    plantilla: draft.plantilla,
+    total: options?.total ?? 0,
+    estado: options?.estado || "Guardado",
+    sourceAction: options?.sourceAction || "saved",
+    createdAt: options?.createdAt || now,
+    updatedAt: now,
+  };
+}
+
+function hydrateFromEditableDocument(
+  document: EditableDocumentRecord,
+  apply: {
+    setDocumentType: (value: InvoiceDocumentType) => void;
+    setFecha: (value: string) => void;
+    setFechaVencimiento: (value: string) => void;
+    setNumeroFactura: (value: string) => void;
+    setLinkedClientId: (value: string) => void;
+    setCliente: (value: Cliente) => void;
+    setEmpresa: (value: Empresa) => void;
+    setConceptos: (value: Concepto[]) => void;
+    setDeliveryDetails: (value: DeliveryDetails) => void;
+    setLogo: (value: string) => void;
+    setNotas: (value: string) => void;
+    setTipoIVA: (value: number) => void;
+    setPlantilla: (value: Plantilla) => void;
+  },
+) {
+  apply.setDocumentType(document.tipo);
+  apply.setFecha(document.fecha || today());
+  apply.setFechaVencimiento(
+    document.fechaVencimiento || addDays(document.fecha || today(), 30),
+  );
+  apply.setNumeroFactura(normalizeInvoiceDocumentNumber(document.numero));
+  apply.setLinkedClientId(document.linkedClientId || "");
+  apply.setCliente(normalizeCliente(document.cliente));
+  apply.setEmpresa(normalizeEmpresa(document.empresa));
+  apply.setConceptos(normalizeConceptos(document.conceptos));
+  apply.setDeliveryDetails(normalizeDeliveryDetails(document.deliveryDetails));
+  apply.setLogo(s(document.logo));
+  apply.setNotas(s(document.notas));
+  apply.setTipoIVA(num(document.tipoIVA, 21));
+  if (isPlantilla(document.plantilla)) {
+    apply.setPlantilla(document.plantilla);
+  }
 }
 
 export default function CrearFacturaPage() {
@@ -297,6 +414,7 @@ export default function CrearFacturaPage() {
   const isSpanish = language === "es";
   const latestDraftRef = useRef<DraftInvoice | null>(null);
   const draftIdRef = useRef<string | null>(null);
+  const editableDocumentIdRef = useRef<string | null>(null);
 
   const [cliente, setCliente] = useState<Cliente>(EMPTY_CLIENTE);
   const [clientesGuardados, setClientesGuardados] = useState<ClientRecord[]>([]);
@@ -320,7 +438,7 @@ export default function CrearFacturaPage() {
   const [hasRegisteredUser, setHasRegisteredUser] = useState(false);
   const [hasLoadedAccount, setHasLoadedAccount] = useState(false);
   const [isPageReady, setIsPageReady] = useState(false);
-  const [plantilla, setPlantilla] = useState<Plantilla>("InvoicePDF");
+  const [plantilla, setPlantilla] = useState<Plantilla>(DEFAULT_INVOICE_TEMPLATE);
   const [linkedClientId, setLinkedClientId] = useState("");
   const [clientSearch, setClientSearch] = useState("");
   const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
@@ -813,12 +931,8 @@ export default function CrearFacturaPage() {
     value: string,
     nextDocumentType: InvoiceDocumentType = documentType,
   ) => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
     const normalizedValue = normalizeInvoiceDocumentNumber(value);
-    localStorage.setItem(
+    activeHistoryRepository.saveLastNumber(
       getInvoiceDocumentMeta(nextDocumentType).lastNumberStorageKey,
       normalizedValue,
     );
@@ -845,34 +959,157 @@ export default function CrearFacturaPage() {
       };
       const params = new URLSearchParams(window.location.search);
       const initialDocumentType = normalizeInvoiceDocumentType(params.get("tipo"));
-      const storedClients = readClients();
+      const requestedDocumentId = params.get("documentId") || "";
+      const storedClients = activeClientRepository.readAll();
       const routeClientId = params.get("clienteId") || "";
       const storedFiscalSettings = readFiscalSettings();
-      const storedProfile = readUserProfile();
+      const storedProfile = activeUserRepository.readProfile();
 
       startTransition(() => {
         setClientesGuardados(storedClients);
-        setCatalogItems(readCatalogItems());
+        setCatalogItems(activeCatalogRepository.readAll());
         setFiscalSettings(storedFiscalSettings);
         setTipoIVA(storedFiscalSettings.defaultTaxRate);
         setHasRegisteredUser(getUserFirstName(storedProfile).length > 0);
       });
 
-      const rawCompany = localStorage.getItem("datosEmpresa");
-      let seededCompany = EMPTY_EMPRESA;
-      if (rawCompany) try { startTransition(() => setEmpresa(normalizeEmpresa(JSON.parse(rawCompany)))); } catch {}
-      if (rawCompany) try { seededCompany = normalizeEmpresa(JSON.parse(rawCompany)); } catch {}
-      const rawLogo = localStorage.getItem("logoUsuario");
-      if (rawLogo) startTransition(() => setLogo(rawLogo));
-      const rawNotes = localStorage.getItem("notasUsuario");
-      if (rawNotes) startTransition(() => setNotas(rawNotes));
-      const rawTemplate =
-        localStorage.getItem("plantillaSeleccionada") ||
-        localStorage.getItem("plantillaUsuario") ||
-        localStorage.getItem("plantillaElegida");
-      if (rawTemplate && isPlantilla(rawTemplate)) startTransition(() => setPlantilla(rawTemplate));
+      const workspace = activeCompanyRepository.readWorkspace();
+      const seededCompany = normalizeEmpresa(workspace.company);
+      const rawLogo = workspace.logo;
+      const rawNotes = workspace.notes;
+      const rawTemplate = workspace.template;
 
-      const activeDraft = readActiveDraft<Partial<DraftInvoice>>();
+      startTransition(() => {
+        setEmpresa(seededCompany);
+        setLogo(rawLogo);
+        setNotas(rawNotes);
+        if (isPlantilla(rawTemplate)) {
+          setPlantilla(rawTemplate);
+        }
+      });
+
+      if (requestedDocumentId) {
+        const editableDocument =
+          activeDocumentRepository.readById(requestedDocumentId);
+
+        if (editableDocument) {
+          editableDocumentIdRef.current = editableDocument.id;
+          draftIdRef.current = editableDocument.id;
+          latestDraftRef.current = {
+            id: editableDocument.id,
+            tipo: editableDocument.tipo,
+            numero: editableDocument.numero,
+            fecha: editableDocument.fecha,
+            fechaVencimiento: editableDocument.fechaVencimiento,
+            linkedClientId: editableDocument.linkedClientId,
+            cliente: normalizeCliente(editableDocument.cliente),
+            empresa: normalizeEmpresa(editableDocument.empresa),
+            conceptos: normalizeConceptos(editableDocument.conceptos),
+            deliveryDetails: normalizeDeliveryDetails(
+              editableDocument.deliveryDetails,
+            ),
+            logo: editableDocument.logo,
+            notas: editableDocument.notas,
+            tipoIVA: editableDocument.tipoIVA,
+            ivaPorc: editableDocument.ivaPorc,
+            plantilla: editableDocument.plantilla,
+            updatedAt: editableDocument.updatedAt,
+          };
+
+          startTransition(() => {
+            hydrateFromEditableDocument(editableDocument, {
+              setDocumentType,
+              setFecha,
+              setFechaVencimiento,
+              setNumeroFactura,
+              setLinkedClientId,
+              setCliente,
+              setEmpresa,
+              setConceptos,
+              setDeliveryDetails,
+              setLogo,
+              setNotas,
+              setTipoIVA,
+              setPlantilla,
+            });
+          });
+          finishHydration();
+          return;
+        }
+
+        const historyDocument = activeHistoryRepository
+          .readDocuments<HistoryDocument>()
+          .find(
+            (item) =>
+              item.editableDocumentId === requestedDocumentId ||
+              item.id === requestedDocumentId ||
+              item.numero === requestedDocumentId,
+          );
+
+        if (historyDocument) {
+          const fallbackDocument = toEditableDocumentRecord(
+            {
+              id: requestedDocumentId,
+              tipo: normalizeInvoiceDocumentType(historyDocument.tipo),
+              numero: normalizeInvoiceDocumentNumber(
+                historyDocument.numero || historyDocument.id,
+              ),
+              fecha: normalizeEditorDate(historyDocument.fecha, today()),
+              fechaVencimiento: normalizeEditorDate(
+                historyDocument.fechaVencimiento,
+                "",
+              ),
+              linkedClientId: "",
+              cliente: normalizeCliente(historyDocument.cliente),
+              empresa: seededCompany,
+              conceptos: normalizeConceptos(historyDocument.conceptos),
+              deliveryDetails: normalizeDeliveryDetails(
+                historyDocument.deliveryDetails,
+              ),
+              logo: rawLogo,
+              notas: rawNotes,
+              tipoIVA: storedFiscalSettings.defaultTaxRate,
+              ivaPorc: storedFiscalSettings.defaultTaxRate,
+              plantilla:
+                rawTemplate && isPlantilla(rawTemplate)
+                  ? rawTemplate
+                  : DEFAULT_INVOICE_TEMPLATE,
+              updatedAt: new Date().toISOString(),
+            },
+            {
+              documentId: requestedDocumentId,
+              total: num(historyDocument.total, 0),
+              estado: s(historyDocument.estado) || "Guardado",
+              sourceAction: "saved",
+            },
+          );
+
+          activeDocumentRepository.upsert(fallbackDocument);
+          editableDocumentIdRef.current = fallbackDocument.id;
+          draftIdRef.current = fallbackDocument.id;
+          startTransition(() => {
+            hydrateFromEditableDocument(fallbackDocument, {
+              setDocumentType,
+              setFecha,
+              setFechaVencimiento,
+              setNumeroFactura,
+              setLinkedClientId,
+              setCliente,
+              setEmpresa,
+              setConceptos,
+              setDeliveryDetails,
+              setLogo,
+              setNotas,
+              setTipoIVA,
+              setPlantilla,
+            });
+          });
+          finishHydration();
+          return;
+        }
+      }
+
+      const activeDraft = activeDraftRepository.readActive<Partial<DraftInvoice>>();
       if (activeDraft) {
         try {
           const draft = activeDraft;
@@ -896,15 +1133,16 @@ export default function CrearFacturaPage() {
             if (isPlantilla(nextTemplate)) setPlantilla(nextTemplate);
           });
         } catch {}
-        clearActiveDraft();
+        activeDraftRepository.clearActive();
         finishHydration();
         return;
       }
 
-      const convertDraft = localStorage.getItem("presupuestoConvertir");
+      const convertDraft =
+        activeHistoryRepository.readConversionDraft<Record<string, unknown>>();
       if (convertDraft) {
         try {
-          const parsed = JSON.parse(convertDraft) as Record<string, unknown>;
+          const parsed = convertDraft;
           startTransition(() => {
             if (parsed.cliente) setCliente(normalizeCliente(parsed.cliente));
             if (parsed.conceptos || parsed.items) {
@@ -921,7 +1159,7 @@ export default function CrearFacturaPage() {
             );
           });
         } catch {}
-        localStorage.removeItem("presupuestoConvertir");
+        activeHistoryRepository.clearConversionDraft();
       }
 
       if (routeClientId) {
@@ -982,11 +1220,11 @@ export default function CrearFacturaPage() {
     }
 
     const syncCatalog = () => {
-      const storedProfile = readUserProfile();
+      const storedProfile = activeUserRepository.readProfile();
 
       startTransition(() => {
         setHasRegisteredUser(getUserFirstName(storedProfile).length > 0);
-        setCatalogItems(readCatalogItems());
+        setCatalogItems(activeCatalogRepository.readAll());
       });
     };
 
@@ -1021,6 +1259,17 @@ export default function CrearFacturaPage() {
 
     try {
       persistDraftSilently(nextDraft);
+
+      if (editableDocumentIdRef.current) {
+        activeDocumentRepository.upsert(
+          toEditableDocumentRecord(nextDraft, {
+            documentId: editableDocumentIdRef.current,
+            total,
+            estado: "Guardado",
+            sourceAction: "saved",
+          }),
+        );
+      }
     } catch {}
   }, [
     activeConceptos,
@@ -1037,6 +1286,7 @@ export default function CrearFacturaPage() {
     notas,
     numeroFacturaActual,
     plantilla,
+    total,
     tipoIVA,
   ]);
 
@@ -1046,6 +1296,17 @@ export default function CrearFacturaPage() {
       if (!draft || typeof window === "undefined") return;
       try {
         persistDraftSilently(draft);
+
+        if (editableDocumentIdRef.current) {
+          activeDocumentRepository.upsert(
+            toEditableDocumentRecord(draft, {
+              documentId: editableDocumentIdRef.current,
+              total,
+              estado: "Guardado",
+              sourceAction: "saved",
+            }),
+          );
+        }
       } catch {}
     };
     window.addEventListener("beforeunload", persist);
@@ -1055,7 +1316,7 @@ export default function CrearFacturaPage() {
       window.removeEventListener("beforeunload", persist);
       window.removeEventListener("pagehide", persist);
     };
-  }, []);
+  }, [total]);
 
   const updateConcept = (index: number, field: keyof Concepto, value: string | number) =>
     setConceptos((current) =>
@@ -1165,13 +1426,13 @@ export default function CrearFacturaPage() {
       return false;
     }
 
-    const saved = readDrafts<DraftInvoice>();
+    const saved = activeDraftRepository.readAll<DraftInvoice>();
 
     if (!hasContent(draft)) {
       const nextSaved = saved.filter((item) => item.id !== draft.id);
 
       if (nextSaved.length !== saved.length) {
-        writeDrafts(nextSaved);
+        activeDraftRepository.saveAll(nextSaved);
       }
 
       return false;
@@ -1259,6 +1520,29 @@ export default function CrearFacturaPage() {
     estado: string,
     sourceAction: VerifactuSourceAction,
   ) => {
+    const currentDraft: DraftInvoice = {
+      id:
+        editableDocumentIdRef.current ||
+        draftIdRef.current ||
+        latestDraftRef.current?.id ||
+        draftId(),
+      tipo: documentType,
+      numero: numeroFacturaActual,
+      fecha,
+      fechaVencimiento: documentMeta.supportsSecondaryDate ? fechaVencimiento : "",
+      linkedClientId,
+      cliente,
+      empresa,
+      conceptos: activeConceptos,
+      deliveryDetails,
+      logo,
+      notas,
+      tipoIVA,
+      ivaPorc: tipoIVA,
+      plantilla,
+      updatedAt: new Date().toISOString(),
+    };
+
     let verifactuSummary:
       | {
           recordId: string;
@@ -1328,11 +1612,28 @@ export default function CrearFacturaPage() {
       }
     }
 
+    const editableDocumentId =
+      editableDocumentIdRef.current || currentDraft.id || draftId();
+    const existingEditableDocument = activeDocumentRepository.readById(
+      editableDocumentId,
+    );
+    editableDocumentIdRef.current = editableDocumentId;
+    const editableDocument = toEditableDocumentRecord(currentDraft, {
+      documentId: editableDocumentId,
+      total,
+      estado,
+      sourceAction,
+      createdAt: existingEditableDocument?.createdAt,
+    });
+    activeDocumentRepository.upsert(editableDocument);
+
     const item = {
       id: numeroFacturaActual,
+      editableDocumentId,
       numero: numeroFacturaActual,
       tipo: documentType,
       cliente,
+      empresa,
       deliveryDetails,
       fecha: new Date(fecha).toLocaleDateString(getLanguageLocale(language)),
       fechaVencimiento:
@@ -1340,17 +1641,22 @@ export default function CrearFacturaPage() {
           ? new Date(fechaVencimiento).toLocaleDateString(getLanguageLocale(language))
           : "",
       conceptos: activeConceptos,
+      logo,
+      notas,
+      tipoIVA,
+      ivaPorc: tipoIVA,
+      plantilla,
       total,
       estado,
       verifactu: verifactuSummary,
     };
-    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]") as Array<Record<string, unknown>>;
+    const history = activeHistoryRepository.readDocuments<Record<string, unknown>>();
     const index = history.findIndex(
       (doc) => s(doc.numero || doc.id) === numeroFacturaActual,
     );
     if (index >= 0) history[index] = { ...history[index], ...item };
     else history.unshift(item);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    activeHistoryRepository.saveDocuments(history);
     saveLastNumber(numeroFacturaActual, documentType);
   };
   const descargar = async () => {

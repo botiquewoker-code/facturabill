@@ -3,6 +3,7 @@ import type {
   VerifactuRecord,
   VerifactuSettings,
 } from "./types";
+import { createJsonLocalStore, createStringLocalStore } from "@/features/storage/local";
 
 export const VERIFACTU_RECORDS_STORAGE_KEY = "facturabill-verifactu-records";
 export const VERIFACTU_EVENTS_STORAGE_KEY = "facturabill-verifactu-events";
@@ -34,25 +35,6 @@ function sortEvents(events: VerifactuEvent[]) {
   );
 }
 
-function readArrayFromStorage<T>(key: string): T[] {
-  if (!isBrowser()) {
-    return [];
-  }
-
-  try {
-    const raw = window.localStorage.getItem(key);
-
-    if (!raw) {
-      return [];
-    }
-
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as T[]) : [];
-  } catch {
-    return [];
-  }
-}
-
 function normalizeVerifactuSettings(
   value: unknown,
 ): VerifactuSettings {
@@ -71,78 +53,72 @@ function normalizeVerifactuSettings(
   };
 }
 
+const verifactuSettingsStore = createJsonLocalStore<VerifactuSettings>(
+  VERIFACTU_SETTINGS_STORAGE_KEY,
+  {
+    fallback: {
+      taxAgencyAutoSubmissionEnabled: false,
+      updatedAt: "",
+    },
+    migrate(value) {
+      return normalizeVerifactuSettings(value);
+    },
+  },
+);
+
+const verifactuRecordsStore = createJsonLocalStore<VerifactuRecord[]>(
+  VERIFACTU_RECORDS_STORAGE_KEY,
+  {
+    fallback: [],
+    migrate(value) {
+      return Array.isArray(value) ? sortRecords(value as VerifactuRecord[]) : [];
+    },
+  },
+);
+
+const verifactuEventsStore = createJsonLocalStore<VerifactuEvent[]>(
+  VERIFACTU_EVENTS_STORAGE_KEY,
+  {
+    fallback: [],
+    migrate(value) {
+      return Array.isArray(value) ? sortEvents(value as VerifactuEvent[]) : [];
+    },
+  },
+);
+
+const verifactuInstallationIdStore = createStringLocalStore(
+  VERIFACTU_INSTALLATION_ID_STORAGE_KEY,
+  "",
+);
+
 export function createVerifactuLocalId(prefix: string) {
   return createLocalId(prefix);
 }
 
 export function readVerifactuSettings(): VerifactuSettings {
-  if (!isBrowser()) {
-    return {
-      taxAgencyAutoSubmissionEnabled: false,
-      updatedAt: "",
-    };
-  }
-
-  try {
-    const raw = window.localStorage.getItem(VERIFACTU_SETTINGS_STORAGE_KEY);
-
-    if (!raw) {
-      return {
-        taxAgencyAutoSubmissionEnabled: false,
-        updatedAt: "",
-      };
-    }
-
-    return normalizeVerifactuSettings(JSON.parse(raw));
-  } catch {
-    return {
-      taxAgencyAutoSubmissionEnabled: false,
-      updatedAt: "",
-    };
-  }
+  return verifactuSettingsStore.read();
 }
 
 export function writeVerifactuSettings(
   settings: VerifactuSettings,
 ) {
-  if (!isBrowser()) {
-    return;
-  }
-
-  window.localStorage.setItem(
-    VERIFACTU_SETTINGS_STORAGE_KEY,
-    JSON.stringify(normalizeVerifactuSettings(settings)),
-  );
+  verifactuSettingsStore.write(normalizeVerifactuSettings(settings));
 }
 
 export function readVerifactuRecords() {
-  return sortRecords(readArrayFromStorage<VerifactuRecord>(VERIFACTU_RECORDS_STORAGE_KEY));
+  return verifactuRecordsStore.read();
 }
 
 export function writeVerifactuRecords(records: VerifactuRecord[]) {
-  if (!isBrowser()) {
-    return;
-  }
-
-  window.localStorage.setItem(
-    VERIFACTU_RECORDS_STORAGE_KEY,
-    JSON.stringify(sortRecords(records)),
-  );
+  verifactuRecordsStore.write(sortRecords(records));
 }
 
 export function readVerifactuEvents() {
-  return sortEvents(readArrayFromStorage<VerifactuEvent>(VERIFACTU_EVENTS_STORAGE_KEY));
+  return verifactuEventsStore.read();
 }
 
 export function writeVerifactuEvents(events: VerifactuEvent[]) {
-  if (!isBrowser()) {
-    return;
-  }
-
-  window.localStorage.setItem(
-    VERIFACTU_EVENTS_STORAGE_KEY,
-    JSON.stringify(sortEvents(events)),
-  );
+  verifactuEventsStore.write(sortEvents(events));
 }
 
 export function appendVerifactuEvent(event: VerifactuEvent) {
@@ -157,16 +133,14 @@ export function ensureVerifactuInstallationId() {
     return "server-build";
   }
 
-  const currentId = window.localStorage.getItem(
-    VERIFACTU_INSTALLATION_ID_STORAGE_KEY,
-  );
+  const currentId = verifactuInstallationIdStore.read();
 
   if (currentId) {
     return currentId;
   }
 
   const nextId = createLocalId("vf-installation");
-  window.localStorage.setItem(VERIFACTU_INSTALLATION_ID_STORAGE_KEY, nextId);
+  verifactuInstallationIdStore.write(nextId);
   return nextId;
 }
 

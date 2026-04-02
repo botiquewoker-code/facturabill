@@ -5,12 +5,6 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ListChecks, ShieldCheck } from "lucide-react";
 import {
-  readVerifactuEvents,
-  readVerifactuRecords,
-  readVerifactuSettings,
-  writeVerifactuSettings,
-} from "@/features/verifactu/storage";
-import {
   formatCurrencyByLanguage,
   formatDateTimeByLanguage,
 } from "@/features/i18n/core";
@@ -25,6 +19,7 @@ import type {
   VerifactuRecordStatus,
   VerifactuSettings,
 } from "@/features/verifactu/types";
+import { activeVerifactuRepository } from "@/features/repositories";
 
 const statusClass: Record<VerifactuRecordStatus, string> = {
   prepared: "border border-sky-200 bg-sky-50 text-sky-700",
@@ -37,8 +32,8 @@ const statusClass: Record<VerifactuRecordStatus, string> = {
 
 function readVerifactuSnapshot() {
   return {
-    records: readVerifactuRecords(),
-    events: readVerifactuEvents(),
+    records: activeVerifactuRepository.readRecords(),
+    events: activeVerifactuRepository.readEvents(),
   };
 }
 
@@ -49,7 +44,7 @@ export default function AjustesVerifactuPage() {
   const [records, setRecords] = useState<VerifactuRecord[]>([]);
   const [events, setEvents] = useState<VerifactuEvent[]>([]);
   const [settings, setSettings] = useState<VerifactuSettings>(() =>
-    readVerifactuSettings(),
+    activeVerifactuRepository.readSettings(),
   );
   const focusedRecordId = searchParams.get("focus") || "";
 
@@ -206,7 +201,7 @@ export default function AjustesVerifactuPage() {
       const snapshot = readVerifactuSnapshot();
       setRecords(snapshot.records);
       setEvents(snapshot.events);
-      setSettings(readVerifactuSettings());
+      setSettings(activeVerifactuRepository.readSettings());
     };
 
     refresh();
@@ -252,7 +247,7 @@ export default function AjustesVerifactuPage() {
         updatedAt: new Date().toISOString(),
       };
 
-      writeVerifactuSettings(nextSettings);
+      activeVerifactuRepository.saveSettings(nextSettings);
       setSettings(nextSettings);
       showSuccessToast(
         nextSettings.taxAgencyAutoSubmissionEnabled

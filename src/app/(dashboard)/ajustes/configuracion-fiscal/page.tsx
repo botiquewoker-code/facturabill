@@ -15,9 +15,9 @@ import { useAppLanguage } from "@/features/i18n/provider";
 import {
   DEFAULT_FISCAL_SETTINGS,
   FISCAL_RATE_OPTIONS,
-  FISCAL_SETTINGS_STORAGE_KEY,
-  normalizeFiscalSettings,
+  readFiscalSettings,
   type FiscalSettings,
+  writeFiscalSettings,
 } from "@/features/invoices/fiscal-settings";
 import {
   showSuccessToast,
@@ -120,24 +120,12 @@ export default function ConfiguracionFiscalPage() {
         };
 
   useClientLayoutEffect(() => {
-    const stored = window.localStorage.getItem(FISCAL_SETTINGS_STORAGE_KEY);
-
-    if (stored) {
-      try {
-        setSettings(normalizeFiscalSettings(JSON.parse(stored)));
-      } catch (error) {
-        console.error("Error loading fiscal settings", error);
-      }
-    }
-
+    setSettings(readFiscalSettings());
     setIsReady(true);
   }, []);
 
   function persistSettings(nextSettings: FiscalSettings) {
-    window.localStorage.setItem(
-      FISCAL_SETTINGS_STORAGE_KEY,
-      JSON.stringify(nextSettings),
-    );
+    writeFiscalSettings(nextSettings);
   }
 
   useEffect(() => {

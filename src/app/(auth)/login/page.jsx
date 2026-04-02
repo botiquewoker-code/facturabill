@@ -15,17 +15,13 @@ import { Amplify } from "aws-amplify";
 import { fetchUserAttributes, signIn } from "aws-amplify/auth";
 import awsconfig from "@/config/aws-exports";
 import {
-  readLocalAccountCredentials,
   verifyLocalAccountPassword,
 } from "@/features/account/credentials";
-import {
-  readUserProfile,
-  writeUserProfile,
-} from "@/features/account/profile";
 import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import { activeUserRepository } from "@/features/repositories";
 import { useAppI18n } from "@/features/i18n/runtime";
 
 Amplify.configure(awsconfig);
@@ -89,7 +85,7 @@ export default function Login() {
 
   useEffect(() => {
     startTransition(() => {
-      const credentials = readLocalAccountCredentials();
+      const credentials = activeUserRepository.readCredentials();
 
       setLocalCredentials(credentials);
       setEmail(credentials?.email || "");
@@ -129,9 +125,9 @@ export default function Login() {
           return;
         }
 
-        const storedProfile = readUserProfile();
+        const storedProfile = activeUserRepository.readProfile();
 
-        writeUserProfile({
+        activeUserRepository.saveProfile({
           displayName: localCredentials.displayName,
           email: localCredentials.email,
           companyName: storedProfile?.companyName || "",
@@ -153,7 +149,7 @@ export default function Login() {
       const displayName =
         attributes?.name?.trim() || normalizedEmail.split("@")[0] || "Usuario";
 
-      writeUserProfile({
+      activeUserRepository.saveProfile({
         displayName,
         email: attributes?.email?.trim() || normalizedEmail,
         companyName: "",

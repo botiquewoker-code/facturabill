@@ -19,53 +19,14 @@ import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import {
+  DEFAULT_PAYMENT_SETTINGS,
+  type PaymentMethodKey,
+  type PaymentMethodSettings,
+  type PaymentTerms,
+} from "@/features/storage/payment-methods";
+import { activePaymentRepository } from "@/features/repositories";
 import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
-
-const PAYMENT_METHODS_STORAGE_KEY = "facturabill-payment-methods";
-
-type PaymentMethodKey =
-  | "bankTransfer"
-  | "sepaDebit"
-  | "card"
-  | "bizum"
-  | "paypal";
-type PaymentTerms = "uponReceipt" | "15days" | "30days" | "60days";
-
-type PaymentMethodSettings = {
-  accountHolder: string;
-  bankName: string;
-  iban: string;
-  bic: string;
-  sepaCreditorId: string;
-  paymentReference: string;
-  cardGateway: string;
-  bizumPhone: string;
-  paypalEmail: string;
-  paymentInstructions: string;
-  defaultTerms: PaymentTerms;
-  methods: Record<PaymentMethodKey, boolean>;
-};
-
-const DEFAULT_PAYMENT_SETTINGS: PaymentMethodSettings = {
-  accountHolder: "",
-  bankName: "",
-  iban: "",
-  bic: "",
-  sepaCreditorId: "",
-  paymentReference: "",
-  cardGateway: "",
-  bizumPhone: "",
-  paypalEmail: "",
-  paymentInstructions: "",
-  defaultTerms: "30days",
-  methods: {
-    bankTransfer: true,
-    sepaDebit: false,
-    card: true,
-    bizum: false,
-    paypal: false,
-  },
-};
 
 const paymentTermsOptions: Array<{ value: PaymentTerms; label: string }> = [
   { value: "uponReceipt", label: "Pago inmediato" },
@@ -111,19 +72,6 @@ const paymentMethodsCatalog: Array<{
     icon: Wallet,
   },
 ];
-
-function normalizePaymentSettings(
-  value?: Partial<PaymentMethodSettings> | null,
-): PaymentMethodSettings {
-  return {
-    ...DEFAULT_PAYMENT_SETTINGS,
-    ...value,
-    methods: {
-      ...DEFAULT_PAYMENT_SETTINGS.methods,
-      ...(value?.methods || {}),
-    },
-  };
-}
 
 function SectionCard({
   eyebrow,
@@ -258,24 +206,12 @@ export default function MetodosCobroPage() {
   const [isReady, setIsReady] = useState(false);
 
   useClientLayoutEffect(() => {
-    const stored = window.localStorage.getItem(PAYMENT_METHODS_STORAGE_KEY);
-
-    if (stored) {
-      try {
-        setSettings(normalizePaymentSettings(JSON.parse(stored)));
-      } catch (error) {
-        console.error("Error loading payment methods", error);
-      }
-    }
-
+    setSettings(activePaymentRepository.readSettings());
     setIsReady(true);
   }, []);
 
   function persistSettings(nextSettings: PaymentMethodSettings) {
-    window.localStorage.setItem(
-      PAYMENT_METHODS_STORAGE_KEY,
-      JSON.stringify(nextSettings),
-    );
+    activePaymentRepository.saveSettings(nextSettings);
   }
 
   useEffect(() => {

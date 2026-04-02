@@ -22,6 +22,12 @@ import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import {
+  DEFAULT_INVOICE_TEMPLATE,
+  type InvoiceTemplate,
+  isInvoiceTemplate,
+} from "@/features/storage/company";
+import { activeCompanyRepository } from "@/features/repositories";
 import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
 type Empresa = {
@@ -34,7 +40,7 @@ type Empresa = {
   email: string;
 };
 
-type Plantilla = "InvoicePDF" | "PlantillaNueva" | "PlantillaStudio";
+type Plantilla = InvoiceTemplate;
 
 const EMPTY_EMPRESA: Empresa = {
   nombre: "",
@@ -45,14 +51,6 @@ const EMPTY_EMPRESA: Empresa = {
   telefono: "",
   email: "",
 };
-
-function isPlantilla(value: string): value is Plantilla {
-  return (
-    value === "InvoicePDF" ||
-    value === "PlantillaNueva" ||
-    value === "PlantillaStudio"
-  );
-}
 
 function getInitials(nombre: string): string {
   const initials = nombre
@@ -75,7 +73,7 @@ export default function ConfiguracionEmpresaPage() {
       ? "Premium, sobria y con presencia visual"
       : "Premium, refined, and visually rich";
   const [empresa, setEmpresa] = useState<Empresa>(EMPTY_EMPRESA);
-  const [plantilla, setPlantilla] = useState<Plantilla>("InvoicePDF");
+  const [plantilla, setPlantilla] = useState(DEFAULT_INVOICE_TEMPLATE);
   const [logo, setLogo] = useState("");
   const [notas, setNotas] = useState("");
   const [isReady, setIsReady] = useState(false);
@@ -112,45 +110,24 @@ export default function ConfiguracionEmpresaPage() {
   );
 
   useClientLayoutEffect(() => {
-    const storedCompany = window.localStorage.getItem("datosEmpresa");
-    if (storedCompany) {
-      try {
-        const parsed = JSON.parse(storedCompany) as Partial<Empresa>;
-        setEmpresa({ ...EMPTY_EMPRESA, ...parsed });
-      } catch (error) {
-        console.error("Error loading company profile", error);
-      }
+    const workspace = activeCompanyRepository.readWorkspace();
+    setEmpresa({ ...EMPTY_EMPRESA, ...workspace.company });
+    if (isInvoiceTemplate(workspace.template)) {
+      setPlantilla(workspace.template);
     }
-
-    const storedTemplate =
-      window.localStorage.getItem("plantillaSeleccionada") ||
-      window.localStorage.getItem("plantillaUsuario") ||
-      window.localStorage.getItem("plantillaElegida");
-
-    if (storedTemplate && isPlantilla(storedTemplate)) {
-      setPlantilla(storedTemplate);
-    }
-
-    const storedLogo = window.localStorage.getItem("logoUsuario");
-    if (storedLogo) {
-      setLogo(storedLogo);
-    }
-
-    const storedNotes = window.localStorage.getItem("notasUsuario");
-    if (storedNotes) {
-      setNotas(storedNotes);
-    }
+    setLogo(workspace.logo);
+    setNotas(workspace.notes);
 
     setIsReady(true);
   }, []);
 
   function persistProfile() {
-    window.localStorage.setItem("datosEmpresa", JSON.stringify(empresa));
-    window.localStorage.setItem("plantillaSeleccionada", plantilla);
-    window.localStorage.setItem("plantillaUsuario", plantilla);
-    window.localStorage.setItem("plantillaElegida", plantilla);
-    window.localStorage.setItem("logoUsuario", logo || "");
-    window.localStorage.setItem("notasUsuario", notas || "");
+    activeCompanyRepository.saveWorkspace({
+      company: empresa,
+      template: plantilla,
+      logo: logo || "",
+      notes: notas || "",
+    });
   }
 
   useEffect(() => {
@@ -159,7 +136,7 @@ export default function ConfiguracionEmpresaPage() {
     }
 
     if (empresa.nombre || empresa.nif || empresa.direccion) {
-      window.localStorage.setItem("datosEmpresa", JSON.stringify(empresa));
+      activeCompanyRepository.saveProfile(empresa);
     }
   }, [empresa, isReady]);
 
@@ -168,9 +145,7 @@ export default function ConfiguracionEmpresaPage() {
       return;
     }
 
-    window.localStorage.setItem("plantillaSeleccionada", plantilla);
-    window.localStorage.setItem("plantillaUsuario", plantilla);
-    window.localStorage.setItem("plantillaElegida", plantilla);
+    activeCompanyRepository.saveTemplate(plantilla);
   }, [plantilla, isReady]);
 
   useEffect(() => {
@@ -178,7 +153,7 @@ export default function ConfiguracionEmpresaPage() {
       return;
     }
 
-    window.localStorage.setItem("logoUsuario", logo);
+    activeCompanyRepository.saveLogo(logo);
   }, [logo, isReady]);
 
   useEffect(() => {
@@ -186,7 +161,7 @@ export default function ConfiguracionEmpresaPage() {
       return;
     }
 
-    window.localStorage.setItem("notasUsuario", notas);
+    activeCompanyRepository.saveNotes(notas);
   }, [notas, isReady]);
 
   function showNotice(message: string, tone: "warning" | "success") {
@@ -214,7 +189,7 @@ export default function ConfiguracionEmpresaPage() {
     reader.onload = () => {
       const image = reader.result as string;
       setLogo(image);
-      window.localStorage.setItem("logoUsuario", image);
+      activeCompanyRepository.saveLogo(image);
     };
 
     reader.readAsDataURL(file);

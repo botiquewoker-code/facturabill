@@ -1,3 +1,5 @@
+import { createJsonLocalStore } from "@/features/storage/local";
+
 export const LOCAL_ACCOUNT_CREDENTIALS_STORAGE_KEY =
   "facturabill-local-account-credentials";
 
@@ -39,41 +41,31 @@ export function normalizeLocalAccountCredentials(value: unknown) {
   } satisfies LocalAccountCredentials;
 }
 
+const localAccountCredentialsStore =
+  createJsonLocalStore<LocalAccountCredentials | null>(
+    LOCAL_ACCOUNT_CREDENTIALS_STORAGE_KEY,
+    {
+      fallback: null,
+      migrate(value) {
+        return normalizeLocalAccountCredentials(value);
+      },
+    },
+  );
+
 export function readLocalAccountCredentials() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(LOCAL_ACCOUNT_CREDENTIALS_STORAGE_KEY);
-
-    if (!raw) {
-      return null;
-    }
-
-    return normalizeLocalAccountCredentials(JSON.parse(raw));
-  } catch {
-    return null;
-  }
+  return localAccountCredentialsStore.read();
 }
 
 export function writeLocalAccountCredentials(
   credentials: LocalAccountCredentials,
 ) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(
-    LOCAL_ACCOUNT_CREDENTIALS_STORAGE_KEY,
-    JSON.stringify({
-      displayName: credentials.displayName.trim(),
-      email: credentials.email.trim().toLowerCase(),
-      passwordHash: credentials.passwordHash,
-      registeredAt: credentials.registeredAt,
-      updatedAt: credentials.updatedAt,
-    }),
-  );
+  localAccountCredentialsStore.write({
+    displayName: credentials.displayName.trim(),
+    email: credentials.email.trim().toLowerCase(),
+    passwordHash: credentials.passwordHash,
+    registeredAt: credentials.registeredAt,
+    updatedAt: credentials.updatedAt,
+  });
 }
 
 function hashLocalAccountPasswordFallback(password: string) {

@@ -12,17 +12,12 @@ import {
 } from "lucide-react";
 import {
   hashLocalAccountPassword,
-  readLocalAccountCredentials,
-  writeLocalAccountCredentials,
 } from "@/features/account/credentials";
-import {
-  readUserProfile,
-  writeUserProfile,
-} from "@/features/account/profile";
 import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import { activeUserRepository } from "@/features/repositories";
 import AppScreenLoader from "@/features/ui/AppScreenLoader";
 import { useAppI18n } from "@/features/i18n/runtime";
 import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
@@ -72,8 +67,8 @@ export default function DatosAccesoPage() {
   };
 
   useClientLayoutEffect(() => {
-    const storedProfile = readUserProfile();
-    const storedCredentials = readLocalAccountCredentials();
+    const storedProfile = activeUserRepository.readProfile();
+    const storedCredentials = activeUserRepository.readCredentials();
 
     setDisplayName(
       storedProfile?.displayName || storedCredentials?.displayName || "",
@@ -86,8 +81,8 @@ export default function DatosAccesoPage() {
     const normalizedName = displayName.trim();
     const normalizedEmail = email.trim().toLowerCase();
     const nextPassword = password.trim();
-    const storedProfile = readUserProfile();
-    const storedCredentials = readLocalAccountCredentials();
+    const storedProfile = activeUserRepository.readProfile();
+    const storedCredentials = activeUserRepository.readCredentials();
 
     if (!normalizedName || !normalizedEmail) {
       showWarningToast(copy.missingFields);
@@ -105,7 +100,7 @@ export default function DatosAccesoPage() {
     }
 
     try {
-      writeUserProfile({
+      activeUserRepository.saveProfile({
         displayName: normalizedName,
         email: normalizedEmail,
         companyName: storedProfile?.companyName || "",
@@ -115,7 +110,7 @@ export default function DatosAccesoPage() {
       if (nextPassword || !storedCredentials) {
         const passwordHash = await hashLocalAccountPassword(nextPassword);
 
-        writeLocalAccountCredentials({
+        activeUserRepository.saveCredentials({
           displayName: normalizedName,
           email: normalizedEmail,
           passwordHash,
@@ -126,7 +121,7 @@ export default function DatosAccesoPage() {
           updatedAt: new Date().toISOString(),
         });
       } else if (storedCredentials) {
-        writeLocalAccountCredentials({
+        activeUserRepository.saveCredentials({
           ...storedCredentials,
           displayName: normalizedName,
           email: normalizedEmail,

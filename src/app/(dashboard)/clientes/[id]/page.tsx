@@ -21,23 +21,19 @@ import {
   findClientById,
   hasDuplicateTaxId,
   normalizeRouteParam,
-  readClients,
   toClientDraft,
   type ClientDraft,
   type ClientRecord,
-  writeClients,
 } from "@/features/clients/storage";
-import {
-  readDrafts,
-  upsertDraft,
-  writeActiveDraft,
-  writeDrafts,
-} from "@/features/drafts/storage";
 import type { InvoiceDocumentType } from "@/features/invoices/document-types";
 import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
+import {
+  activeClientRepository,
+  activeDraftRepository,
+} from "@/features/repositories";
 import { useAppI18n } from "@/features/i18n/runtime";
 import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
@@ -149,7 +145,7 @@ export default function ClienteDetallePage() {
   };
 
   useClientLayoutEffect(() => {
-    const storedClients = readClients();
+    const storedClients = activeClientRepository.readAll();
     const match = findClientById(storedClients, routeClientId);
 
     setCliente(match.client);
@@ -177,7 +173,7 @@ export default function ClienteDetallePage() {
   }
 
   function refreshClient() {
-    const storedClients = readClients();
+    const storedClients = activeClientRepository.readAll();
     const match = findClientById(storedClients, cliente?.id || routeClientId);
 
     if (!match.client) {
@@ -209,7 +205,7 @@ export default function ClienteDetallePage() {
 
     const shouldSuggestIdentity = !draft.nombre.trim() || !draft.nif.trim();
 
-    const storedClients = readClients();
+    const storedClients = activeClientRepository.readAll();
 
     if (hasDuplicateTaxId(storedClients, draft.nif, cliente.id)) {
       showNotice(copy.duplicateTaxId, "warning");
@@ -221,7 +217,7 @@ export default function ClienteDetallePage() {
       item.id === cliente.id ? updatedClient : item,
     );
 
-    writeClients(updatedClients);
+    activeClientRepository.saveAll(updatedClients);
     setCliente(updatedClient);
     setDraft(toClientDraft(updatedClient));
     setIsEditing(false);
@@ -237,10 +233,10 @@ export default function ClienteDetallePage() {
       return;
     }
 
-    const storedClients = readClients();
+    const storedClients = activeClientRepository.readAll();
     const updatedClients = storedClients.filter((item) => item.id !== cliente.id);
 
-    writeClients(updatedClients);
+    activeClientRepository.saveAll(updatedClients);
     router.push("/clientes");
   }
 
@@ -292,8 +288,13 @@ export default function ClienteDetallePage() {
       updatedAt: new Date().toISOString(),
     };
 
-    writeActiveDraft(nextDraft);
-    writeDrafts(upsertDraft(nextDraft, readDrafts<typeof nextDraft>()));
+    activeDraftRepository.saveActive(nextDraft);
+    activeDraftRepository.saveAll(
+      activeDraftRepository.upsert(
+        nextDraft,
+        activeDraftRepository.readAll<typeof nextDraft>(),
+      ),
+    );
     router.push("/crear-factura");
   }
 

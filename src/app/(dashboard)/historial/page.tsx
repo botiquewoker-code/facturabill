@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, Clock3, FileText, ReceiptText } from "lucide-react";
+import { ArrowRight, Clock3, FilePenLine, FileText, ReceiptText } from "lucide-react";
 import { getHistoryDocumentFocusKey } from "@/features/history/focus";
 import {
   getInvoiceDocumentMeta,
@@ -11,9 +11,11 @@ import {
 } from "@/features/invoices/document-types";
 import { formatCurrencyByLanguage } from "@/features/i18n/core";
 import { useAppI18n } from "@/features/i18n/runtime";
+import { activeHistoryRepository } from "@/features/repositories";
 
 type HistoryDocument = {
   id?: string;
+  editableDocumentId?: string;
   numero?: string;
   tipo?: InvoiceDocumentType;
   fecha?: string;
@@ -35,39 +37,18 @@ type HistoryDocument = {
   };
 };
 
-const HISTORY_KEY = "historial";
-const CONVERT_KEY = "presupuestoConvertir";
-
-function readHistory(): HistoryDocument[] {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  try {
-    const raw = window.localStorage.getItem(HISTORY_KEY);
-
-    if (!raw) {
-      return [];
-    }
-
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as HistoryDocument[]) : [];
-  } catch {
-    return [];
-  }
-}
-
 export default function HistorialPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { language, t } = useAppI18n();
   const [documentos, setDocumentos] = useState<HistoryDocument[]>(() =>
-    readHistory(),
+    activeHistoryRepository.readDocuments(),
   );
   const focusedDocumentKey = searchParams.get("focus") || "";
 
   useEffect(() => {
-    const refreshHistory = () => setDocumentos(readHistory());
+    const refreshHistory = () =>
+      setDocumentos(activeHistoryRepository.readDocuments());
 
     window.addEventListener("focus", refreshHistory);
 
@@ -132,6 +113,7 @@ export default function HistorialPage() {
       es: "El seguimiento se activara cuando emitas la factura.",
       en: "Tracking will activate when you issue the invoice.",
     }),
+    editDocument: t({ es: "Editar documento", en: "Edit document" }),
     verifactuQueued: t({
       es: "Esta factura ya esta en proceso de envio a Hacienda.",
       en: "This invoice is already being submitted to the tax agency.",
@@ -314,17 +296,30 @@ export default function HistorialPage() {
                     ) : null}
                   </div>
 
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const editableDocumentId =
+                        doc.editableDocumentId?.trim() || doc.id || doc.numero || "";
+                      router.push(
+                        `/crear-factura?documentId=${encodeURIComponent(editableDocumentId)}`,
+                      );
+                    }}
+                    className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition hover:bg-slate-800"
+                  >
+                    <FilePenLine className="h-4 w-4" strokeWidth={2.2} />
+                    {copy.editDocument}
+                  </button>
+
                   {documentMeta.canConvertToInvoice ? (
                     <button
                       type="button"
                       onClick={() => {
-                        window.localStorage.setItem(
-                          CONVERT_KEY,
-                          JSON.stringify(doc),
-                        );
+                        activeHistoryRepository.clearConversionDraft();
+                        activeHistoryRepository.saveConversionDraft(doc);
                         router.push("/crear-factura");
                       }}
-                      className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(15,23,42,0.9)] transition hover:bg-slate-800"
+                      className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                     >
                       <ReceiptText className="h-4 w-4" strokeWidth={2.2} />
                       {copy.convertToInvoice}
@@ -335,7 +330,7 @@ export default function HistorialPage() {
                       onClick={() =>
                         router.push(`/crear-factura?tipo=${documentType}`)
                       }
-                      className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                      className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                     >
                       <FileText className="h-4 w-4" strokeWidth={2.2} />
                       {documentMeta.article === "la" ? copy.createAnother : copy.createOther}{" "}

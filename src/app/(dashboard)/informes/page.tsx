@@ -14,13 +14,20 @@ import {
   ChartColumn,
 } from "lucide-react";
 import { getLanguageLocale } from "@/features/i18n/core";
-import { readUserProfile, type UserProfile } from "@/features/account/profile";
-import { readClients, type ClientRecord } from "@/features/clients/storage";
+import { type UserProfile } from "@/features/account/profile";
+import { type ClientRecord } from "@/features/clients/storage";
 import { readDrafts } from "@/features/drafts/storage";
 import type { InvoiceDocumentType } from "@/features/invoices/document-types";
 import { useAppI18n } from "@/features/i18n/runtime";
 import { readVerifactuRecords } from "@/features/verifactu/storage";
 import type { VerifactuRecord } from "@/features/verifactu/types";
+import { type CompanyProfile } from "@/features/storage/company";
+import {
+  activeClientRepository,
+  activeCompanyRepository,
+  activeHistoryRepository,
+  activeUserRepository,
+} from "@/features/repositories";
 import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
 type HistoryDocument = {
@@ -43,16 +50,6 @@ type DraftItem = {
   numero?: string;
   tipo?: InvoiceDocumentType;
   updatedAt?: string;
-};
-
-type CompanyProfile = {
-  nombre: string;
-  nif: string;
-  direccion: string;
-  ciudad: string;
-  cp: string;
-  telefono: string;
-  email: string;
 };
 
 type ReportsSnapshot = {
@@ -98,8 +95,6 @@ type AlertMetric = {
   toneClassName: string;
 };
 
-const HISTORY_KEY = "historial";
-const COMPANY_KEY = "datosEmpresa";
 const EMPTY_COMPANY: CompanyProfile = {
   nombre: "",
   nif: "",
@@ -126,57 +121,18 @@ function normalizeNumber(value: unknown) {
   return typeof value === "number" ? value : Number(value) || 0;
 }
 
-function readHistory(): HistoryDocument[] {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  try {
-    const raw = window.localStorage.getItem(HISTORY_KEY);
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as HistoryDocument[]) : [];
-  } catch {
-    return [];
-  }
-}
-
 function readCompanyProfile(): CompanyProfile {
-  if (typeof window === "undefined") {
-    return EMPTY_COMPANY;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(COMPANY_KEY);
-    if (!raw) return EMPTY_COMPANY;
-    const parsed: unknown = JSON.parse(raw);
-    const record =
-      parsed && typeof parsed === "object"
-        ? (parsed as Record<string, unknown>)
-        : {};
-
-    return {
-      nombre: normalizeString(record.nombre),
-      nif: normalizeString(record.nif),
-      direccion: normalizeString(record.direccion),
-      ciudad: normalizeString(record.ciudad),
-      cp: normalizeString(record.cp),
-      telefono: normalizeString(record.telefono),
-      email: normalizeString(record.email),
-    };
-  } catch {
-    return EMPTY_COMPANY;
-  }
+  return activeCompanyRepository.readWorkspace().company || EMPTY_COMPANY;
 }
 
 function readReportsSnapshot(): ReportsSnapshot {
   return {
-    historial: readHistory(),
-    clientes: readClients(),
+    historial: activeHistoryRepository.readDocuments<HistoryDocument>(),
+    clientes: activeClientRepository.readAll(),
     borradores: readDrafts<DraftItem>(),
     verifactuRecords: readVerifactuRecords(),
     company: readCompanyProfile(),
-    userProfile: readUserProfile(),
+    userProfile: activeUserRepository.readProfile(),
   };
 }
 

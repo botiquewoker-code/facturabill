@@ -22,7 +22,6 @@ import {
 } from "lucide-react";
 import {
   getUserFirstName,
-  readUserProfile,
 } from "@/features/account/profile";
 import {
   DRAFTS_UPDATED_EVENT,
@@ -37,6 +36,7 @@ import {
   normalizeInvoiceDocumentType,
   type InvoiceDocumentType,
 } from "@/features/invoices/document-types";
+import { activeUserRepository } from "@/features/repositories";
 import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
 type DashboardShellProps = {
@@ -153,7 +153,9 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   useClientLayoutEffect(() => {
     const runHydration = () => {
       startTransition(() => {
-        setHasRegisteredUser(getUserFirstName(readUserProfile()).length > 0);
+        setHasRegisteredUser(
+          getUserFirstName(activeUserRepository.readProfile()).length > 0,
+        );
         setDrafts(readDrafts<DraftItem>());
         setHasHydratedShell(true);
       });

@@ -1,3 +1,5 @@
+import { createJsonLocalStore } from "@/features/storage/local";
+
 export const CLIENTS_STORAGE_KEY = "clientes";
 
 export type ClientDraft = {
@@ -95,39 +97,19 @@ export function normalizeClient(value: unknown): ClientRecord {
   );
 }
 
-export function writeClients(clients: ClientRecord[]) {
-  if (typeof window === "undefined") {
-    return;
-  }
+const clientsStore = createJsonLocalStore<ClientRecord[]>(CLIENTS_STORAGE_KEY, {
+  fallback: [],
+  migrate(value) {
+    return Array.isArray(value) ? value.map(normalizeClient) : [];
+  },
+});
 
-  window.localStorage.setItem(CLIENTS_STORAGE_KEY, JSON.stringify(clients));
+export function writeClients(clients: ClientRecord[]) {
+  clientsStore.write(clients.map(normalizeClient));
 }
 
 export function readClients(): ClientRecord[] {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  try {
-    const storedClients = window.localStorage.getItem(CLIENTS_STORAGE_KEY);
-
-    if (!storedClients) {
-      return [];
-    }
-
-    const parsed: unknown = JSON.parse(storedClients);
-
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    const normalized = parsed.map(normalizeClient);
-    writeClients(normalized);
-
-    return normalized;
-  } catch {
-    return [];
-  }
+  return clientsStore.read();
 }
 
 export function normalizeRouteParam(

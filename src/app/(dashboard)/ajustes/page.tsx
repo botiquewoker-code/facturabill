@@ -2,14 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft, ChevronRight } from "lucide-react";
-import { USER_PROFILE_STORAGE_KEY } from "@/features/account/profile";
-import { CLIENTS_STORAGE_KEY } from "@/features/clients/storage";
 import {
-  ACTIVE_DRAFT_STORAGE_KEY,
-  DRAFTS_STORAGE_KEY,
-} from "@/features/drafts/storage";
-import {
-  LANGUAGE_STORAGE_KEY,
   languageOptions,
   type AppLanguage,
 } from "@/features/i18n/config";
@@ -19,38 +12,7 @@ import {
   showSuccessToast,
   showWarningToast,
 } from "@/features/notifications/toast";
-import {
-  VERIFACTU_EVENTS_STORAGE_KEY,
-  VERIFACTU_INSTALLATION_ID_STORAGE_KEY,
-  VERIFACTU_RECORDS_STORAGE_KEY,
-  VERIFACTU_SETTINGS_STORAGE_KEY,
-} from "@/features/verifactu/storage";
-
-const PAYMENT_METHODS_STORAGE_KEY = "facturabill-payment-methods";
-const EXPORTABLE_STORAGE_KEYS = [
-  LANGUAGE_STORAGE_KEY,
-  USER_PROFILE_STORAGE_KEY,
-  CLIENTS_STORAGE_KEY,
-  DRAFTS_STORAGE_KEY,
-  ACTIVE_DRAFT_STORAGE_KEY,
-  PAYMENT_METHODS_STORAGE_KEY,
-  VERIFACTU_RECORDS_STORAGE_KEY,
-  VERIFACTU_EVENTS_STORAGE_KEY,
-  VERIFACTU_INSTALLATION_ID_STORAGE_KEY,
-  VERIFACTU_SETTINGS_STORAGE_KEY,
-  "historial",
-  "datosEmpresa",
-  "configEmpresa",
-  "logoUsuario",
-  "notasUsuario",
-  "plantillaSeleccionada",
-  "plantillaUsuario",
-  "plantillaElegida",
-  "ultimoNumeroFactura",
-  "ultimoNumeroPresupuesto",
-  "ultimoNumeroProforma",
-  "ultimoNumeroAlbaran",
-] as const;
+import { EXPORTABLE_STORAGE_KEYS } from "@/features/storage/export";
 
 type AccountActionsCopy = {
   exportData: string;
