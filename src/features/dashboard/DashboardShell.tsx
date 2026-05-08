@@ -39,7 +39,6 @@ import {
 } from "@/features/invoices/document-types";
 import { activeUserRepository } from "@/features/repositories";
 import { getStorageEventName } from "@/features/storage/local";
-import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -151,7 +150,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
     },
   ];
 
-  useClientLayoutEffect(() => {
+  useEffect(() => {
     const runHydration = () => {
       startTransition(() => {
         setHasRegisteredUser(
@@ -179,23 +178,6 @@ export default function DashboardShell({ children }: DashboardShellProps) {
       );
     };
   }, []);
-
-  useEffect(() => {
-    [
-      "/",
-      "/catalogo",
-      "/clientes",
-      "/ajustes",
-      "/informes",
-      "/borradores",
-      "/historial",
-      "/crear-factura",
-      "/crear-factura?tipo=proforma",
-      "/crear-factura?tipo=albaran",
-    ].forEach((href) => {
-      router.prefetch(href);
-    });
-  }, [router]);
 
   useEffect(() => {
     if (!isMoreMenuOpen) {

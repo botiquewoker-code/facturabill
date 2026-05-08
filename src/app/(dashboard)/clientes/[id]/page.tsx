@@ -85,6 +85,10 @@ export default function ClienteDetallePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  function loadClientRecord(targetClientId: string) {
+    return findClientById(activeClientRepository.readAll(), targetClientId);
+  }
+
   const copy = {
     duplicateTaxId: t({
       es: "Ya existe un cliente con ese NIF. Revisalo antes de guardar los cambios.",
@@ -145,8 +149,7 @@ export default function ClienteDetallePage() {
   };
 
   useClientLayoutEffect(() => {
-    const storedClients = activeClientRepository.readAll();
-    const match = findClientById(storedClients, routeClientId);
+    const match = loadClientRecord(routeClientId);
 
     setCliente(match.client);
     setDraft(match.client ? toClientDraft(match.client) : createEmptyClientDraft());
@@ -173,8 +176,7 @@ export default function ClienteDetallePage() {
   }
 
   function refreshClient() {
-    const storedClients = activeClientRepository.readAll();
-    const match = findClientById(storedClients, cliente?.id || routeClientId);
+    const match = loadClientRecord(cliente?.id || routeClientId);
 
     if (!match.client) {
       setCliente(null);

@@ -69,7 +69,6 @@ import {
   activeUserRepository,
 } from "@/features/repositories";
 import AppScreenLoader from "@/features/ui/AppScreenLoader";
-import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 import { getHistoryDocumentFocusKey } from "@/features/history/focus";
 
 type DraftItem = {
@@ -629,7 +628,7 @@ export default function DashboardHomeClient({
           loginAction: "Sign in",
         };
 
-  useClientLayoutEffect(() => {
+  useEffect(() => {
     const runHydration = () => {
       const savedHomeVisibility = activePreferenceRepository.readHomeVisibility();
 
@@ -666,19 +665,6 @@ export default function DashboardHomeClient({
       );
     };
   }, []);
-
-  useEffect(() => {
-    [
-      "/crear-factura",
-      "/clientes",
-      "/historial",
-      "/informes",
-      "/ajustes/verifactu",
-      "/ajustes",
-    ].forEach((href) => {
-      router.prefetch(href);
-    });
-  }, [router]);
 
   useEffect(() => {
     if (!selectedInsightId && !isFilterSheetOpen) {

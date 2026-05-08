@@ -68,6 +68,7 @@ export function useInvoicePersistence(options: UseInvoicePersistenceOptions) {
   const draftIdRef = useRef<string | null>(null);
   const editableDocumentIdRef = useRef<string | null>(null);
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastPersistedSnapshotRef = useRef<string | null>(null);
 
   const buildDraft = useCallback(
     (): DraftInvoice => ({
@@ -112,19 +113,30 @@ export function useInvoicePersistence(options: UseInvoicePersistenceOptions) {
         return false;
       }
 
-      const saved = activeDraftRepository.readAll<DraftInvoice>();
+      const draftSnapshot = JSON.stringify({
+        ...draft,
+        updatedAt: "",
+      });
 
       if (!hasContent(draft)) {
+        const saved = activeDraftRepository.readAll<DraftInvoice>();
         const nextSaved = saved.filter((item) => item.id !== draft.id);
 
         if (nextSaved.length !== saved.length) {
           activeDraftRepository.saveAll(nextSaved);
         }
 
+        lastPersistedSnapshotRef.current = null;
         return false;
       }
 
+      if (lastPersistedSnapshotRef.current === draftSnapshot) {
+        return true;
+      }
+
+      const saved = activeDraftRepository.readAll<DraftInvoice>();
       activeDraftRepository.saveAll(activeDraftRepository.upsert(draft, saved));
+      lastPersistedSnapshotRef.current = draftSnapshot;
       saveLastNumber(draft.numero, draft.tipo);
       return true;
     },
@@ -175,9 +187,9 @@ export function useInvoicePersistence(options: UseInvoicePersistenceOptions) {
 
     autosaveTimerRef.current = setTimeout(() => {
       try {
-        persistDraftSilently(nextDraft);
+        const didPersist = persistDraftSilently(nextDraft);
 
-        if (editableDocumentIdRef.current) {
+        if (didPersist && editableDocumentIdRef.current) {
           activeDocumentRepository.upsert(
             toEditableDocumentRecord(nextDraft, {
               documentId: editableDocumentIdRef.current,
@@ -188,7 +200,7 @@ export function useInvoicePersistence(options: UseInvoicePersistenceOptions) {
           );
         }
       } catch {}
-    }, 220);
+    }, 500);
 
     return () => {
       if (autosaveTimerRef.current !== null) {
@@ -207,9 +219,9 @@ export function useInvoicePersistence(options: UseInvoicePersistenceOptions) {
       }
 
       try {
-        persistDraftSilently(draft);
+        const didPersist = persistDraftSilently(draft);
 
-        if (editableDocumentIdRef.current) {
+        if (didPersist && editableDocumentIdRef.current) {
           activeDocumentRepository.upsert(
             toEditableDocumentRecord(draft, {
               documentId: editableDocumentIdRef.current,

@@ -29,11 +29,6 @@ import { activeClientRepository } from "@/features/repositories";
 import { useAppI18n } from "@/features/i18n/runtime";
 import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 
-type WindowWithWebkitAudio = Window &
-  typeof globalThis & {
-    webkitAudioContext?: typeof AudioContext;
-  };
-
 function getInitials(nombre: string): string {
   const initials = nombre
     .split(" ")
@@ -150,34 +145,6 @@ export default function ClientesPage() {
     setNuevoCliente(createEmptyClientDraft());
   }
 
-  function sonidoError() {
-    const AudioContextConstructor =
-      window.AudioContext ||
-      (window as WindowWithWebkitAudio).webkitAudioContext;
-
-    if (!AudioContextConstructor) {
-      return;
-    }
-
-    const audioCtx = new AudioContextConstructor();
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-
-    oscillator.type = "square";
-    oscillator.frequency.setValueAtTime(180, audioCtx.currentTime);
-    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + 0.2);
-
-    window.setTimeout(() => {
-      void audioCtx.close();
-    }, 260);
-  }
-
   function showNotice(message: string, tone: "warning" | "success") {
     if (tone === "success") {
       showSuccessToast(message);
@@ -193,7 +160,6 @@ export default function ClientesPage() {
 
     if (hasDuplicateTaxId(clientes, nuevoCliente.nif)) {
       showNotice(copy.duplicateTaxId, "warning");
-      sonidoError();
       return;
     }
 

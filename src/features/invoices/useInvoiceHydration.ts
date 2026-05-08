@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { startTransition } from "react";
 import {
   activeCatalogRepository,
@@ -11,7 +12,6 @@ import {
   activeUserRepository,
 } from "@/features/repositories";
 import { readFiscalSettings, type FiscalSettings } from "./fiscal-settings";
-import { useClientLayoutEffect } from "@/features/ui/useClientLayoutEffect";
 import {
   addDays,
   draftId,
@@ -103,7 +103,7 @@ export function useInvoiceHydration(options: UseInvoiceHydrationOptions) {
     setDeliveryDetails,
   } = options;
 
-  useClientLayoutEffect(() => {
+  useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
@@ -120,13 +120,14 @@ export function useInvoiceHydration(options: UseInvoiceHydrationOptions) {
       const initialDocumentType = normalizeInvoiceDocumentType(params.get("tipo"));
       const requestedDocumentId = params.get("documentId") || "";
       const storedClients = activeClientRepository.readAll();
+      const storedCatalog = activeCatalogRepository.readAll();
       const routeClientId = params.get("clienteId") || "";
       const storedFiscalSettings = readFiscalSettings();
       const storedProfile = activeUserRepository.readProfile();
 
       startTransition(() => {
         setClientesGuardados(storedClients);
-        setCatalogItems(activeCatalogRepository.readAll());
+        setCatalogItems(storedCatalog);
         setFiscalSettings(storedFiscalSettings);
         setTipoIVA(storedFiscalSettings.defaultTaxRate);
         setHasRegisteredUser(getUserFirstName(storedProfile).length > 0);
@@ -148,6 +149,8 @@ export function useInvoiceHydration(options: UseInvoiceHydrationOptions) {
       });
 
       if (requestedDocumentId) {
+        const historyDocuments =
+          activeHistoryRepository.readDocuments<HistoryDocument>();
         const editableDocument =
           activeDocumentRepository.readById(requestedDocumentId);
 
@@ -196,14 +199,12 @@ export function useInvoiceHydration(options: UseInvoiceHydrationOptions) {
           return;
         }
 
-        const historyDocument = activeHistoryRepository
-          .readDocuments<HistoryDocument>()
-          .find(
-            (item) =>
-              item.editableDocumentId === requestedDocumentId ||
-              item.id === requestedDocumentId ||
-              item.numero === requestedDocumentId,
-          );
+        const historyDocument = historyDocuments.find(
+          (item) =>
+            item.editableDocumentId === requestedDocumentId ||
+            item.id === requestedDocumentId ||
+            item.numero === requestedDocumentId,
+        );
 
         if (historyDocument) {
           const fallbackDocument = toEditableDocumentRecord(
@@ -372,5 +373,28 @@ export function useInvoiceHydration(options: UseInvoiceHydrationOptions) {
     };
 
     hydratePage();
-  }, []);
+  }, [
+    draftIdRef,
+    editableDocumentIdRef,
+    latestDraftRef,
+    setCatalogItems,
+    setCliente,
+    setClientesGuardados,
+    setConceptos,
+    setDeliveryDetails,
+    setDocumentType,
+    setEmpresa,
+    setFecha,
+    setFechaVencimiento,
+    setFiscalSettings,
+    setHasLoadedAccount,
+    setHasRegisteredUser,
+    setIsPageReady,
+    setLinkedClientId,
+    setLogo,
+    setNotas,
+    setNumeroFactura,
+    setPlantilla,
+    setTipoIVA,
+  ]);
 }
