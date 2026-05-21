@@ -11,11 +11,7 @@ import {
 import { prepareVerifactuInvoiceRecord } from "@/features/verifactu/service";
 import type { VerifactuSourceAction } from "@/features/verifactu/types";
 import { requestWebDownloadPermission } from "@/features/downloads/web-download-limit";
-import {
-  showSuccessToast,
-  showWarningActionToast,
-  showWarningToast,
-} from "@/features/notifications/toast";
+import { showSuccessToast, showWarningToast } from "@/features/notifications/toast";
 import {
   draftId,
   pdfTemplates,
@@ -60,6 +56,11 @@ type UseInvoiceDocumentActionsOptions = {
   total: number;
 };
 
+export type DownloadLimitBlock = {
+  appDownloadUrl: string;
+  message: string;
+};
+
 export function useInvoiceDocumentActions(
   options: UseInvoiceDocumentActionsOptions,
 ) {
@@ -93,6 +94,8 @@ export function useInvoiceDocumentActions(
   } = options;
 
   const [isDocumentActionPending, setIsDocumentActionPending] = useState(false);
+  const [downloadLimitBlock, setDownloadLimitBlock] =
+    useState<DownloadLimitBlock | null>(null);
 
   const createPdfBlob = useCallback(async () => {
     await waitForNextFrame();
@@ -321,17 +324,19 @@ export function useInvoiceDocumentActions(
     setIsDocumentActionPending(true);
 
     try {
-      const blob = await createPdfBlob();
       const downloadPermission = await requestWebDownloadPermission(isSpanish);
 
       if (!downloadPermission.allowed) {
-        showWarningActionToast(downloadPermission.message, {
-          href: downloadPermission.appDownloadUrl,
-          label: isSpanish ? "Descargar la app" : "Download the app",
+        setDownloadLimitBlock({
+          appDownloadUrl: downloadPermission.appDownloadUrl,
+          message: downloadPermission.message,
         });
         return;
       }
 
+      setDownloadLimitBlock(null);
+
+      const blob = await createPdfBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -465,6 +470,7 @@ export function useInvoiceDocumentActions(
 
   return {
     descargar,
+    downloadLimitBlock,
     enviar,
     isDocumentActionPending,
   };

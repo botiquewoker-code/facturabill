@@ -694,7 +694,12 @@ export default function CrearFacturaPage() {
     documentLabel: documentMeta.label,
     saveLastNumber,
   });
-  const { descargar, enviar, isDocumentActionPending } = useInvoiceDocumentActions({
+  const {
+    descargar,
+    downloadLimitBlock,
+    enviar,
+    isDocumentActionPending,
+  } = useInvoiceDocumentActions({
     activeConceptos,
     buildDraft,
     cliente,
@@ -1374,10 +1379,12 @@ export default function CrearFacturaPage() {
             currentTaxLabel={currentTaxLabel}
             currentTaxNote={currentTaxNote}
             descargar={descargar}
+            downloadLimitBlock={downloadLimitBlock}
             enviar={enviar}
             guestModeCopy={guestModeCopy}
             iva={iva}
             isDocumentActionPending={isDocumentActionPending}
+            isSpanish={isSpanish}
             modeCopy={modeCopy}
             money={money}
             primaryActionClass={primaryActionClass}

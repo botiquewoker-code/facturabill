@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Download, Send } from "lucide-react";
+import { Download, ExternalLink, Send, Smartphone } from "lucide-react";
+import type { DownloadLimitBlock } from "@/features/invoices/useInvoiceDocumentActions";
 
 type ModeCopy = {
   totalLabel: string;
@@ -28,10 +29,12 @@ type Props = {
   currentTaxLabel: string;
   currentTaxNote: string;
   descargar: () => void;
+  downloadLimitBlock: DownloadLimitBlock | null;
   enviar: () => void;
   guestModeCopy: GuestModeCopy;
   iva: number;
   isDocumentActionPending: boolean;
+  isSpanish: boolean;
   modeCopy: ModeCopy;
   money: (value: number) => string;
   primaryActionClass: string;
@@ -48,10 +51,12 @@ export default function InvoiceEditorSummary({
   currentTaxLabel,
   currentTaxNote,
   descargar,
+  downloadLimitBlock,
   enviar,
   guestModeCopy,
   iva,
   isDocumentActionPending,
+  isSpanish,
   modeCopy,
   money,
   primaryActionClass,
@@ -131,6 +136,43 @@ export default function InvoiceEditorSummary({
           </button>
         ) : null}
       </div>
+
+      {downloadLimitBlock ? (
+        <div
+          role="alert"
+          className="mt-5 min-h-[220px] overflow-hidden rounded-[34px] border border-blue-100 bg-[linear-gradient(135deg,#eff6ff_0%,#ffffff_48%,#e0f2fe_100%)] p-6 shadow-[0_30px_80px_-42px_rgba(37,99,235,0.6)] sm:p-8"
+        >
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 gap-4">
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[26px] bg-blue-950 text-white shadow-[0_18px_36px_-20px_rgba(30,64,175,0.85)]">
+                <Smartphone className="h-7 w-7" strokeWidth={2.1} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-700">
+                  {modeCopy.downloadLabel}
+                </p>
+                <h4 className="mt-3 text-[1.55rem] font-semibold tracking-[-0.04em] text-slate-950 sm:text-[1.9rem]">
+                  {downloadLimitBlock.message}
+                </h4>
+                <p className="mt-4 max-w-xl text-[15px] leading-7 text-slate-600">
+                  {isSpanish
+                    ? "Ya has usado las descargas disponibles en la web. Continua desde la app para trabajar con una experiencia mas rapida y completa."
+                    : "You have already used the available web downloads. Continue from the app to work with a faster and more complete experience."}
+                </p>
+              </div>
+            </div>
+            <a
+              href={downloadLimitBlock.appDownloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-blue-950 px-5 text-sm font-semibold text-white shadow-[0_18px_38px_-24px_rgba(30,64,175,0.85)] transition hover:bg-blue-900"
+            >
+              {isSpanish ? "Descargar la app" : "Download the app"}
+              <ExternalLink className="h-4 w-4" strokeWidth={2.2} />
+            </a>
+          </div>
+        </div>
+      ) : null}
 
       <div className="mt-4 flex items-center justify-between gap-3 rounded-[22px] border border-white/70 bg-white/82 px-4 py-3 text-sm text-slate-500 shadow-[0_16px_30px_-24px_rgba(15,23,42,0.35)]">
         <p>
