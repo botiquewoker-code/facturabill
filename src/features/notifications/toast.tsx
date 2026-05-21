@@ -7,6 +7,11 @@ export type AppNoticeTone = "success" | "warning";
 
 const TOAST_DURATION_MS = 3000;
 
+type AppToastAction = {
+  href: string;
+  label: string;
+};
+
 const toneStyles: Record<
   AppNoticeTone,
   {
@@ -28,10 +33,12 @@ const toneStyles: Record<
 };
 
 function NotificationToast({
+  action,
   message,
   toastRef,
   tone,
 }: {
+  action?: AppToastAction;
   message: string;
   toastRef: Toast;
   tone: AppNoticeTone;
@@ -55,7 +62,19 @@ function NotificationToast({
         >
           <Icon className={`h-4 w-4 ${styles.iconColor}`} strokeWidth={2.2} />
         </span>
-        <span className="min-w-0 flex-1 leading-5">{message}</span>
+        <div className="min-w-0 flex-1 leading-5">
+          <span>{message}</span>
+          {action ? (
+            <a
+              href={action.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 block w-fit font-semibold text-slate-950 underline decoration-slate-300 underline-offset-4 transition hover:text-blue-700"
+            >
+              {action.label}
+            </a>
+          ) : null}
+        </div>
         <button
           type="button"
           onClick={() => toast.dismiss(toastRef.id)}
@@ -80,16 +99,22 @@ export function AppToaster() {
   );
 }
 
-export function showAppToast(message: string, tone: AppNoticeTone = "success") {
+export function showAppToast(
+  message: string,
+  tone: AppNoticeTone = "success",
+  action?: AppToastAction,
+  options?: { durationMs?: number },
+) {
   return toast.custom(
     (toastRef) => (
       <NotificationToast
+        action={action}
         message={message}
         toastRef={toastRef}
         tone={tone}
       />
     ),
-    { duration: TOAST_DURATION_MS },
+    { duration: options?.durationMs || TOAST_DURATION_MS },
   );
 }
 
@@ -99,4 +124,8 @@ export function showSuccessToast(message: string) {
 
 export function showWarningToast(message: string) {
   return showAppToast(message, "warning");
+}
+
+export function showWarningActionToast(message: string, action: AppToastAction) {
+  return showAppToast(message, "warning", action, { durationMs: 9000 });
 }

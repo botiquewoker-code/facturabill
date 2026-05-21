@@ -10,7 +10,12 @@ import {
 } from "@/features/repositories";
 import { prepareVerifactuInvoiceRecord } from "@/features/verifactu/service";
 import type { VerifactuSourceAction } from "@/features/verifactu/types";
-import { showSuccessToast, showWarningToast } from "@/features/notifications/toast";
+import { requestWebDownloadPermission } from "@/features/downloads/web-download-limit";
+import {
+  showSuccessToast,
+  showWarningActionToast,
+  showWarningToast,
+} from "@/features/notifications/toast";
 import {
   draftId,
   pdfTemplates,
@@ -317,6 +322,16 @@ export function useInvoiceDocumentActions(
 
     try {
       const blob = await createPdfBlob();
+      const downloadPermission = await requestWebDownloadPermission(isSpanish);
+
+      if (!downloadPermission.allowed) {
+        showWarningActionToast(downloadPermission.message, {
+          href: downloadPermission.appDownloadUrl,
+          label: isSpanish ? "Descargar la app" : "Download the app",
+        });
+        return;
+      }
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
