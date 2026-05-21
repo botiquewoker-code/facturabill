@@ -139,37 +139,40 @@ export default function InvoiceEditorSummary({
 
       {downloadLimitBlock ? (
         <div
-          role="alert"
-          className="mt-5 min-h-[220px] overflow-hidden rounded-[34px] border border-blue-100 bg-[linear-gradient(135deg,#eff6ff_0%,#ffffff_48%,#e0f2fe_100%)] p-6 shadow-[0_30px_80px_-42px_rgba(37,99,235,0.6)] sm:p-8"
+          role="alertdialog"
+          aria-modal="true"
+          className="fixed inset-0 z-[90] flex min-h-dvh items-center justify-center overflow-y-auto bg-[linear-gradient(135deg,#dbeafe_0%,#ffffff_46%,#e0f2fe_100%)] px-4 py-8"
         >
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex min-w-0 gap-4">
-              <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[26px] bg-blue-950 text-white shadow-[0_18px_36px_-20px_rgba(30,64,175,0.85)]">
-                <Smartphone className="h-7 w-7" strokeWidth={2.1} />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-700">
-                  {modeCopy.downloadLabel}
-                </p>
-                <h4 className="mt-3 text-[1.55rem] font-semibold tracking-[-0.04em] text-slate-950 sm:text-[1.9rem]">
-                  {downloadLimitBlock.message}
-                </h4>
-                <p className="mt-4 max-w-xl text-[15px] leading-7 text-slate-600">
-                  {isSpanish
-                    ? "Ya has usado las descargas disponibles en la web. Continua desde la app para trabajar con una experiencia mas rapida y completa."
-                    : "You have already used the available web downloads. Continue from the app to work with a faster and more complete experience."}
-                </p>
+          <div className="flex min-h-[calc(100dvh-4rem)] w-full max-w-5xl flex-col justify-center rounded-[38px] border border-white/80 bg-white/88 p-7 shadow-[0_38px_110px_-48px_rgba(30,64,175,0.75)] backdrop-blur-xl sm:p-12">
+            <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex min-w-0 flex-col gap-6 sm:flex-row">
+                <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[30px] bg-blue-950 text-white shadow-[0_22px_44px_-22px_rgba(30,64,175,0.9)]">
+                  <Smartphone className="h-9 w-9" strokeWidth={2.1} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-blue-700">
+                    {modeCopy.downloadLabel}
+                  </p>
+                  <h4 className="mt-4 max-w-3xl text-[2rem] font-semibold leading-[1.04] tracking-[-0.04em] text-slate-950 sm:text-[3.2rem]">
+                    {downloadLimitBlock.message}
+                  </h4>
+                  <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
+                    {isSpanish
+                      ? "Ya has usado las descargas disponibles en la web. Continua desde la app para trabajar con una experiencia mas rapida y completa."
+                      : "You have already used the available web downloads. Continue from the app to work with a faster and more complete experience."}
+                  </p>
+                </div>
               </div>
+              <a
+                href={downloadLimitBlock.appDownloadUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-14 shrink-0 items-center justify-center gap-2 rounded-full bg-blue-950 px-7 text-base font-semibold text-white shadow-[0_22px_44px_-24px_rgba(30,64,175,0.9)] transition hover:bg-blue-900"
+              >
+                {isSpanish ? "Descargar la app" : "Download the app"}
+                <ExternalLink className="h-5 w-5" strokeWidth={2.2} />
+              </a>
             </div>
-            <a
-              href={downloadLimitBlock.appDownloadUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-blue-950 px-5 text-sm font-semibold text-white shadow-[0_18px_38px_-24px_rgba(30,64,175,0.85)] transition hover:bg-blue-900"
-            >
-              {isSpanish ? "Descargar la app" : "Download the app"}
-              <ExternalLink className="h-4 w-4" strokeWidth={2.2} />
-            </a>
           </div>
         </div>
       ) : null}
